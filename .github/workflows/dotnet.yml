@@ -24,7 +24,7 @@ jobs:
       run: dotnet restore
     
     - name: Lint with dotnet format
-      run: dotnet format --verify-no-changes --verbosity diagnostic *.sln
+      run: dotnet format $(find . -maxdepth 1 -name "*.sln" -print -quit) --verify-no-changes --verbosity diagnostic
     
     - name: Build
       run: dotnet build --no-restore
