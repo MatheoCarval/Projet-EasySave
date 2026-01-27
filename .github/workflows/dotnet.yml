@@ -24,7 +24,16 @@ jobs:
       run: dotnet restore
     
     - name: Lint with dotnet format
-      run: dotnet format $(find . -maxdepth 1 -name "*.sln" -print -quit) --verify-no-changes --verbosity diagnostic
+      run: |
+        echo "Looking for solution files..."
+        ls -la
+        SOLUTION=$(ls *.sln 2>/dev/null | head -n 1)
+        if [ -z "$SOLUTION" ]; then
+          echo "No .sln file found in root, searching subdirectories..."
+          SOLUTION=$(find . -name "*.sln" | head -n 1)
+        fi
+        echo "Using solution: $SOLUTION"
+        dotnet format "$SOLUTION" --verify-no-changes --verbosity diagnostic
     
     - name: Build
       run: dotnet build --no-restore
