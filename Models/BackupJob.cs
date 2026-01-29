@@ -9,7 +9,7 @@ namespace Models
         public string Name { get; set; }
         public List<string> SourcePath { get; set; }
         public string TargetPath { get; set; }
-        public BackupType BackupType { get; set; }
+        public BackupState BackupType { get; set; }
         public BackupState BackupState { get; set; }
         public DateTime LastExecution { get; set; }
         public long TotalFile { get; set; }
