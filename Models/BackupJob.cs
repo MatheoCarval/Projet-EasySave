@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Models.Enums;
 
 namespace Models
@@ -6,7 +7,7 @@ namespace Models
     public class BackupJob
     {
         public string Name { get; set; }
-        public string SourcePath { get; set; }
+        public List<string> SourcePath { get; set; }
         public string TargetPath { get; set; }
         public BackupState BackupType { get; set; }
         public BackupState BackupState { get; set; }
@@ -19,11 +20,16 @@ namespace Models
         public string CurrentTargetFile { get; set; }
         public float Progress { get; set; }
 
+        public BackupJob()
+        {
+            SourcePath = new List<string>();
+        }
+
         public void UpdateProgress()
         {
             if (TotalFile > 0)
             {
-                Progress = ((TotalFile - RemainingFiles) * 100 / TotalFile);
+                Progress = ((TotalSize - RemainingSize) * 100 / TotalSize);
             }
         }
 
@@ -39,6 +45,7 @@ namespace Models
             RemainingFiles = 0;
             RemainingSize = 0;
             Progress = 100;
+            BackupState = BackupState.COMPLETED;
         }
 
         public void MarkAsError()
