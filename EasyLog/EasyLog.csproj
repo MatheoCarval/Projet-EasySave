@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <!-- PAS de OutputType pour une bibliothèque -->
+    
+    <!-- NuGet -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>EasyLog</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Allan Bouhamed, Phillipe Luu, Maxime Stoffel, Enzo Cadière, Maeva Challies, Mathéo Carval</Authors>
+    <Description>Lightweight logging library</Description>
+  </PropertyGroup>
+
+</Project>
