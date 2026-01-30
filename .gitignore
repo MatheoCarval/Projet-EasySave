@@ -22,9 +22,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-bin/
 .vs/
-obj/
 
 # .NET Core
 project.lock.json
