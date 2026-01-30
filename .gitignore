@@ -54,3 +54,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+
+EasySave.AssemblyInfo.cs
+*.cache
+*.editconfig
