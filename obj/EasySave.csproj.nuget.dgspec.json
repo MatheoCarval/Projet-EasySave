@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\feita\\easysave\\Projet-EasySave\\EasySave.csproj": {}
+    "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\EasySave.csproj": {}
   },
   "projects": {
-    "C:\\Users\\feita\\easysave\\Projet-EasySave\\EasySave.csproj": {
+    "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\EasySave.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\feita\\easysave\\Projet-EasySave\\EasySave.csproj",
+        "projectUniqueName": "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\EasySave.csproj",
         "projectName": "EasySave",
-        "projectPath": "C:\\Users\\feita\\easysave\\Projet-EasySave\\EasySave.csproj",
-        "packagesPath": "C:\\Users\\feita\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\feita\\easysave\\Projet-EasySave\\obj\\",
+        "projectPath": "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\EasySave.csproj",
+        "packagesPath": "C:\\Users\\Maxime\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\feita\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Maxime\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -50,6 +49,16 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "System.IO.FileSystem.AccessControl": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "System.Security.Principal.Windows": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

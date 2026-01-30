@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "Vcd4fSGEFYw=",
+  "dgSpecHash": "7vEkHG6A6SU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\feita\\easysave\\Projet-EasySave\\EasySave.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\Maxime\\Desktop\\Cours CESI\\Projet Genie Logiciel\\Projet-EasySave\\EasySave.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Maxime\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "C:\\Users\\Maxime\\.nuget\\packages\\system.io.filesystem.accesscontrol\\5.0.0\\system.io.filesystem.accesscontrol.5.0.0.nupkg.sha512",
+    "C:\\Users\\Maxime\\.nuget\\packages\\system.security.accesscontrol\\5.0.0\\system.security.accesscontrol.5.0.0.nupkg.sha512",
+    "C:\\Users\\Maxime\\.nuget\\packages\\system.security.principal.windows\\5.0.0\\system.security.principal.windows.5.0.0.nupkg.sha512"
+  ],
   "logs": []
 }
