@@ -55,7 +55,10 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-
+EasySave.AssemblyInfo.cs
+*.cache
+*.editconfigbin/
+obj/
 
 EasySave.AssemblyInfo.cs
 *.cache
@@ -65,4 +68,5 @@ obj/
 
 EasySave.AssemblyInfo.cs
 *.cache
-*.editconfig
+*.editconfigbin/
+obj/
