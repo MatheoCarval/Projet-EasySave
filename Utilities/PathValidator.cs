@@ -6,30 +6,6 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 
-// ============================================================================
-// REQUIRED NUGET PACKAGES (for .NET Core / .NET 5+ / .NET 8+)
-// ============================================================================
-// The following NuGet packages must be installed for this code to compile:
-//
-// 1. System.IO.FileSystem.AccessControl
-//    - Provides: FileSecurity, DirectorySecurity, FileSystemAccessRule
-//    - Install: dotnet add package System.IO.FileSystem.AccessControl
-//
-// 2. System.Security.Principal.Windows
-//    - Provides: WindowsIdentity, WindowsPrincipal, SecurityIdentifier
-//    - Install: dotnet add package System.Security.Principal.Windows
-//
-// Note: These are included by default in .NET Framework but must be added
-// explicitly in .NET Core and later versions.
-// ============================================================================
-
-// ============================================================================
-// PLATFORM COMPATIBILITY
-// ============================================================================
-// - Windows: Full functionality including ACL-based permission checking
-// - Linux/Mac: Falls back to file operation testing (FallbackWriteAccessCheck)
-// - The code handles PlatformNotSupportedException gracefully for cross-platform use
-// ============================================================================
 
 namespace FileSystemValidation
 {
