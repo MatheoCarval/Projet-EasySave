@@ -1,6 +1,6 @@
 namespace Models.Enums
 {
-    public enum BackupSate
+    public enum BackupState
     {
         ACTIVE,
         PAUSED,
