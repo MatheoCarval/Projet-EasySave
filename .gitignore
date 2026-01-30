@@ -72,3 +72,11 @@ EasySave.AssemblyInfo.cs
 *.cache
 *.editconfigbin/
 obj/
+
+# Visual Studio
+.vs/
+
+
+EasySave.AssemblyInfo.cs
+*.cache
+*.editconfig
