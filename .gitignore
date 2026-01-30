@@ -59,4 +59,5 @@ nunit-*.xml
 
 EasySave.AssemblyInfo.cs
 *.cache
-*.editconfig
+*.editconfigbin/
+obj/
