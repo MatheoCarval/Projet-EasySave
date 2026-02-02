@@ -1,14 +1,11 @@
-using EasySave.View.Console; 
+using EasySave.View.Console;
 
 namespace EasySave;
 
 /// Point d'entrée principal de l'application EasySave
-
 internal class Program
 {
-
     /// Point d'entrée de l'application
-
     private static void Main(string[] args)
     {
         InitializeServices();
@@ -23,11 +20,9 @@ internal class Program
         // TODO: Initialiser ConfigurationManager
     }
 
-    /// Traite les arguments de ligne de commande
-
+    /// Traite les arguments de ligne de commande et lance l'interface
     private static void HandleCommandLineArgs(string[] args)
     {
-        // Lance l'interface console
         var consoleUI = new ConsoleUI();
         consoleUI.Start();
     }
