@@ -83,7 +83,7 @@ internal class ConsoleUI
         int maxSource = 5; 
 
         var sources = new List<string>();
-            if {
+        if sources.Count <= maxSource {
                 do
                 {
                     System.Console.Write("Source : ");
