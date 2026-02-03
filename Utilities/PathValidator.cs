@@ -40,7 +40,7 @@ namespace FileSystemValidation
                 }
 
                 string fullPath = Path.GetFullPath(path);
-                
+
                 if (!Path.IsPathRooted(fullPath))
                 {
                     return false;
@@ -76,11 +76,11 @@ namespace FileSystemValidation
             try
             {
                 string fullPath = Path.GetFullPath(path);
-                
+
                 if (fullPath.StartsWith(@"\\") || fullPath.StartsWith(@"//"))
                 {
                     string[] parts = fullPath.TrimStart('\\', '/').Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-                    
+
                     return parts.Length >= 2;
                 }
 
@@ -102,12 +102,12 @@ namespace FileSystemValidation
             try
             {
                 string fullPath = Path.GetFullPath(path);
-                
+
                 if (IsNetworkPath(fullPath))
                 {
                     return fullPath;
                 }
-                
+
                 string? driveLetterNullable = Path.GetPathRoot(fullPath);
                 if (string.IsNullOrEmpty(driveLetterNullable))
                 {
@@ -121,9 +121,9 @@ namespace FileSystemValidation
                     return string.Empty;
                 }
                 string pathWithoutRoot = fullPath.Substring(root.Length);
-                
+
                 string uncPath = $@"\\localhost\{driveLetter}$\{pathWithoutRoot}";
-                
+
                 return uncPath;
             }
             catch (Exception)
@@ -207,7 +207,7 @@ namespace FileSystemValidation
                 bool isDirectory = IsDirectory(targetPath);
 
                 AuthorizationRuleCollection rules;
-                
+
                 if (isDirectory)
                 {
                     DirectoryInfo dirInfo = new DirectoryInfo(targetPath);
@@ -288,7 +288,7 @@ namespace FileSystemValidation
                 if (isDirectory)
                 {
                     string testFile = Path.Combine(targetPath, $".write_test_{Guid.NewGuid()}.tmp");
-                    
+
                     try
                     {
                         using (FileStream fs = File.Create(testFile, 1, FileOptions.DeleteOnClose))

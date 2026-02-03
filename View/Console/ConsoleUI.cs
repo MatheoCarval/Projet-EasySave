@@ -12,19 +12,19 @@ internal class ConsoleUI
 {
     /// <summary>Maximum number of backup jobs allowed</summary>
     private const int MAX_JOBS = 5;
-    
+
     /// <summary>Maximum number of sources per backup job</summary>
     private const int MAX_SOURCES = 5;
 
     /// <summary>List of all backup jobs with their properties: id, name, sources, destinations, backup type</summary>
     private List<(int id, string name, List<string> sources, List<string> destinations, string backupType)> _jobs = new();
-    
+
     /// <summary>Counter for generating unique job IDs</summary>
     private int _nextJobId = 1;
 
     /// <summary>Main application window</summary>
     private Window? _mainWindow;
-    
+
     /// <summary>Content frame for displaying different screens</summary>
     private FrameView? _contentFrame;
 
@@ -1306,10 +1306,10 @@ internal class ConsoleUI
         {
             var selectedIndex = listView.SelectedItem;
             var selectedJob = _jobs[selectedIndex];
-            
+
             // Ask for confirmation before deleting
-            var result = MessageBox.Query(60, 10, "Confirmation de suppression", 
-                $"Êtes-vous sûr de vouloir supprimer la tâche:\n\n\"{selectedJob.name}\"?\n\nCette action est irréversible.", 
+            var result = MessageBox.Query(60, 10, "Confirmation de suppression",
+                $"Êtes-vous sûr de vouloir supprimer la tâche:\n\n\"{selectedJob.name}\"?\n\nCette action est irréversible.",
                 "Oui, supprimer", "Non, annuler");
 
             if (result == 0)
