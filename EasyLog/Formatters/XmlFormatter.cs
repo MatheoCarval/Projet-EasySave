@@ -65,9 +65,9 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     /// <summary>
     /// Convertit une collection en XML
     /// LOGIQUE:
-    /// 1. Créé un élément racine <ArrayOf{TypeName}>
+    /// 1. Créé un élément racine ArrayOf{TypeName}
     /// 2. Sérialise chaque élément comme enfant de la racine
-    /// 3. Exemple: <ArrayOfBackupLogEntry><BackupLogEntry>...</><BackupLogEntry>...</></ArrayOfBackupLogEntry>
+    /// 3. Exemple: ArrayOfBackupLogEntry contenant des éléments BackupLogEntry
     /// </summary>
     public string FormatCollection(IEnumerable<T> data)
     {
@@ -121,10 +121,10 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     }
 
     /// <summary>
-    /// Parse un XML contenant une collection en IEnumerable<T>
+    /// Parse un XML contenant une collection en IEnumerable&lt;T&gt;
     /// LOGIQUE:
     /// 1. Détecte si c'est un élément racine de collection (ArrayOf...)
-    /// 2. Désérialise en List<T>
+    /// 2. Désérialise en List&lt;T&gt;
     /// </summary>
     public IEnumerable<T> ParseCollection(string content)
     {
