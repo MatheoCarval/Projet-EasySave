@@ -7,7 +7,7 @@ using System.Security.Principal;
 using System.Text.RegularExpressions;
 
 
-namespace FileSystemValidation
+namespace Utilities
 {
     public static class PathValidator
     {
