@@ -1200,14 +1200,14 @@ internal class ConsoleUI
 
             if (newTypeKey != job.backupType)
             {
-                ShowModifyConfirmation(jobIndex, job, T("modify_backup_type"), 
-                    GetBackupTypeDisplay(job.backupType), 
+                ShowModifyConfirmation(jobIndex, job, T("modify_backup_type"),
+                    GetBackupTypeDisplay(job.backupType),
                     GetBackupTypeDisplay(newTypeKey), () =>
-                {
-                    _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newTypeKey);
-                    MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
-                    AskContinueModifying(jobIndex);
-                });
+                    {
+                        _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newTypeKey);
+                        MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
+                        AskContinueModifying(jobIndex);
+                    });
             }
             else
             {
@@ -1220,9 +1220,6 @@ internal class ConsoleUI
         {
             DisplayMainMenu();
         };
-
-        _contentFrame!.Add(label, listView, confirmBtn, cancelBtn);
-    }
 
         _contentFrame!.Add(label, listView, confirmBtn, cancelBtn);
     }
