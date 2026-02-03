@@ -147,8 +147,8 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
     /// Parse un JSON array en collection d'objets T
     /// LOGIQUE:
     /// 1. Nettoie les caractères de pagination
-    /// 2. Désérialise en List<T>
-    /// 3. Retourne IEnumerable<T>
+    /// 2. Désérialise en List&lt;T&gt;
+    /// 3. Retourne IEnumerable&lt;T&gt;
     /// </summary>
     public IEnumerable<T> ParseCollection(string content)
     {

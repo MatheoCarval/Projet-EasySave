@@ -1634,3 +1634,4 @@ internal class ConsoleUI
     {
         return backupTypeKey.ToLower() == "full" ? 0 : 1;
     }
+}
