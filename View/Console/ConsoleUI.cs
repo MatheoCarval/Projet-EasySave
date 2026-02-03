@@ -30,7 +30,7 @@ internal class ConsoleUI
     private FrameView? _contentFrame;
 
     /// <summary>Localization service for translations</summary>
-    private LocalizationService _localizationService;
+    private readonly LocalizationService _localizationService;
 
     // TODO: _backupManager: BackupManager
     // TODO: _configManager: ConfigurationManager
