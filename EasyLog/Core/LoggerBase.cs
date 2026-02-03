@@ -33,7 +33,7 @@ public abstract class LoggerBase : ILogger
 
     /// <summary>
     /// Enregistre un formatter personnalisé pour un type spécifique
-    /// Exemple: RegisterFormatter(new CustomJsonFormatter<BackupLogEntry>())
+    /// Exemple: RegisterFormatter(new CustomJsonFormatter&lt;BackupLogEntry&gt;())
     /// </summary>
     public void RegisterFormatter<T>(ILogFormatter<T> formatter) where T : class
     {

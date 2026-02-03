@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terminal.Gui;
+using EasySave.Services;
 
 namespace EasySave.View.Console;
 
@@ -28,9 +29,20 @@ internal class ConsoleUI
     /// <summary>Content frame for displaying different screens</summary>
     private FrameView? _contentFrame;
 
+    /// <summary>Localization service for translations</summary>
+    private readonly LocalizationService _localizationService;
+
     // TODO: _backupManager: BackupManager
-    // TODO: _localizationService: LocalizationService
     // TODO: _configManager: ConfigurationManager
+
+    /// <summary>
+    /// Initializes ConsoleUI with a localization service
+    /// </summary>
+    /// <param name="localizationService">The localization service instance</param>
+    public ConsoleUI(LocalizationService localizationService)
+    {
+        _localizationService = localizationService;
+    }
 
     /// <summary>
     /// Initializes and runs the terminal UI application
@@ -49,7 +61,7 @@ internal class ConsoleUI
 
     private Window CreateMainWindow()
     {
-        var window = new Window("EasySave")
+        var window = new Window(_localizationService.GetTextTranslated("app_title"))
         {
             X = 0,
             Y = 0,
@@ -61,12 +73,12 @@ internal class ConsoleUI
         {
             new MenuBarItem("_Menu", new MenuItem[]
             {
-                new MenuItem("_Quitter", "", () => Application.RequestStop())
+                new MenuItem(_localizationService.GetTextTranslated("menu_quit"), "", () => Application.RequestStop())
             })
         });
         window.Add(menuBar);
 
-        _contentFrame = new FrameView("Menu Principal")
+        _contentFrame = new FrameView(_localizationService.GetTextTranslated("main_menu_title"))
         {
             X = 0,
             Y = 1,
@@ -85,14 +97,14 @@ internal class ConsoleUI
     {
         var items = new List<string>
         {
-            "Créer une tâche",
-            "Modifier une tâche",
-            "Supprimer une tâche",
-            "Exécuter une tâche",
-            "Exécuter toutes les tâches",
-            "Afficher les tâches",
-            "Modifier les paramètres",
-            "Quitter"
+            _localizationService.GetTextTranslated("menu_create_task"),
+            _localizationService.GetTextTranslated("menu_modify_task"),
+            _localizationService.GetTextTranslated("menu_delete_task"),
+            _localizationService.GetTextTranslated("menu_execute_task"),
+            _localizationService.GetTextTranslated("menu_execute_all_tasks"),
+            _localizationService.GetTextTranslated("menu_display_tasks"),
+            _localizationService.GetTextTranslated("menu_change_settings"),
+            _localizationService.GetTextTranslated("menu_quit_main")
         };
 
         var listView = new ListView(items)
@@ -153,7 +165,9 @@ internal class ConsoleUI
     {
         if (_jobs.Count >= MAX_JOBS)
         {
-            MessageBox.ErrorQuery("Erreur", $"Limite de {MAX_JOBS} tâches atteinte.", "OK");
+            MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"),
+                string.Format(_localizationService.GetTextTranslated("error_max_jobs_reached"), MAX_JOBS),
+                _localizationService.GetTextTranslated("ok"));
             return;
         }
 
@@ -191,10 +205,10 @@ internal class ConsoleUI
     /// </summary>
     private void CreateJobStepName(Action<string> onComplete)
     {
-        _contentFrame!.Title = "Créer une tâche - Étape 1/3";
+        _contentFrame!.Title = _localizationService.GetTextTranslated("create_task_step_name");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Nom de la tâche:")
+        var label = new Label(_localizationService.GetTextTranslated("task_name_label"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -208,14 +222,14 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var nextBtn = new Button("Suivant")
+        var nextBtn = new Button(T("next"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -226,7 +240,9 @@ internal class ConsoleUI
             var taskName = nameField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(taskName))
             {
-                MessageBox.ErrorQuery("Erreur", "Le nom de la tâche est requis.", "OK");
+                MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"),
+                    _localizationService.GetTextTranslated("error_task_name_required"),
+                    _localizationService.GetTextTranslated("ok"));
                 return;
             }
             onComplete(taskName);
@@ -255,10 +271,10 @@ internal class ConsoleUI
     /// </summary>
     private void AddSourceForm(List<string> sources, Action<List<string>> onComplete)
     {
-        _contentFrame!.Title = $"Créer une tâche - Étape 2/4 (Source {sources.Count + 1}/{MAX_SOURCES})";
+        _contentFrame!.Title = T("create_task_step_sources", sources.Count + 1, MAX_SOURCES);
         _contentFrame!.RemoveAll();
 
-        var label = new Label($"Source {sources.Count + 1}/{MAX_SOURCES}:")
+        var label = new Label(T("source_label", sources.Count + 1, MAX_SOURCES))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -272,20 +288,20 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var addBtn = new Button("Ajouter")
+        var addBtn = new Button(T("add"))
         {
             X = Pos.Center() - 25,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var skipBtn = new Button("Suivant")
+        var skipBtn = new Button(T("skip"))
         {
             X = Pos.Center() - 5,
             Y = Pos.Center() + 2
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 15,
             Y = Pos.Center() + 2
@@ -296,7 +312,7 @@ internal class ConsoleUI
             var source = sourceField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(source))
             {
-                MessageBox.ErrorQuery("Erreur", "La source ne peut pas être vide.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
                 return;
             }
 
@@ -304,7 +320,7 @@ internal class ConsoleUI
 
             if (sources.Count < MAX_SOURCES)
             {
-                int result = MessageBox.Query(50, 7, "Ajouter une source", "Ajouter une autre source ?", "Oui", "Non");
+                int result = MessageBox.Query(50, 7, T("add"), T("add_another_source"), T("yes"), T("no"));
                 if (result == 0)
                 {
                     AddSourceForm(sources, onComplete);
@@ -316,7 +332,7 @@ internal class ConsoleUI
             }
             else
             {
-                MessageBox.Query(50, 7, "Limite atteinte", $"Limite de {MAX_SOURCES} sources atteinte.", "OK");
+                MessageBox.Query(50, 7, T("source_limit_reached"), T("source_limit_reached", MAX_SOURCES), T("ok"));
                 onComplete(sources);
             }
         };
@@ -325,7 +341,7 @@ internal class ConsoleUI
         {
             if (sources.Count == 0)
             {
-                MessageBox.ErrorQuery("Erreur", "Au moins une source est requise.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_at_least_one_source"), T("ok"));
                 return;
             }
             onComplete(sources);
@@ -344,10 +360,10 @@ internal class ConsoleUI
     /// </summary>
     private void CreateJobStepDestination(Action<string> onComplete)
     {
-        _contentFrame!.Title = "Créer une tâche - Étape 3/4";
+        _contentFrame!.Title = T("create_task_step_destination");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Destination:")
+        var label = new Label(T("destination_label"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -361,20 +377,20 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var infoLabel = new Label("Format: C:\\path\\to\\folder\\")
+        var infoLabel = new Label(T("destination_format"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center()
         };
 
-        var nextBtn = new Button("Suivant")
+        var nextBtn = new Button(T("next"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -385,7 +401,7 @@ internal class ConsoleUI
             var destination = destField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(destination))
             {
-                MessageBox.ErrorQuery("Erreur", "La destination est requise.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_destination_required"), T("ok"));
                 return;
             }
             onComplete(destination);
@@ -404,16 +420,16 @@ internal class ConsoleUI
     /// </summary>
     private void CreateJobStepBackupType(Action<string> onComplete)
     {
-        _contentFrame!.Title = "Créer une tâche - Étape 4/4";
+        _contentFrame!.Title = T("create_task_step_backup_type");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Type de sauvegarde:")
+        var label = new Label(T("backup_type_label"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 4
         };
 
-        var backupTypes = new List<string> { "Complète", "Différentielle" };
+        var backupTypes = new List<string> { T("backup_type_full"), T("backup_type_differential") };
         var listView = new ListView(backupTypes)
         {
             X = Pos.Center() - 15,
@@ -424,14 +440,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var selectBtn = new Button("Sélectionner")
+        var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -439,8 +455,8 @@ internal class ConsoleUI
 
         selectBtn.Clicked += () =>
         {
-            var selectedType = backupTypes[listView.SelectedItem];
-            onComplete(selectedType);
+            var selectedTypeKey = GetBackupTypeKey(listView.SelectedItem);
+            onComplete(selectedTypeKey);
         };
 
         cancelBtn.Clicked += () =>
@@ -456,28 +472,24 @@ internal class ConsoleUI
     /// </summary>
     private void CreateJobStepValidation(string taskName, List<string> sources, string destination, string backupType)
     {
-        _contentFrame!.Title = "Créer une tâche - Validation";
+        _contentFrame!.Title = T("create_task_validation");
         _contentFrame!.RemoveAll();
 
-        var summary = $"Récapitulatif de la création\n\n" +
-                     $"Nom: {taskName}\n" +
-                     $"Sources:\n";
-
+        var sourcesText = "";
         for (int i = 0; i < sources.Count; i++)
         {
-            summary += $"  [{i + 1}/{sources.Count}] {sources[i]}\n";
+            sourcesText += $"  [{i + 1}/{sources.Count}] {sources[i]}\n";
         }
 
-        summary += $"Destination: {destination}\n" +
-                   $"Type: {backupType}";
+        var summary = T("summary_creation", taskName, sourcesText, destination, GetBackupTypeDisplay(backupType));
 
-        var result = MessageBox.Query(60, 18, "Validation", summary, "Valider", "Annuler");
+        var result = MessageBox.Query(60, 18, T("validation"), summary, T("validate"), T("cancel"));
 
         if (result == 0)
         {
             var destinations = new List<string> { destination };
             _jobs.Add((_nextJobId++, taskName, sources, destinations, backupType));
-            MessageBox.Query(50, 7, "Succès", "Tâche créée.", "OK");
+            MessageBox.Query(50, 7, T("success"), T("task_created"), T("ok"));
             // TODO: Appeler BackupManager.CreateJob(taskName, sources, destination, backupType)
             DisplayMainMenu();
         }
@@ -494,7 +506,7 @@ internal class ConsoleUI
     {
         if (_jobs.Count == 0)
         {
-            MessageBox.ErrorQuery("Erreur", "Aucune tâche disponible.", "OK");
+            MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             return;
         }
 
@@ -504,10 +516,10 @@ internal class ConsoleUI
             jobNames.Add(job.name);
         }
 
-        _contentFrame!.Title = "Exécuter une tâche";
+        _contentFrame!.Title = T("execute_task_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Choisissez une tâche à exécuter:")
+        var label = new Label(T("choose_task_to_execute"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
@@ -523,14 +535,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var executeBtn = new Button("Exécuter")
+        var executeBtn = new Button(T("execute"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
@@ -539,7 +551,7 @@ internal class ConsoleUI
         executeBtn.Clicked += () =>
         {
             var selectedJob = _jobs[listView.SelectedItem];
-            MessageBox.Query(50, 7, "Exécution", $"Tâche exécutée: {selectedJob.name}\nDate: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", "OK");
+            MessageBox.Query(50, 7, T("execute"), T("task_executed", selectedJob.name, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), T("ok"));
             // TODO: Appeler BackupManager.ExecuteJob(selectedJob.id)
             DisplayMainMenu();
         };
@@ -559,11 +571,11 @@ internal class ConsoleUI
     {
         if (_jobs.Count == 0)
         {
-            MessageBox.ErrorQuery("Erreur", "Aucune tâche disponible.", "OK");
+            MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             return;
         }
 
-        MessageBox.Query(50, 7, "Exécution", $"Exécution de toutes les tâches...\nDate: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\nToutes les tâches ont été exécutées.", "OK");
+        MessageBox.Query(50, 7, T("execute_all_tasks_title"), T("executing_all_tasks", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), T("ok"));
         // TODO: Appeler BackupManager.ExecuteAll()
         DisplayMainMenu();
     }
@@ -576,7 +588,7 @@ internal class ConsoleUI
     {
         if (_jobs.Count == 0)
         {
-            MessageBox.ErrorQuery("Erreur", "Aucune tâche disponible.", "OK");
+            MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             return;
         }
 
@@ -586,10 +598,10 @@ internal class ConsoleUI
             jobNames.Add(job.name);
         }
 
-        _contentFrame!.Title = "Modifier une tâche";
+        _contentFrame!.Title = T("modify_task_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Choisissez une tâche à modifier:")
+        var label = new Label(T("choose_task_to_modify"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
@@ -605,14 +617,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var modifyBtn = new Button("Modifier")
+        var modifyBtn = new Button(T("modify"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
@@ -638,16 +650,16 @@ internal class ConsoleUI
     /// </summary>
     private void ShowModifyOptions(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier une tâche - Choisir le paramètre";
+        _contentFrame!.Title = T("modify_choose_parameter");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Que souhaitez-vous modifier?")
+        var label = new Label(T("what_to_modify"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        var options = new List<string> { "Nom de la tâche", "Sources", "Destination", "Type de sauvegarde" };
+        var options = new List<string> { T("modify_task_name"), T("modify_sources"), T("modify_destination"), T("modify_backup_type") };
         var listView = new ListView(options)
         {
             X = Pos.Center() - 15,
@@ -658,14 +670,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var selectBtn = new Button("Sélectionner")
+        var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 5
@@ -703,10 +715,10 @@ internal class ConsoleUI
     /// </summary>
     private void ModifyJobName(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier - Nom de la tâche";
+        _contentFrame!.Title = T("modify_name_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Nouveau nom:")
+        var label = new Label(T("new_name"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -720,14 +732,14 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var confirmBtn = new Button("Confirmer")
+        var confirmBtn = new Button(T("confirm"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -738,22 +750,22 @@ internal class ConsoleUI
             var newName = nameField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(newName))
             {
-                MessageBox.ErrorQuery("Erreur", "Le nom ne peut pas être vide.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_field_empty", T("modify_task_name")), T("ok"));
                 return;
             }
 
             if (newName != job.name)
             {
-                ShowModifyConfirmation(jobIndex, job, "Nom", job.name, newName, () =>
+                ShowModifyConfirmation(jobIndex, job, T("modify_task_name"), job.name, newName, () =>
                 {
                     _jobs[jobIndex] = (job.id, newName, job.sources, job.destinations, job.backupType);
-                    MessageBox.Query(50, 7, "Succès", "Tâche modifiée.", "OK");
+                    MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying(jobIndex);
                 });
             }
             else
             {
-                MessageBox.Query(50, 7, "Information", "Aucune modification effectuée.", "OK");
+                MessageBox.Query(50, 7, T("information"), T("error_no_modification"), T("ok"));
                 AskContinueModifying(jobIndex);
             }
         };
@@ -771,16 +783,16 @@ internal class ConsoleUI
     /// </summary>
     private void ModifyJobSources(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier - Sources";
+        _contentFrame!.Title = T("modify_sources_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Que voulez-vous faire?")
+        var label = new Label(T("what_to_do"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        var options = new List<string> { "Modifier une source existante", "Ajouter une nouvelle source" };
+        var options = new List<string> { T("modify_existing_source"), T("add_new_source") };
         var listView = new ListView(options)
         {
             X = Pos.Center() - 20,
@@ -791,14 +803,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var selectBtn = new Button("Sélectionner")
+        var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 3,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 3
@@ -829,10 +841,10 @@ internal class ConsoleUI
     /// </summary>
     private void ShowEditSourcesList(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier - Choisir une source";
+        _contentFrame!.Title = T("modify_sources_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Sélectionnez une source à modifier:")
+        var label = new Label(T("choose_source_to_modify"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
@@ -848,14 +860,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var editBtn = new Button("Modifier")
+        var editBtn = new Button(T("modify"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
@@ -880,10 +892,10 @@ internal class ConsoleUI
     /// </summary>
     private void ShowEditSourceForm(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job, int sourceIndex)
     {
-        _contentFrame!.Title = $"Modifier - Source {sourceIndex + 1}/{job.sources.Count}";
+        _contentFrame!.Title = T("create_task_step_sources", sourceIndex + 1, job.sources.Count);
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Nouvelle valeur:")
+        var label = new Label(T("new_value"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -897,14 +909,14 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var confirmBtn = new Button("Confirmer")
+        var confirmBtn = new Button(T("confirm"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -915,24 +927,24 @@ internal class ConsoleUI
             var newSource = sourceField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(newSource))
             {
-                MessageBox.ErrorQuery("Erreur", "La source ne peut pas être vide.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
                 return;
             }
 
             if (newSource != job.sources[sourceIndex])
             {
-                ShowModifyConfirmation(jobIndex, job, $"Source {sourceIndex + 1}", job.sources[sourceIndex], newSource, () =>
+                ShowModifyConfirmation(jobIndex, job, T("modify_sources", sourceIndex + 1), job.sources[sourceIndex], newSource, () =>
                 {
                     var updatedSources = new List<string>(job.sources);
                     updatedSources[sourceIndex] = newSource;
                     _jobs[jobIndex] = (job.id, job.name, updatedSources, job.destinations, job.backupType);
-                    MessageBox.Query(50, 7, "Succès", "Source modifiée.", "OK");
+                    MessageBox.Query(50, 7, T("success"), T("source_modified"), T("ok"));
                     AskContinueModifying(jobIndex);
                 });
             }
             else
             {
-                MessageBox.Query(50, 7, "Information", "Aucune modification effectuée.", "OK");
+                MessageBox.Query(50, 7, T("information"), T("error_no_modification"), T("ok"));
                 AskContinueModifying(jobIndex);
             }
         };
@@ -955,16 +967,16 @@ internal class ConsoleUI
         {
             if (newSources.Count > job.sources.Count)
             {
-                ShowModifyConfirmation(jobIndex, job, "Sources", string.Join(", ", job.sources), string.Join(", ", newSources), () =>
+                ShowModifyConfirmation(jobIndex, job, T("modify_sources"), string.Join(", ", job.sources), string.Join(", ", newSources), () =>
                 {
                     _jobs[jobIndex] = (job.id, job.name, newSources, job.destinations, job.backupType);
-                    MessageBox.Query(50, 7, "Succès", "Sources modifiées.", "OK");
+                    MessageBox.Query(50, 7, T("success"), T("sources_modified"), T("ok"));
                     AskContinueModifying(jobIndex);
                 });
             }
             else
             {
-                MessageBox.Query(50, 7, "Information", "Aucune nouvelle source ajoutée.", "OK");
+                MessageBox.Query(50, 7, T("information"), T("no_new_source_added"), T("ok"));
                 AskContinueModifying(jobIndex);
             }
         });
@@ -975,10 +987,10 @@ internal class ConsoleUI
     /// </summary>
     private void AddModifySourceForm(List<string> sources, (int id, string name, List<string> sources, List<string> destinations, string backupType) job, int jobIndex, Action onComplete)
     {
-        _contentFrame!.Title = $"Modifier - Source {sources.Count + 1}/{MAX_SOURCES}";
+        _contentFrame!.Title = T("create_task_step_sources", sources.Count + 1, MAX_SOURCES);
         _contentFrame!.RemoveAll();
 
-        var label = new Label($"Source {sources.Count + 1}/{MAX_SOURCES}:")
+        var label = new Label(T("source_label", sources.Count + 1, MAX_SOURCES))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -992,20 +1004,20 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var addBtn = new Button("Ajouter")
+        var addBtn = new Button(T("add"))
         {
             X = Pos.Center() - 25,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var skipBtn = new Button("Valider")
+        var skipBtn = new Button(T("validate"))
         {
             X = Pos.Center() - 5,
             Y = Pos.Center() + 2
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 15,
             Y = Pos.Center() + 2
@@ -1016,7 +1028,7 @@ internal class ConsoleUI
             var source = sourceField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(source))
             {
-                MessageBox.ErrorQuery("Erreur", "La source ne peut pas être vide.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
                 return;
             }
 
@@ -1031,7 +1043,7 @@ internal class ConsoleUI
 
             if (sources.Count < MAX_SOURCES)
             {
-                int result = MessageBox.Query(50, 7, "Ajouter une source", "Ajouter une autre source ?", "Oui", "Non");
+                int result = MessageBox.Query(50, 7, T("add"), T("add_another_source"), T("yes"), T("no"));
                 if (result == 0)
                 {
                     AddModifySourceForm(sources, job, jobIndex, onComplete);
@@ -1043,7 +1055,7 @@ internal class ConsoleUI
             }
             else
             {
-                MessageBox.Query(50, 7, "Limite atteinte", $"Limite de {MAX_SOURCES} sources atteinte.", "OK");
+                MessageBox.Query(50, 7, T("source_limit_reached"), T("source_limit_reached", MAX_SOURCES), T("ok"));
                 onComplete();
             }
         };
@@ -1052,7 +1064,7 @@ internal class ConsoleUI
         {
             if (sources.Count == 0)
             {
-                MessageBox.ErrorQuery("Erreur", "Au moins une source est requise.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_at_least_one_source"), T("ok"));
                 return;
             }
             onComplete();
@@ -1071,10 +1083,10 @@ internal class ConsoleUI
     /// </summary>
     private void ModifyJobDestination(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier - Destination";
+        _contentFrame!.Title = T("modify_destination_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Nouvelle destination:")
+        var label = new Label(T("new_destination"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 3
@@ -1088,7 +1100,7 @@ internal class ConsoleUI
             Height = 1
         };
 
-        var infoLabel = new Label("Format: C:\\path\\to\\folder\\")
+        var infoLabel = new Label(T("destination_format"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center()
@@ -1112,23 +1124,23 @@ internal class ConsoleUI
             var newDestination = destField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(newDestination))
             {
-                MessageBox.ErrorQuery("Erreur", "La destination ne peut pas être vide.", "OK");
+                MessageBox.ErrorQuery(T("error"), T("error_destination_required"), T("ok"));
                 return;
             }
 
             if (newDestination != job.destinations[0])
             {
-                ShowModifyConfirmation(jobIndex, job, "Destination", job.destinations[0], newDestination, () =>
+                ShowModifyConfirmation(jobIndex, job, T("modify_destination"), job.destinations[0], newDestination, () =>
                 {
                     var newDestinations = new List<string> { newDestination };
                     _jobs[jobIndex] = (job.id, job.name, job.sources, newDestinations, job.backupType);
-                    MessageBox.Query(50, 7, "Succès", "Tâche modifiée.", "OK");
+                    MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying(jobIndex);
                 });
             }
             else
             {
-                MessageBox.Query(50, 7, "Information", "Aucune modification effectuée.", "OK");
+                MessageBox.Query(50, 7, T("information"), T("error_no_modification"), T("ok"));
                 AskContinueModifying(jobIndex);
             }
         };
@@ -1146,18 +1158,17 @@ internal class ConsoleUI
     /// </summary>
     private void ModifyJobBackupType(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job)
     {
-        _contentFrame!.Title = "Modifier - Type de sauvegarde";
+        _contentFrame!.Title = T("modify_backup_type_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Nouveau type de sauvegarde:")
+        var label = new Label(T("new_backup_type"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 4
         };
 
-        var backupTypes = new List<string> { "Complète", "Différentielle" };
-        var selectedIndex = backupTypes.IndexOf(job.backupType);
-        if (selectedIndex < 0) selectedIndex = 0;
+        var backupTypes = new List<string> { T("backup_type_full"), T("backup_type_differential") };
+        var selectedIndex = GetBackupTypeIndex(job.backupType);
 
         var listView = new ListView(backupTypes)
         {
@@ -1170,14 +1181,14 @@ internal class ConsoleUI
             SelectedItem = selectedIndex
         };
 
-        var confirmBtn = new Button("Confirmer")
+        var confirmBtn = new Button(T("confirm"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -1185,20 +1196,22 @@ internal class ConsoleUI
 
         confirmBtn.Clicked += () =>
         {
-            var newType = backupTypes[listView.SelectedItem];
+            var newTypeKey = GetBackupTypeKey(listView.SelectedItem);
 
-            if (newType != job.backupType)
+            if (newTypeKey != job.backupType)
             {
-                ShowModifyConfirmation(jobIndex, job, "Type", job.backupType, newType, () =>
-                {
-                    _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newType);
-                    MessageBox.Query(50, 7, "Succès", "Tâche modifiée.", "OK");
-                    AskContinueModifying(jobIndex);
-                });
+                ShowModifyConfirmation(jobIndex, job, T("modify_backup_type"),
+                    GetBackupTypeDisplay(job.backupType),
+                    GetBackupTypeDisplay(newTypeKey), () =>
+                    {
+                        _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newTypeKey);
+                        MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
+                        AskContinueModifying(jobIndex);
+                    });
             }
             else
             {
-                MessageBox.Query(50, 7, "Information", "Aucune modification effectuée.", "OK");
+                MessageBox.Query(50, 7, T("information"), T("error_no_modification"), T("ok"));
                 AskContinueModifying(jobIndex);
             }
         };
@@ -1217,7 +1230,7 @@ internal class ConsoleUI
     private void AskContinueModifying(int jobIndex)
     {
         var updatedJob = _jobs[jobIndex];
-        var result = MessageBox.Query(50, 7, "Continuer", "Voulez-vous modifier un autre champ?", "Oui", "Non");
+        var result = MessageBox.Query(50, 7, T("continue"), T("continue_modifying"), T("yes"), T("no"));
 
         if (result == 0)
         {
@@ -1234,14 +1247,9 @@ internal class ConsoleUI
     /// </summary>
     private void ShowModifyConfirmation(int jobIndex, (int id, string name, List<string> sources, List<string> destinations, string backupType) job, string parameterName, string oldValue, string newValue, Action onConfirm)
     {
-        var summary = $"Confirmation de modification\n\n" +
-                     $"Tâche: {job.name}\n" +
-                     $"Paramètre: {parameterName}\n\n" +
-                     $"Ancienne valeur:\n{oldValue}\n\n" +
-                     $"Nouvelle valeur:\n{newValue}\n\n" +
-                     $"Êtes-vous sûr de vouloir appliquer cette modification?";
+        var summary = T("modification_confirmation", job.name, parameterName, oldValue, newValue);
 
-        var result = MessageBox.Query(70, 20, "Confirmation", summary, "Oui, sauvegarder", "Non, annuler");
+        var result = MessageBox.Query(70, 20, T("confirmation"), summary, T("yes_save"), T("no_cancel"));
 
         if (result == 0)
         {
@@ -1260,7 +1268,7 @@ internal class ConsoleUI
     {
         if (_jobs.Count == 0)
         {
-            MessageBox.ErrorQuery("Erreur", "Aucune tâche disponible.", "OK");
+            MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             return;
         }
 
@@ -1270,10 +1278,10 @@ internal class ConsoleUI
             jobNames.Add(job.name);
         }
 
-        _contentFrame!.Title = "Supprimer une tâche";
+        _contentFrame!.Title = T("delete_task_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Choisissez une tâche à supprimer:")
+        var label = new Label(T("choose_task_to_delete"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
@@ -1289,14 +1297,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var deleteBtn = new Button("Supprimer")
+        var deleteBtn = new Button(T("delete"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
@@ -1308,14 +1316,14 @@ internal class ConsoleUI
             var selectedJob = _jobs[selectedIndex];
 
             // Ask for confirmation before deleting
-            var result = MessageBox.Query(60, 10, "Confirmation de suppression",
-                $"Êtes-vous sûr de vouloir supprimer la tâche:\n\n\"{selectedJob.name}\"?\n\nCette action est irréversible.",
-                "Oui, supprimer", "Non, annuler");
+            var result = MessageBox.Query(60, 10, T("delete_confirmation"),
+                T("delete_confirmation_message", selectedJob.name),
+                T("yes_delete"), T("no_cancel"));
 
             if (result == 0)
             {
                 _jobs.RemoveAt(selectedIndex);
-                MessageBox.Query(50, 7, "Succès", "Tâche supprimée.", "OK");
+                MessageBox.Query(50, 7, T("success"), T("task_deleted"), T("ok"));
                 // TODO: Appeler BackupManager.DeleteJob(selectedJob.id)
                 DisplayMainMenu();
             }
@@ -1340,7 +1348,7 @@ internal class ConsoleUI
     {
         if (_jobs.Count == 0)
         {
-            MessageBox.ErrorQuery("Erreur", "Aucune tâche disponible.", "OK");
+            MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             return;
         }
 
@@ -1350,10 +1358,10 @@ internal class ConsoleUI
             jobNames.Add(job.name);
         }
 
-        _contentFrame!.Title = "Afficher les tâches";
+        _contentFrame!.Title = T("display_tasks_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Choisissez une tâche pour la détailler:")
+        var label = new Label(T("choose_task_for_details"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
@@ -1369,14 +1377,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var detailBtn = new Button("Détails")
+        var detailBtn = new Button(T("details"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() + 5,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Retour")
+        var cancelBtn = new Button(T("back"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
@@ -1385,19 +1393,18 @@ internal class ConsoleUI
         detailBtn.Clicked += () =>
         {
             var selectedJob = _jobs[listView.SelectedItem];
-            var details = $"[{selectedJob.id}] {selectedJob.name}\n\n";
-            details += "Sources:\n";
+            var sourcesText = "";
             for (int i = 0; i < selectedJob.sources.Count; i++)
             {
-                details += $"  [{i + 1}/{selectedJob.sources.Count}] {selectedJob.sources[i]}\n";
+                sourcesText += $"  [{i + 1}/{selectedJob.sources.Count}] {selectedJob.sources[i]}\n";
             }
-            details += $"\nDestination:\n";
+            var destText = "";
             for (int i = 0; i < selectedJob.destinations.Count; i++)
             {
-                details += $"  [{i + 1}] {selectedJob.destinations[i]}\n";
+                destText += $"  [{i + 1}] {selectedJob.destinations[i]}\n";
             }
-            details += $"\nType de sauvegarde: {selectedJob.backupType}";
-            MessageBox.Query(60, 18, "Détails", details, "OK");
+            var details = T("task_details", selectedJob.id, selectedJob.name, sourcesText, destText, GetBackupTypeDisplay(selectedJob.backupType));
+            MessageBox.Query(60, 18, T("details"), details, T("ok"));
             DisplayJobs();
         };
 
@@ -1414,10 +1421,10 @@ internal class ConsoleUI
     /// </summary>
     private void ChangeSettings()
     {
-        _contentFrame!.Title = "Modifier les paramètres";
+        _contentFrame!.Title = T("change_settings_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Choisissez un paramètre:")
+        var label = new Label(T("choose_parameter"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
@@ -1476,16 +1483,17 @@ internal class ConsoleUI
     /// </summary>
     private void ChooseLanguage()
     {
-        _contentFrame!.Title = "Choisir la langue";
+        _contentFrame!.Title = T("choose_language_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Sélectionnez la langue:")
+        var label = new Label(T("select_language"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        var languages = new List<string> { "Français", "English" };
+        var languages = new List<string> { T("language_french"), T("language_english") };
+        var languageCodes = new List<string> { "fr", "en" };
         var listView = new ListView(languages)
         {
             X = Pos.Center() - 10,
@@ -1496,14 +1504,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var selectBtn = new Button("Sélectionner")
+        var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 4,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Retour")
+        var cancelBtn = new Button(T("back"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 4
@@ -1511,9 +1519,11 @@ internal class ConsoleUI
 
         selectBtn.Clicked += () =>
         {
-            // TODO: Appeler LocalizationService.ChangeLanguage(listView.SelectedItem)
-            MessageBox.Query(50, 7, "Succès", "Langue modifiée.", "OK");
-            ChangeSettings();
+            var selectedLanguageCode = languageCodes[listView.SelectedItem];
+            _localizationService.ChangeLanguage(selectedLanguageCode);
+            MessageBox.Query(50, 7, T("success"), T("language_changed"), T("ok"));
+            // Refresh the UI to reflect new language
+            DisplayMainMenu();
         };
 
         cancelBtn.Clicked += () =>
@@ -1529,10 +1539,10 @@ internal class ConsoleUI
     /// </summary>
     private void ChooseLogFormat()
     {
-        _contentFrame!.Title = "Choisir le format de log";
+        _contentFrame!.Title = T("choose_log_format_title");
         _contentFrame!.RemoveAll();
 
-        var label = new Label("Sélectionnez le format:")
+        var label = new Label(T("select_format"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
@@ -1549,14 +1559,14 @@ internal class ConsoleUI
             CanFocus = true
         };
 
-        var selectBtn = new Button("Sélectionner")
+        var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 4,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Retour")
+        var cancelBtn = new Button(T("back"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 4
@@ -1565,7 +1575,7 @@ internal class ConsoleUI
         selectBtn.Clicked += () =>
         {
             // TODO: Appeler ConfigurationManager.UpdateLogFormat(listView.SelectedItem)
-            MessageBox.Query(50, 7, "Succès", "Format de log modifié.", "OK");
+            MessageBox.Query(50, 7, T("success"), T("log_format_changed"), T("ok"));
             ChangeSettings();
         };
 
@@ -1582,8 +1592,46 @@ internal class ConsoleUI
     /// </summary>
     private void DisplayMainMenu()
     {
-        _contentFrame!.Title = "Menu Principal";
+        _contentFrame!.Title = _localizationService.GetTextTranslated("main_menu_title");
         _contentFrame!.RemoveAll();
         _contentFrame!.Add(CreateMenuListView());
+    }
+
+    /// <summary>
+    /// Helper method to get translation with formatting
+    /// </summary>
+    private string T(string key, params object[] args)
+    {
+        var text = _localizationService.GetTextTranslated(key);
+        return args.Length > 0 ? string.Format(text, args) : text;
+    }
+
+    /// <summary>
+    /// Converts backup type key to translated display text
+    /// </summary>
+    private string GetBackupTypeDisplay(string backupTypeKey)
+    {
+        return backupTypeKey.ToLower() switch
+        {
+            "full" => T("backup_type_full"),
+            "differential" => T("backup_type_differential"),
+            _ => backupTypeKey
+        };
+    }
+
+    /// <summary>
+    /// Gets the backup type key from selected index
+    /// </summary>
+    private string GetBackupTypeKey(int selectedIndex)
+    {
+        return selectedIndex == 0 ? "full" : "differential";
+    }
+
+    /// <summary>
+    /// Gets the selected index from backup type key
+    /// </summary>
+    private int GetBackupTypeIndex(string backupTypeKey)
+    {
+        return backupTypeKey.ToLower() == "full" ? 0 : 1;
     }
 }

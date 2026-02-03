@@ -9,29 +9,69 @@ using System.IO;
 
 namespace EasySave.Services
 {
+    /// <summary>
+    /// LocalizationService Class : Translation dynamic service usable in public in the project
+    /// </summary>
     internal class LocalizationService
     {
+        /// <summary>
+        /// Current Language selected
+        /// </summary>
         private string CurrentLanguage { get; set; }
+
+        /// <summary>
+        /// Translation Datas List
+        /// </summary>
         private Dictionary<string, Dictionary<string, string>> TranslationDatas { get; set; }
 
-        // When class is initialized
+        /// <summary>
+        /// When class is initialized
+        /// </summary>
+        /// <param name="currentLanguage"></param>
         public LocalizationService(string currentLanguage)
         {
-            // Retrieve all translation data
             CurrentLanguage = currentLanguage;
 
-            // Get the path of the local JSON storage file (AppData)
-            string jsonLocalPath = "C:/Users/guill/source/repos/Projet-EasySave/Datas/Languages.json";
+            // Load translations directly from embedded resource
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string resourceName = "EasySave.Datas.Languages.json";
 
-            // Retrieve available languages from the JSON file (main sections)
-            string readJsonContent = File.ReadAllText(jsonLocalPath);
-
-            // To treat json datas as objects C#
-            TranslationDatas = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(readJsonContent)
-                               ?? new();
+            using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream != null)
+                {
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        string jsonContent = reader.ReadToEnd();
+                        TranslationDatas = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonContent)
+                                            ?? new();
+                    }
+                }
+                else
+                {
+                    // Fallback: create minimal default translations if resource not found
+                    TranslationDatas = new Dictionary<string, Dictionary<string, string>>
+                    {
+                        ["en"] = new Dictionary<string, string>
+                        {
+                            ["error"] = "Error",
+                            ["ok"] = "OK"
+                        },
+                        ["fr"] = new Dictionary<string, string>
+                        {
+                            ["error"] = "Erreur",
+                            ["ok"] = "OK"
+                        }
+                    };
+                }
+            }
         }
 
-        // To get the text wanted with good translation
+        /// <summary>
+        /// To get the text wanted with good translation
+        /// </summary>
+        /// <param name="stringToTranslate"></param>
+        /// <returns></returns>
         public string GetTextTranslated(string stringToTranslate)
         {
 
@@ -40,23 +80,34 @@ namespace EasySave.Services
             return TranslationDatas[CurrentLanguage][stringToTranslate];
         }
 
-        // To Update the language Setting
-        public void ChangeLanguage(string stringToTranslate)
+        /// <summary>
+        /// To Update the language Setting
+        /// </summary>
+        /// <param name="newLanguage"></param>
+        public void ChangeLanguage(string newLanguage)
         {
-            // Get the path of the local JSON storage file (AppData)            
+            // Check if the requested language exists
+            if (!TranslationDatas.ContainsKey(newLanguage))
+            {
+                throw new ArgumentException($"Language '{newLanguage}' is not available.");
+            }
 
-            // Update the language in the appropriate JSON section
-
-            // Reset the console menu
+            // Update the current language
+            CurrentLanguage = newLanguage;
         }
-
+        /// <summary>
+        /// To get available languagues List in App Settings
+        /// </summary>
+        /// <returns></returns>
         public string[] GetAvailableLanguages()
         {
             // Retrieve available languages as an array
             return TranslationDatas.Keys.ToArray();
         }
 
-        // Class translation to get datas with json formate
+        /// <summary>
+        /// Class translation to get datas with json formate
+        /// </summary>
         private class Translation()
         {
             // Key = language code ("en", "fr", ...)
