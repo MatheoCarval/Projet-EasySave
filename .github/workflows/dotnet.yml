@@ -25,7 +25,7 @@ jobs:
       run: dotnet restore
     
     - name: Check code formatting
-      run: dotnet format --verify-no-changes --verbosity diagnostic
+      run: dotnet format EasySave.slnx --verify-no-changes --verbosity diagnostic
 
   build:
     name: Build
