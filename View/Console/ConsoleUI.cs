@@ -165,8 +165,8 @@ internal class ConsoleUI
     {
         if (_jobs.Count >= MAX_JOBS)
         {
-            MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"), 
-                string.Format(_localizationService.GetTextTranslated("error_max_jobs_reached"), MAX_JOBS), 
+            MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"),
+                string.Format(_localizationService.GetTextTranslated("error_max_jobs_reached"), MAX_JOBS),
                 _localizationService.GetTextTranslated("ok"));
             return;
         }
@@ -240,8 +240,8 @@ internal class ConsoleUI
             var taskName = nameField.Text.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(taskName))
             {
-                MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"), 
-                    _localizationService.GetTextTranslated("error_task_name_required"), 
+                MessageBox.ErrorQuery(_localizationService.GetTextTranslated("error"),
+                    _localizationService.GetTextTranslated("error_task_name_required"),
                     _localizationService.GetTextTranslated("ok"));
                 return;
             }

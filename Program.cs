@@ -20,7 +20,7 @@ internal class Program
     {
         // Initialize LocalizationService with default language (French)
         _localizationService = new LocalizationService("fr");
-        
+
         // TODO: Initialiser BackupManager
         // TODO: Initialiser ConfigurationManager
     }
