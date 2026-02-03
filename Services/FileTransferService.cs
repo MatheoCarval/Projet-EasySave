@@ -169,8 +169,7 @@ namespace EasySave.Services
             }
             catch (UnauthorizedAccessException ex)
             {
-                // Skip directories without access
-                Console.WriteLine($"Access denied: {directory}");
+                throw new FileTransferException($"Access denied to directory: {directory}", ex);                
             }
             
             return files;
@@ -185,8 +184,6 @@ namespace EasySave.Services
             {
                 Directory.CreateDirectory(targetPath);
                 
-                // Log directory creation
-                Console.WriteLine($"Created directory: {targetPath}");
             }
         }
         
