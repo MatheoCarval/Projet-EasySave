@@ -30,41 +30,9 @@ namespace EasySave.Services
         /// <param name="currentLanguage"></param>
         public LocalizationService(string currentLanguage)
         {
-            // Retrieve all translation data
             CurrentLanguage = currentLanguage;
 
-            // Get the path of the local JSON storage file (AppData)
-            string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
-            string jsonLocalPath = Path.Combine(appDataFolder, "localization.json");
-
-            // Initialize the localization file if it doesn't exist
-            InitializeLocalizationFile(appDataFolder, jsonLocalPath);
-
-            // Retrieve available languages from the JSON file (main sections)
-            string readJsonContent = File.ReadAllText(jsonLocalPath);
-
-            // To treat json datas as objects C#
-            TranslationDatas = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(readJsonContent)
-                                ?? new();
-        }
-
-        /// <summary>
-        /// Initialize the localization file from embedded resource or project data
-        /// </summary>
-        /// <param name="appDataFolder"></param>
-        /// <param name="jsonLocalPath"></param>
-        private void InitializeLocalizationFile(string appDataFolder, string jsonLocalPath)
-        {
-            // Check if the localization file already exists
-            if (File.Exists(jsonLocalPath))
-            {
-                return;
-            }
-
-            // Create the EasySave directory in AppData if it doesn't exist
-            Directory.CreateDirectory(appDataFolder);
-
-            // Extract the embedded Languages.json resource
+            // Load translations directly from embedded resource
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string resourceName = "EasySave.Datas.Languages.json";
 
@@ -72,30 +40,29 @@ namespace EasySave.Services
             {
                 if (stream != null)
                 {
-                    using (var fileStream = File.Create(jsonLocalPath))
+                    using (StreamReader reader = new StreamReader(stream))
                     {
-                        stream.CopyTo(fileStream);
+                        string jsonContent = reader.ReadToEnd();
+                        TranslationDatas = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonContent)
+                                            ?? new();
                     }
                 }
                 else
                 {
-                    // Fallback: create a minimal default file if resource doesn't exist
-                    var defaultTranslations = new Dictionary<string, Dictionary<string, string>>
+                    // Fallback: create minimal default translations if resource not found
+                    TranslationDatas = new Dictionary<string, Dictionary<string, string>>
                     {
                         ["en"] = new Dictionary<string, string>
                         {
-                            ["text-1"] = "This is the text 1",
-                            ["text-2"] = "This is the text 2"
+                            ["error"] = "Error",
+                            ["ok"] = "OK"
                         },
                         ["fr"] = new Dictionary<string, string>
                         {
-                            ["text-1"] = "C'est le texte 1",
-                            ["text-2"] = "C'est le texte 2"
+                            ["error"] = "Erreur",
+                            ["ok"] = "OK"
                         }
                     };
-
-                    string jsonContent = JsonSerializer.Serialize(defaultTranslations, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(jsonLocalPath, jsonContent);
                 }
             }
         }

@@ -455,8 +455,8 @@ internal class ConsoleUI
 
         selectBtn.Clicked += () =>
         {
-            var selectedType = backupTypes[listView.SelectedItem];
-            onComplete(selectedType);
+            var selectedTypeKey = GetBackupTypeKey(listView.SelectedItem);
+            onComplete(selectedTypeKey);
         };
 
         cancelBtn.Clicked += () =>
@@ -481,7 +481,7 @@ internal class ConsoleUI
             sourcesText += $"  [{i + 1}/{sources.Count}] {sources[i]}\n";
         }
 
-        var summary = T("summary_creation", taskName, sourcesText, destination, backupType);
+        var summary = T("summary_creation", taskName, sourcesText, destination, GetBackupTypeDisplay(backupType));
 
         var result = MessageBox.Query(60, 18, T("validation"), summary, T("validate"), T("cancel"));
 
@@ -1168,8 +1168,7 @@ internal class ConsoleUI
         };
 
         var backupTypes = new List<string> { T("backup_type_full"), T("backup_type_differential") };
-        var selectedIndex = backupTypes.IndexOf(job.backupType);
-        if (selectedIndex < 0) selectedIndex = 0;
+        var selectedIndex = GetBackupTypeIndex(job.backupType);
 
         var listView = new ListView(backupTypes)
         {
@@ -1182,14 +1181,14 @@ internal class ConsoleUI
             SelectedItem = selectedIndex
         };
 
-        var confirmBtn = new Button("Confirmer")
+        var confirmBtn = new Button(T("confirm"))
         {
             X = Pos.Center() - 10,
             Y = Pos.Center() + 2,
             IsDefault = true
         };
 
-        var cancelBtn = new Button("Annuler")
+        var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 2
@@ -1197,13 +1196,15 @@ internal class ConsoleUI
 
         confirmBtn.Clicked += () =>
         {
-            var newType = backupTypes[listView.SelectedItem];
+            var newTypeKey = GetBackupTypeKey(listView.SelectedItem);
 
-            if (newType != job.backupType)
+            if (newTypeKey != job.backupType)
             {
-                ShowModifyConfirmation(jobIndex, job, T("modify_backup_type"), job.backupType, newType, () =>
+                ShowModifyConfirmation(jobIndex, job, T("modify_backup_type"), 
+                    GetBackupTypeDisplay(job.backupType), 
+                    GetBackupTypeDisplay(newTypeKey), () =>
                 {
-                    _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newType);
+                    _jobs[jobIndex] = (job.id, job.name, job.sources, job.destinations, newTypeKey);
                     MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying(jobIndex);
                 });
@@ -1219,6 +1220,9 @@ internal class ConsoleUI
         {
             DisplayMainMenu();
         };
+
+        _contentFrame!.Add(label, listView, confirmBtn, cancelBtn);
+    }
 
         _contentFrame!.Add(label, listView, confirmBtn, cancelBtn);
     }
@@ -1402,7 +1406,7 @@ internal class ConsoleUI
             {
                 destText += $"  [{i + 1}] {selectedJob.destinations[i]}\n";
             }
-            var details = T("task_details", selectedJob.id, selectedJob.name, sourcesText, destText, selectedJob.backupType);
+            var details = T("task_details", selectedJob.id, selectedJob.name, sourcesText, destText, GetBackupTypeDisplay(selectedJob.backupType));
             MessageBox.Query(60, 18, T("details"), details, T("ok"));
             DisplayJobs();
         };
@@ -1604,4 +1608,32 @@ internal class ConsoleUI
         var text = _localizationService.GetTextTranslated(key);
         return args.Length > 0 ? string.Format(text, args) : text;
     }
-}
+
+    /// <summary>
+    /// Converts backup type key to translated display text
+    /// </summary>
+    private string GetBackupTypeDisplay(string backupTypeKey)
+    {
+        return backupTypeKey.ToLower() switch
+        {
+            "full" => T("backup_type_full"),
+            "differential" => T("backup_type_differential"),
+            _ => backupTypeKey
+        };
+    }
+
+    /// <summary>
+    /// Gets the backup type key from selected index
+    /// </summary>
+    private string GetBackupTypeKey(int selectedIndex)
+    {
+        return selectedIndex == 0 ? "full" : "differential";
+    }
+
+    /// <summary>
+    /// Gets the selected index from backup type key
+    /// </summary>
+    private int GetBackupTypeIndex(string backupTypeKey)
+    {
+        return backupTypeKey.ToLower() == "full" ? 0 : 1;
+    }
