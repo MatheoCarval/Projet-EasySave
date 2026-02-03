@@ -1,4 +1,5 @@
 namespace EasyLog.Loggers;
+
 using EasyLog.Core;
 using EasyLog.Enums;
 using EasyLog.Exceptions;
@@ -10,7 +11,7 @@ public class JsonLogger : LoggerBase
     public JsonLogger(string outputPath) : base(outputPath, LogFormat.JSON)
     {
     }
-    
+
     /// <summary>
     /// Écrit le contenu formaté dans le fichier JSON
     /// LOGIQUE:
@@ -29,7 +30,7 @@ public class JsonLogger : LoggerBase
             throw new LoggerException($"Failed to write to file {path}", ex);
         }
     }
-    
+
     /// <summary>
     /// Lit le contenu du fichier JSON
     /// Retourne string.Empty si le fichier n'existe pas
@@ -40,7 +41,7 @@ public class JsonLogger : LoggerBase
         {
             if (!File.Exists(path))
                 return string.Empty;
-            
+
             return File.ReadAllText(path, Encoding.UTF8);
         }
         catch (IOException ex)
