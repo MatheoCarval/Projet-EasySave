@@ -9,29 +9,102 @@ using System.IO;
 
 namespace EasySave.Services
 {
+    /// <summary>
+    /// LocalizationService Class : Translation dynamic service usable in public in the project
+    /// </summary>
     internal class LocalizationService
     {
+        /// <summary>
+        /// Current Language selected
+        /// </summary>
         private string CurrentLanguage { get; set; }
+
+        /// <summary>
+        /// Translation Datas List
+        /// </summary>
         private Dictionary<string, Dictionary<string, string>> TranslationDatas { get; set; }
 
-        // When class is initialized
+        /// <summary>
+        /// When class is initialized
+        /// </summary>
+        /// <param name="currentLanguage"></param>
         public LocalizationService(string currentLanguage)
         {
             // Retrieve all translation data
             CurrentLanguage = currentLanguage;
 
             // Get the path of the local JSON storage file (AppData)
-            string jsonLocalPath = "C:/Users/guill/source/repos/Projet-EasySave/Datas/Languages.json";
+            string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+            string jsonLocalPath = Path.Combine(appDataFolder, "localization.json");
+
+            // Initialize the localization file if it doesn't exist
+            InitializeLocalizationFile(appDataFolder, jsonLocalPath);
 
             // Retrieve available languages from the JSON file (main sections)
             string readJsonContent = File.ReadAllText(jsonLocalPath);
 
             // To treat json datas as objects C#
             TranslationDatas = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(readJsonContent)
-                               ?? new();
+                                ?? new();
         }
 
-        // To get the text wanted with good translation
+        /// <summary>
+        /// Initialize the localization file from embedded resource or project data
+        /// </summary>
+        /// <param name="appDataFolder"></param>
+        /// <param name="jsonLocalPath"></param>
+        private void InitializeLocalizationFile(string appDataFolder, string jsonLocalPath)
+        {
+            // Check if the localization file already exists
+            if (File.Exists(jsonLocalPath))
+            {
+                return;
+            }
+
+            // Create the EasySave directory in AppData if it doesn't exist
+            Directory.CreateDirectory(appDataFolder);
+
+            // Extract the embedded Languages.json resource
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string resourceName = "EasySave.Datas.Languages.json";
+
+            using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream != null)
+                {
+                    using (var fileStream = File.Create(jsonLocalPath))
+                    {
+                        stream.CopyTo(fileStream);
+                    }
+                }
+                else
+                {
+                    // Fallback: create a minimal default file if resource doesn't exist
+                    var defaultTranslations = new Dictionary<string, Dictionary<string, string>>
+                    {
+                        ["en"] = new Dictionary<string, string>
+                        {
+                            ["text-1"] = "This is the text 1",
+                            ["text-2"] = "This is the text 2"
+                        },
+                        ["fr"] = new Dictionary<string, string>
+                        {
+                            ["text-1"] = "C'est le texte 1",
+                            ["text-2"] = "C'est le texte 2"
+                        }
+                    };
+
+                    string jsonContent = JsonSerializer.Serialize(defaultTranslations, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(jsonLocalPath, jsonContent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// To get the text wanted with good translation
+        /// </summary>
+        /// <param name="stringToTranslate"></param>
+        /// <returns></returns>
         public string GetTextTranslated(string stringToTranslate)
         {
 
@@ -40,23 +113,34 @@ namespace EasySave.Services
             return TranslationDatas[CurrentLanguage][stringToTranslate];
         }
 
-        // To Update the language Setting
-        public void ChangeLanguage(string stringToTranslate)
+        /// <summary>
+        /// To Update the language Setting
+        /// </summary>
+        /// <param name="newLanguage"></param>
+        public void ChangeLanguage(string newLanguage)
         {
-            // Get the path of the local JSON storage file (AppData)            
+            // Check if the requested language exists
+            if (!TranslationDatas.ContainsKey(newLanguage))
+            {
+                throw new ArgumentException($"Language '{newLanguage}' is not available.");
+            }
 
-            // Update the language in the appropriate JSON section
-
-            // Reset the console menu
+            // Update the current language
+            CurrentLanguage = newLanguage;
         }
-
+        /// <summary>
+        /// To get available languagues List in App Settings
+        /// </summary>
+        /// <returns></returns>
         public string[] GetAvailableLanguages()
         {
             // Retrieve available languages as an array
             return TranslationDatas.Keys.ToArray();
         }
 
-        // Class translation to get datas with json formate
+        /// <summary>
+        /// Class translation to get datas with json formate
+        /// </summary>
         private class Translation()
         {
             // Key = language code ("en", "fr", ...)
