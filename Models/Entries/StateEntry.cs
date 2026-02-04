@@ -41,7 +41,7 @@ namespace Models.Entries
                 JobName = job.Name ?? string.Empty,
                 Timestamp = DateTime.UtcNow,
                 State = job.BackupState,
-                TotalFiles = job.TotalFile,
+                TotalFiles = job.TotalFiles,
                 TotalSize = job.TotalSize,
                 Progress = (int)Math.Clamp(Math.Round(job.Progress), 0, 100),
                 RemainingFiles = job.RemainingFiles,

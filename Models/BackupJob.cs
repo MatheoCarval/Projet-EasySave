@@ -12,22 +12,34 @@ namespace Models
         public BackupType BackupType { get; set; }
         public BackupState BackupState { get; set; }
         public DateTime LastExecution { get; set; }
-        public long TotalFile { get; set; }
+        public long TotalFiles { get; set; }
         public long TotalSize { get; set; }
         public long RemainingFiles { get; set; }
         public long RemainingSize { get; set; }
-        public string CurrentSourceFile { get; set; }
-        public string CurrentTargetFile { get; set; }
+        public string? CurrentSourceFile { get; set; }
+        public string? CurrentTargetFile { get; set; }
         public float Progress { get; set; }
 
-        public BackupJob()
+        public BackupJob(string name, string sourcePath, string targetPath, BackupType backupType)
         {
-            SourcePath = new List<string>();
+            Name = name;
+            SourcePath = new List<string> { sourcePath };
+            TargetPath = targetPath;
+            BackupType = backupType;
+            BackupState = BackupState.PENDING;
+            LastExecution = DateTime.MinValue;
+            TotalFiles = 0;
+            TotalSize = 0;
+            RemainingFiles = 0;
+            RemainingSize = 0;
+            CurrentSourceFile = null;
+            CurrentTargetFile = null;
+            Progress = 0;
         }
 
         public void UpdateProgress()
         {
-            if (TotalFile > 0)
+            if (TotalSize > 0)
             {
                 Progress = ((TotalSize - RemainingSize) * 100 / TotalSize);
             }
