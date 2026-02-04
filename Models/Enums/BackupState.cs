@@ -5,6 +5,7 @@ namespace Models.Enums
         ACTIVE,
         PAUSED,
         COMPLETED,
-        ERROR
+        ERROR,
+        PENDING
     }
 }

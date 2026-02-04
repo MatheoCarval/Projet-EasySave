@@ -1,76 +1,97 @@
 using System;
-using System.Text.Json.Serialization;
-using System.Xml.Serialization;
-using FileSystemValidation;
 
-namespace EasySave.Models
+namespace Models.Entries
 {
-    [Serializable]
+    /// <summary>
+    /// Represents a single backup log entry
+    /// Used for daily log file (logs/YYYY-MM-DD.json)
+    /// </summary>
     public class BackupLogEntry
     {
+        // ==================== PROPERTIES ====================
 
-        [JsonPropertyName("timestamp")]
-        [XmlElement("Timestamp")]
+        /// <summary>
+        /// Timestamp of the file transfer
+        /// </summary>
         public DateTime Timestamp { get; set; }
 
-        [JsonPropertyName("backupName")]
-        [XmlElement("BackupName")]
-        public string BackupName { get; set; } = string.Empty;
+        /// <summary>
+        /// Name of the backup job
+        /// </summary>
+        public string BackupName { get; set; }
 
-        [JsonPropertyName("sourcePath")]
-        [XmlElement("SourcePath")]
-        public string SourcePath { get; set; } = string.Empty;
+        /// <summary>
+        /// Complete source path in UNC format
+        /// Example: //server/share/folder/file.txt
+        /// </summary>
+        public string SourcePath { get; set; }
 
-        [JsonPropertyName("targetPath")]
-        [XmlElement("TargetPath")]
-        public string TargetPath { get; set; } = string.Empty;
+        /// <summary>
+        /// Complete target path in UNC format
+        /// Example: //backup/share/folder/file.txt
+        /// </summary>
+        public string TargetPath { get; set; }
 
-        [JsonPropertyName("fileSize")]
-        [XmlElement("FileSize")]
+        /// <summary>
+        /// Size of the file in bytes
+        /// </summary>
         public long FileSize { get; set; }
 
-        [JsonPropertyName("transferTime")]
-        [XmlElement("TransferTime")]
+        /// <summary>
+        /// Transfer time in milliseconds
+        /// Negative value indicates error
+        /// </summary>
         public long TransferTime { get; set; }
 
-        [JsonPropertyName("metadata")]
-        [XmlElement("Metadata")]
-        public Dictionary<string, string>? Metadata { get; set; }
+        // ==================== CONSTRUCTORS ====================
 
+        /// <summary>
+        /// Parameterless constructor (REQUIRED for JSON/XML serialization)
+        /// </summary>
         public BackupLogEntry()
         {
+            BackupName = string.Empty;
+            SourcePath = string.Empty;
+            TargetPath = string.Empty;
             Timestamp = DateTime.Now;
+            FileSize = 0;
+            TransferTime = 0;
         }
 
-        public BackupLogEntry(string backupName, string sourcePath, string targetPath, long fileSize, long transferTime)
+        // ==================== HELPER METHODS ====================
+
+        /// <summary>
+        /// Check if transfer was successful
+        /// </summary>
+        public bool IsSuccess()
         {
-            Timestamp = DateTime.Now;
-            BackupName = backupName ?? throw new ArgumentNullException(nameof(backupName));
-            SourcePath = sourcePath ?? throw new ArgumentNullException(nameof(sourcePath));
-            TargetPath = targetPath ?? throw new ArgumentNullException(nameof(targetPath));
-            FileSize = fileSize >= 0 ? fileSize : throw new ArgumentOutOfRangeException(nameof(fileSize));
-            TransferTime = transferTime >= 0 ? transferTime : throw new ArgumentOutOfRangeException(nameof(transferTime));
+            return TransferTime >= 0;
         }
 
-        public string ToUncPath()
+        /// <summary>
+        /// Get human-readable file size
+        /// </summary>
+        public string GetFormattedSize()
         {
-            return PathValidator.ToUncPath(TargetPath);
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = FileSize;
+            int order = 0;
+
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+
+            return $"{len:0.##} {sizes[order]}";
         }
 
-        public void SetMetadata(string key, string value)
+        /// <summary>
+        /// Override ToString for debugging
+        /// </summary>
+        public override string ToString()
         {
-            Metadata ??= new Dictionary<string, string>();
-            Metadata[key] = value;
-        }
-
-        public string? GetMetadata(string key)
-        {
-            return Metadata?.GetValueOrDefault(key);
-        }
-
-        public bool HasMetadata(string key)
-        {
-            return Metadata?.ContainsKey(key) ?? false;
+            return $"[{Timestamp:yyyy-MM-dd HH:mm:ss}] {BackupName}: {SourcePath} -> {TargetPath} ({GetFormattedSize()}, {TransferTime}ms)";
         }
     }
 }

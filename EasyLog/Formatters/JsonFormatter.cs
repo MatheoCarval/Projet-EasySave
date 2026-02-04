@@ -5,21 +5,15 @@ using EasyLog.Abstractions;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
 
 public class JsonFormatter<T> : ILogFormatter<T> where T : class
 {
     private readonly JsonSerializerOptions _options;
     private readonly bool _paginate;
 
-    /// <summary>
-    /// Constructeur
-    /// </summary>
-    /// <param name="prettyPrint">Si true, ajoute indentation et retours à la ligne</param>
-    /// <param name="paginate">Si true, ajoute des sauts de page entre entrées (pour Notepad)</param>
     public JsonFormatter(bool prettyPrint = true, bool paginate = false)
     {
         _paginate = paginate;
@@ -28,16 +22,10 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
             WriteIndented = prettyPrint,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Pour les caractères spéciaux
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
     }
 
-    /// <summary>
-    /// Convertit un objet T en JSON
-    /// LOGIQUE:
-    /// 1. Sérialise l'objet avec System.Text.Json
-    /// 2. Si paginate=true, ajoute des caractères de saut de page
-    /// </summary>
     public string Format(T data)
     {
         if (data == null)
@@ -45,15 +33,7 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
 
         try
         {
-            string json = JsonSerializer.Serialize(data, _options);
-
-            if (_paginate)
-            {
-                // Ajouter un saut de page (Form Feed) pour Notepad
-                json += "\f\n";
-            }
-
-            return json;
+            return JsonSerializer.Serialize(data, _options);
         }
         catch (JsonException ex)
         {
@@ -61,12 +41,6 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
     }
 
-    /// <summary>
-    /// Convertit une collection en JSON array
-    /// LOGIQUE:
-    /// 1. Sérialise toute la liste en un tableau JSON: [obj1, obj2, ...]
-    /// 2. Si paginate=true, ajoute des retours à la ligne entre chaque élément
-    /// </summary>
     public string FormatCollection(IEnumerable<T> data)
     {
         if (data == null)
@@ -79,51 +53,15 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
             if (!list.Any())
                 return "[]";
 
-            if (_paginate)
-            {
-                // Format avec séparateurs pour lisibilité dans Notepad
-                var sb = new StringBuilder();
-                sb.AppendLine("[");
-
-                for (int i = 0; i < list.Count; i++)
-                {
-                    string itemJson = JsonSerializer.Serialize(list[i], _options);
-
-                    // Indenter chaque ligne de l'objet
-                    var lines = itemJson.Split('\n');
-                    foreach (var line in lines)
-                    {
-                        sb.Append("  ").AppendLine(line);
-                    }
-
-                    if (i < list.Count - 1)
-                        sb.AppendLine(",");
-
-                    // Saut de page entre chaque entrée
-                    if (_paginate && i < list.Count - 1)
-                        sb.AppendLine("\f");
-                }
-
-                sb.AppendLine("]");
-                return sb.ToString();
-            }
-            else
-            {
-                return JsonSerializer.Serialize(list, _options);
-            }
+            // ✅ SIMPLE : Juste sérialiser la liste complète
+            return JsonSerializer.Serialize(list, _options);
         }
         catch (JsonException ex)
         {
-            throw new FormatterException($"Failed to format collection of {typeof(T).Name} to JSON", ex);
+            throw new FormatterException($"Failed to format collection of {typeof(T).Name} to JSON: {ex.Message}", ex);
         }
     }
 
-    /// <summary>
-    /// Parse une chaîne JSON en objet T
-    /// LOGIQUE:
-    /// 1. Nettoie les caractères de pagination si présents
-    /// 2. Désérialise avec System.Text.Json
-    /// </summary>
     public T Parse(string content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -131,25 +69,22 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
 
         try
         {
-            // Nettoyer les caractères de pagination
+            // Nettoyer
             content = content.Replace("\f", "").Trim();
 
             var result = JsonSerializer.Deserialize<T>(content, _options);
-            return result ?? throw new FormatterException($"Failed to deserialize JSON to {typeof(T).Name}: result was null");
+
+            if (result == null)
+                throw new FormatterException($"Deserialization returned null for type {typeof(T).Name}");
+
+            return result;
         }
         catch (JsonException ex)
         {
-            throw new FormatterException($"Failed to parse JSON to {typeof(T).Name}", ex);
+            throw new FormatterException($"Failed to parse JSON to {typeof(T).Name}: {ex.Message}", ex);
         }
     }
 
-    /// <summary>
-    /// Parse un JSON array en collection d'objets T
-    /// LOGIQUE:
-    /// 1. Nettoie les caractères de pagination
-    /// 2. Désérialise en List&lt;T&gt;
-    /// 3. Retourne IEnumerable&lt;T&gt;
-    /// </summary>
     public IEnumerable<T> ParseCollection(string content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -157,7 +92,7 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
 
         try
         {
-            // Nettoyer les caractères de pagination
+            // Nettoyer
             content = content.Replace("\f", "").Trim();
 
             var list = JsonSerializer.Deserialize<List<T>>(content, _options);
@@ -165,7 +100,11 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
         catch (JsonException ex)
         {
-            throw new FormatterException($"Failed to parse JSON collection to {typeof(T).Name}", ex);
+            // ✅ Log l'erreur avec plus de détails
+            throw new FormatterException(
+                $"Failed to parse JSON collection to {typeof(T).Name}. Content length: {content.Length}. Error: {ex.Message}",
+                ex
+            );
         }
     }
 }
