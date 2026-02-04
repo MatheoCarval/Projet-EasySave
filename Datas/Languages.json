@@ -111,7 +111,8 @@
     "language_changed": "Language changed.",
     "choose_log_format_title": "Choose log format",
     "select_format": "Select format:",
-    "log_format_changed": "Log format changed."
+    "log_format_changed": "Log format changed.",
+    "error_executing_task": "Error executing task:"
   },
   "fr": {
     "app_title": "EasySave",
@@ -225,6 +226,7 @@
     "language_changed": "Langue modifiée.",
     "choose_log_format_title": "Choisir le format de log",
     "select_format": "Sélectionnez le format:",
-    "log_format_changed": "Format de log modifié."
+    "log_format_changed": "Format de log modifié.",
+    "error_executing_task": "Erreur lors de l'exécution de la tâche:"
   }
 }
