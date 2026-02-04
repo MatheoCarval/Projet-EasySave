@@ -26,7 +26,7 @@ namespace Models
             SourcePath = new List<string> { sourcePath };
             TargetPath = targetPath;
             BackupType = backupType;
-            BackupState = BackupState.PAUSED;
+            BackupState = BackupState.PENDING;
             LastExecution = DateTime.MinValue;
             TotalFiles = 0;
             TotalSize = 0;
@@ -39,7 +39,7 @@ namespace Models
 
         public void UpdateProgress()
         {
-            if (TotalFiles > 0)
+            if (TotalSize > 0)
             {
                 Progress = ((TotalSize - RemainingSize) * 100 / TotalSize);
             }

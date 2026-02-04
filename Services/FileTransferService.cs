@@ -15,11 +15,8 @@ namespace EasySave.Services
 {
     public class FileTransferService
     {
-        
         private readonly ILogger _logger;  
         private readonly StateWriter _stateWriter;
-        
-        
         public FileTransferService(
             ILogger logger,  
             StateWriter stateWriter)
@@ -83,18 +80,21 @@ namespace EasySave.Services
             );
             _stateWriter.UpdateJobState(job);
             
-            CreateDirectoryStructure(Path.GetDirectoryName(targetFile));
-            
+            string? targetDirectory = Path.GetDirectoryName(targetFile);
+
+            if (!string.IsNullOrEmpty(targetDirectory))
+            {
+                CreateDirectoryStructure(targetDirectory);
+            }            
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             long fileSize = FileSystemHelper.GetFileSize(sourceFile);
-            long transferTime = -1; // Default: error
             
             try
             {
-                transferTime = CopyFile(sourceFile, targetFile);
+                CopyFile(sourceFile, targetFile);
                 stopwatch.Stop();
                 
-                // 4. Log successful transfer
                 var logEntry = new BackupLogEntry
                 {
                     Timestamp = DateTime.Now,
@@ -183,7 +183,6 @@ namespace EasySave.Services
             if (!Directory.Exists(targetPath))
             {
                 Directory.CreateDirectory(targetPath);
-                
             }
         }
         

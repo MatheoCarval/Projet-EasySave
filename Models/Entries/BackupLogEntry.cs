@@ -61,30 +61,6 @@ namespace Models.Entries
         // ==================== HELPER METHODS ====================
         
         /// <summary>
-        /// Convert a local path to UNC format
-        /// Example: C:\folder\file.txt -> //localhost/C$/folder/file.txt
-        /// </summary>
-        public static string ToUncPath(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return string.Empty;
-            
-            // Already UNC
-            if (path.StartsWith("//") || path.StartsWith(@"\\"))
-                return path.Replace('\\', '/');
-            
-            // Local path with drive letter
-            if (path.Length >= 2 && path[1] == ':')
-            {
-                string drive = path.Substring(0, 1);
-                string remainder = path.Substring(2).Replace('\\', '/');
-                return $"//localhost/{drive}${remainder}";
-            }
-            
-            return path;
-        }
-        
-        /// <summary>
         /// Check if transfer was successful
         /// </summary>
         public bool IsSuccess()
