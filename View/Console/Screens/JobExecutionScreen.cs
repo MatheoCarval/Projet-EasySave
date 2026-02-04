@@ -77,7 +77,7 @@ public class JobExecutionScreen
         executeBtn.Clicked += () =>
         {
             var selectedJob = jobs[listView.SelectedItem];
-            ExecuteJob(selectedJob.Name, onComplete);
+            ExecuteJob(selectedJob.Id, onComplete);
         };
 
         cancelBtn.Clicked += onComplete;
@@ -88,9 +88,9 @@ public class JobExecutionScreen
     /// <summary>
     /// Executes a specific backup job
     /// </summary>
-    /// <param name="jobName">Name of the job to execute</param>
+    /// <param name="jobId">ID of the job to execute</param>
     /// <param name="onComplete">Callback when execution completes</param>
-    private void ExecuteJob(string jobName, Action onComplete)
+    private void ExecuteJob(string jobId, Action onComplete)
     {
         try
         {
@@ -99,10 +99,10 @@ public class JobExecutionScreen
             // 1. Call FileTransferService to copy files
             // 2. Write logs to logs/YYYY-MM-DD.json
             // 3. Update state.json in real-time
-            _backupManager.ExecuteJob(jobName);
+            _backupManager.ExecuteJob(jobId);
             
             MessageBox.Query(50, 7, T("success"), 
-                T("task_executed", jobName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), 
+                T("task_executed", jobId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), 
                 T("ok"));
         }
         catch (Exception ex)

@@ -17,6 +17,7 @@ namespace EasySave.Services
     {
         private readonly ILogger _logger;
         private readonly StateWriter _stateWriter;
+        
         public FileTransferService(
             ILogger logger,
             StateWriter stateWriter)
@@ -29,6 +30,7 @@ namespace EasySave.Services
 
         /// <summary>
         /// Transfer an entire directory (recursive) from source to target
+        /// NOTE: TotalFiles/TotalSize should be initialized by BackupManager.ExecuteJob() before calling this
         /// </summary>
         public void TransferDirectory(string sourceDir, string targetDir, BackupJob job)
         {
@@ -40,12 +42,7 @@ namespace EasySave.Services
 
             var allFiles = GetAllFiles(sourceDir);
 
-            job.TotalFiles = allFiles.Count;
-            job.TotalSize = allFiles.Sum(f => FileSystemHelper.GetFileSize(f));
-            job.RemainingFiles = job.TotalFiles;
-            job.RemainingSize = job.TotalSize;
-            _stateWriter.UpdateJobState(job);
-
+            // Don't reinitialize totals - they're already set in BackupManager.ExecuteJob
             foreach (var sourceFile in allFiles)
             {
                 string relativePath = Path.GetRelativePath(sourceDir, sourceFile);
@@ -57,6 +54,7 @@ namespace EasySave.Services
                 }
                 else
                 {
+                    // File skipped (differential backup)
                     job.RemainingFiles--;
                     job.RemainingSize -= FileSystemHelper.GetFileSize(sourceFile);
                 }
@@ -64,13 +62,11 @@ namespace EasySave.Services
                 job.UpdateProgress();
                 _stateWriter.UpdateJobState(job);
             }
-
-            job.MarkAsCompleted();
-            _stateWriter.UpdateJobState(job);
         }
 
         /// <summary>
         /// Transfer a single file from source to target
+        /// NOTE: TotalFiles/TotalSize should be initialized by BackupManager.ExecuteJob() before calling this
         /// </summary>
         public void TransferFile(string sourceFile, string targetFile, BackupJob job)
         {
@@ -109,6 +105,8 @@ namespace EasySave.Services
 
                 job.RemainingFiles--;
                 job.RemainingSize -= fileSize;
+                job.UpdateProgress();
+                _stateWriter.UpdateJobState(job);
             }
             catch (Exception ex)
             {

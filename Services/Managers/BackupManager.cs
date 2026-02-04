@@ -46,14 +46,14 @@ public class BackupManager
         return job;
     }
 
-    public bool DeleteJob(string jobId)
+    public bool DeleteJob(string jobName)
     {
-        if (string.IsNullOrWhiteSpace(jobId))
+        if (string.IsNullOrWhiteSpace(jobName))
         {
-            throw new ArgumentException("Job identifier cannot be null or empty.", nameof(jobId));
+            throw new ArgumentException("Job name cannot be null or empty.", nameof(jobName));
         }
 
-        var job = _jobs.FirstOrDefault(j => j.Id == jobId);
+        var job = _jobs.FirstOrDefault(j => j.Name == jobName);
         if (job != null)
         {
             _jobs.Remove(job);
@@ -98,13 +98,46 @@ public class BackupManager
 
         try
         {
+            // Calculate totals BEFORE starting transfers
+            job.TotalFiles = 0;
+            job.TotalSize = 0;
+            
+            foreach (var sourcePath in job.SourcePath)
+            {
+                if (PathValidator.IsDirectory(sourcePath))
+                {
+                    var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
+                    job.TotalFiles += files.Length;
+                    job.TotalSize += files.Sum(f => new FileInfo(f).Length);
+                }
+                else if (File.Exists(sourcePath))
+                {
+                    job.TotalFiles += 1;
+                    job.TotalSize += new FileInfo(sourcePath).Length;
+                }
+            }
+            
+            job.RemainingFiles = job.TotalFiles;
+            job.RemainingSize = job.TotalSize;
+            _stateWriter.UpdateJobState(job);
+            
+            // Now transfer all sources
             foreach (var sourcePath in job.SourcePath)
             {
                 if (PathValidator.IsDirectory(sourcePath))
                 {
                     _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
                 }
+                else if (File.Exists(sourcePath))
+                {
+                    string fileName = Path.GetFileName(sourcePath);
+                    string targetFile = Path.Combine(job.TargetPath, fileName);
+                    _fileTransferService.TransferFile(sourcePath, targetFile, job);
+                }
             }
+            
+            job.MarkAsCompleted();
+            _stateWriter.UpdateJobState(job);
         }
         catch (Exception ex)
         {
@@ -153,14 +186,17 @@ public class BackupManager
             string path = "./Datas/jobs.json";
             var jobs = LoadJobsFromFile(path);
 
-            // Remove existing job with same ID
-            var existing = jobs.FirstOrDefault(j => j.Id == job.Id);
-            if (existing != null)
+            // Find and remove existing job (search by ID)
+            var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
+            if (existingIndex >= 0)
             {
-                jobs.Remove(existing);
+                jobs[existingIndex] = job; // Replace instead of remove/add
+            }
+            else
+            {
+                jobs.Add(job); // New job
             }
 
-            jobs.Add(job);
             SaveJobsToFile(path, jobs);
             
             // Reload jobs to sync _jobs list
