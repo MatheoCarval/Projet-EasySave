@@ -1,6 +1,6 @@
 using Models;
-using EasySave.Services.FileTransfer;
-using EasySave.Services.StateWriters;
+using EasySave.Services;
+using Services.Writers;
 
 namespace EasySave.Services.Managers;
 
@@ -105,13 +105,16 @@ public class BackupManager
 
         try
         {
-            _fileTransferService.Transfer(job);
-            _stateWriter.WriteState(job);
+            // Transfer all source paths
+            foreach (var sourcePath in job.SourcePath)
+            {
+                _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
+            }
         }
         catch (Exception ex)
         {
             job.MarkAsError();
-            _stateWriter.WriteState(job);
+            _stateWriter.UpdateJobState(job);
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
     }
