@@ -9,6 +9,8 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <Version>0.1.0</Version>
     <AssemblyVersion>0.1.0</AssemblyVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

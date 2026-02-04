@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terminal.Gui;
 using EasySave.Services;
+using Services.Managers;
 
 namespace EasySave.View.Console;
 
@@ -32,16 +33,18 @@ internal class ConsoleUI
     /// <summary>Localization service for translations</summary>
     private readonly LocalizationService _localizationService;
 
-    // TODO: _backupManager: BackupManager
+    private readonly BackupManager _backupManager;
     // TODO: _configManager: ConfigurationManager
 
     /// <summary>
     /// Initializes ConsoleUI with a localization service
     /// </summary>
     /// <param name="localizationService">The localization service instance</param>
-    public ConsoleUI(LocalizationService localizationService)
+    /// <param name="backupManager">The backup manager instance</param>
+    public ConsoleUI(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService;
+        _backupManager = backupManager;
     }
 
     /// <summary>

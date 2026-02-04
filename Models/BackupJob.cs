@@ -20,10 +20,10 @@ namespace Models
         public string? CurrentTargetFile { get; set; }
         public float Progress { get; set; }
 
-        public BackupJob(string name, string sourcePath, string targetPath, BackupType backupType)
+        public BackupJob(string name, List<string> sourcePath, string targetPath, BackupType backupType)
         {
             Name = name;
-            SourcePath = new List<string> { sourcePath };
+            SourcePath = sourcePath;
             TargetPath = targetPath;
             BackupType = backupType;
             BackupState = BackupState.PENDING;
