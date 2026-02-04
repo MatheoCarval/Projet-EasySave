@@ -34,6 +34,9 @@ internal class Program
 
         StateWriter stateWriter = new StateWriter("state.json");
 
+
+        // TODO: Initialiser ConfigurationManager
+        
         _backupManager = new BackupManager(
             new FileTransferService(
                 new JsonLogger("logs.json"),
@@ -41,7 +44,7 @@ internal class Program
             ),
             stateWriter
         );
-        // TODO: Initialiser ConfigurationManager
+
     }
 
     /// Traite les arguments de ligne de commande et lance l'interface
