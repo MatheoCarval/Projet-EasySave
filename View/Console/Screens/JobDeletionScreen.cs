@@ -81,7 +81,7 @@ public class JobDeletionScreen
             // Confirmation dialog
             if (ConfirmDeletion(selectedJob.Name))
             {
-                DeleteJob(selectedJob.Name, onComplete);
+                DeleteJob(selectedJob.Id, onComplete);
             }
         };
 

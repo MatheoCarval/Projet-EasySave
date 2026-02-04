@@ -108,7 +108,7 @@ public class JobCreationWizard
             }
             
             // Check if name already exists
-            var existingJob = _backupManager.GetJob(name);
+            var existingJob = _backupManager.GetJobByName(name);
             if (existingJob != null)
             {
                 MessageBox.ErrorQuery(T("error"), 

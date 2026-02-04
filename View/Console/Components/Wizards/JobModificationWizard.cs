@@ -210,7 +210,7 @@ public class JobModificationWizard
             if (newName != _currentJob!.Name)
             {
                 // Check if new name already exists
-                var existingJob = _backupManager.GetJob(newName);
+                var existingJob = _backupManager.GetJobByName(newName);
                 if (existingJob != null)
                 {
                     MessageBox.ErrorQuery(T("error"), 
@@ -227,6 +227,7 @@ public class JobModificationWizard
                 if (confirmed)
                 {
                     _currentJob!.Name = newName;
+                    _backupManager.SaveJob(_currentJob!);
                     MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying();
                 }
@@ -404,6 +405,7 @@ public class JobModificationWizard
                 if (confirmed)
                 {
                     _currentJob!.SourcePath[index] = newSource;
+                    _backupManager.SaveJob(_currentJob!);
                     MessageBox.Query(50, 7, T("success"), T("source_modified"), T("ok"));
                     AskContinueModifying();
                 }
@@ -462,6 +464,7 @@ public class JobModificationWizard
             }
 
             _currentJob!.SourcePath.Add(newSource);
+            _backupManager.SaveJob(_currentJob!);
             MessageBox.Query(50, 7, T("success"), T("source_added"), T("ok"));
             AskContinueModifying();
         };
@@ -530,6 +533,7 @@ public class JobModificationWizard
                 if (confirmed)
                 {
                     _currentJob!.TargetPath = newDestination;
+                    _backupManager.SaveJob(_currentJob!);
                     MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying();
                 }
@@ -605,6 +609,7 @@ public class JobModificationWizard
                 if (confirmed)
                 {
                     _currentJob!.BackupType = newType;
+                    _backupManager.SaveJob(_currentJob!);
                     MessageBox.Query(50, 7, T("success"), T("task_modified"), T("ok"));
                     AskContinueModifying();
                 }
