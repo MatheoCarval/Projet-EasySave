@@ -3,6 +3,9 @@
     using EasySave.Services;
     using Services.Writers;
     using Utilities;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
 
     namespace Services.Managers;
 
@@ -12,6 +15,8 @@
         private readonly int _maxJobs;
         private readonly FileTransferService _fileTransferService;
         private readonly StateWriter _stateWriter;
+
+        // private readonly ConfigurationManger _configurationManager;
 
         /// <summary>
         /// Initializes a new instance of the backup manager
@@ -27,10 +32,12 @@
             ArgumentNullException.ThrowIfNull(stateWriter);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxJobs);
 
-            _jobs = new List<BackupJob>(maxJobs);
+            _jobs = new List<BackupJob>();
             _maxJobs = maxJobs;
             _fileTransferService = fileTransferService;
             _stateWriter = stateWriter;
+
+            LoadJobs();
         }
 
         /// <summary>
@@ -56,6 +63,7 @@
             }
 
             var job = new BackupJob(name, sourcesPaths, targetPath, backupType);
+            SaveJob(job);
             _jobs.Add(job);
             return job;
         }
@@ -170,5 +178,147 @@
             {
                 ExecuteJob(job.Name);
             }
+        }
+
+        /// <summary>
+        /// Saves a backup job to the jobs.json file
+        /// </summary>
+        /// <param name="job">The backup job to save</param>
+        /// <exception cref="ArgumentNullException">Thrown if job is null</exception>
+        /// <exception cref="IOException">Thrown if there's an error writing to the file</exception>
+        // TODO: Use configManager to get the path instead of hardcoding
+        public void SaveJob(BackupJob job)
+        {
+            ArgumentNullException.ThrowIfNull(job);
+
+            try
+            {
+                string jobsFilePath = "./Datas/jobs.json";
+                var jobs = LoadJobsFromFile(jobsFilePath);
+
+                // Remove job if it already exists (update case)
+                jobs.RemoveAll(j => j.Name == job.Name);
+                jobs.Add(job);
+
+                SaveJobsToFile(jobsFilePath, jobs);
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Error saving job '{job.Name}' to jobs.json.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Loads all backup jobs from the jobs.json file
+        /// </summary>
+        /// <exception cref="IOException">Thrown if there's an error reading the file</exception>
+        // TODO: Use configManager to get the path instead of hardcoding
+        public void LoadJobs()
+        {
+            try
+            {
+                string jobsFilePath = "./Datas/jobs.json";
+                var jobs = LoadJobsFromFile(jobsFilePath);
+                _jobs.Clear();
+                _jobs.AddRange(jobs);
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("Error loading jobs from jobs.json.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Modifies an existing backup job
+        /// </summary>
+        /// <param name="jobId">Name of the job to modify</param>
+        /// <param name="newName">New name for the job (optional)</param>
+        /// <param name="newSourcePaths">New source paths (optional)</param>
+        /// <param name="newTargetPath">New target path (optional)</param>
+        /// <param name="newBackupType">New backup type (optional)</param>
+        /// <exception cref="ArgumentException">Thrown if job does not exist or if new name already exists</exception>
+        // TODO: Use configManager to get the path instead of hardcoding
+        public void ModifyJob(string jobId, string? newName = null, List<string>? newSourcePaths = null, string? newTargetPath = null, BackupType? newBackupType = null)
+        {
+            var job = GetJob(jobId);
+            if (job == null)
+            {
+                throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
+            }
+
+            // Check if new name already exists (if provided and different from current)
+            if (!string.IsNullOrWhiteSpace(newName) && newName != jobId && _jobs.Any(j => j.Name == newName))
+            {
+                throw new ArgumentException($"A job with name '{newName}' already exists.", nameof(newName));
+            }
+
+            try
+            {
+                // Update job properties
+                if (!string.IsNullOrWhiteSpace(newName))
+                    job.Name = newName;
+                if (newSourcePaths != null)
+                    job.SourcePath = newSourcePaths;
+                if (!string.IsNullOrWhiteSpace(newTargetPath))
+                    job.TargetPath = newTargetPath;
+                if (newBackupType.HasValue)
+                    job.BackupType = newBackupType.Value;
+
+                SaveJob(job);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error modifying job '{jobId}'.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Loads jobs from a JSON file
+        /// </summary>
+        /// <param name="filePath">Path to the jobs.json file</param>
+        /// <returns>List of backup jobs</returns>
+        private List<BackupJob> LoadJobsFromFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return new List<BackupJob>();
+            }
+
+            string jsonContent = File.ReadAllText(filePath);
+            if (string.IsNullOrWhiteSpace(jsonContent))
+            {
+                return new List<BackupJob>();
+            }
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+
+            return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+        }
+
+        /// <summary>
+        /// Saves jobs to a JSON file
+        /// </summary>
+        /// <param name="filePath">Path to the jobs.json file</param>
+        /// <param name="jobs">List of backup jobs to save</param>
+        private void SaveJobsToFile(string filePath, List<BackupJob> jobs)
+        {
+            string directory = Path.GetDirectoryName(filePath) ?? "./Datas";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+
+            string jsonContent = JsonSerializer.Serialize(jobs, options);
+            File.WriteAllText(filePath, jsonContent);
         }
     }

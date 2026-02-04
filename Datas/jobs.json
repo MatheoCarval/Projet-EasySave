@@ -1,0 +1,20 @@
+[
+  {
+    "Name": "test",
+    "SourcePath": [
+      "qsddsqdqs",
+      "ezerzqsdqs"
+    ],
+    "TargetPath": "qddqsdqsdq",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  }
+]
