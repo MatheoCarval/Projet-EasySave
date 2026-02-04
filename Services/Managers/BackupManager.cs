@@ -120,6 +120,7 @@ public class BackupManager
             job.RemainingFiles = job.TotalFiles;
             job.RemainingSize = job.TotalSize;
             _stateWriter.UpdateJobState(job);
+
             
             // Now transfer all sources
             foreach (var sourcePath in job.SourcePath)
