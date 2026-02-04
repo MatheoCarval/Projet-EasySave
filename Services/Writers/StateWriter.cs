@@ -17,14 +17,14 @@ namespace Services.Writers
     public class StateWriter
     {
         // ==================== FIELDS ====================
-        
+
         private readonly string _stateFilePath;
         private readonly Dictionary<string, StateEntry> _stateEntries;
         private readonly object _lock = new object();
         private readonly JsonSerializerOptions _jsonOptions;
-        
+
         // ==================== CONSTRUCTOR ====================
-        
+
         /// <summary>
         /// Initialize StateWriter with specified file path
         /// </summary>
@@ -33,10 +33,10 @@ namespace Services.Writers
         {
             if (string.IsNullOrWhiteSpace(stateFilePath))
                 throw new ArgumentNullException(nameof(stateFilePath));
-            
+
             _stateFilePath = stateFilePath;
             _stateEntries = new Dictionary<string, StateEntry>();
-            
+
             // Configure JSON options for pretty printing
             _jsonOptions = new JsonSerializerOptions
             {
@@ -44,16 +44,16 @@ namespace Services.Writers
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
             };
-            
+
             // Ensure directory exists
             EnsureDirectoryExists();
-            
+
             // Load existing state if file exists
             LoadExistingState();
         }
-        
+
         // ==================== PUBLIC METHODS ====================
-        
+
         /// <summary>
         /// Update the state of a backup job in real-time
         /// </summary>
@@ -62,18 +62,18 @@ namespace Services.Writers
         {
             if (job == null)
                 throw new ArgumentNullException(nameof(job));
-            
+
             lock (_lock) // Thread-safe
             {
                 // Create or update state entry
                 var stateEntry = StateEntry.FromBackupJob(job);
                 _stateEntries[job.Name] = stateEntry;
-                
+
                 // Write to disk immediately (real-time requirement)
                 WriteStateToDisk();
             }
         }
-        
+
         /// <summary>
         /// Remove a job from the state file
         /// </summary>
@@ -83,20 +83,20 @@ namespace Services.Writers
         {
             if (string.IsNullOrWhiteSpace(jobName))
                 throw new ArgumentNullException(nameof(jobName));
-            
+
             lock (_lock)
             {
                 bool removed = _stateEntries.Remove(jobName);
-                
+
                 if (removed)
                 {
                     WriteStateToDisk();
                 }
-                
+
                 return removed;
             }
         }
-        
+
         /// <summary>
         /// Get current state of all jobs (snapshot)
         /// </summary>
@@ -109,7 +109,7 @@ namespace Services.Writers
                 return new Dictionary<string, StateEntry>(_stateEntries);
             }
         }
-        
+
         /// <summary>
         /// Get state of a specific job
         /// </summary>
@@ -119,13 +119,13 @@ namespace Services.Writers
         {
             if (string.IsNullOrWhiteSpace(jobName))
                 throw new ArgumentNullException(nameof(jobName));
-            
+
             lock (_lock)
             {
                 return _stateEntries.TryGetValue(jobName, out var state) ? state : null;
             }
         }
-        
+
         /// <summary>
         /// Clear all job states
         /// </summary>
@@ -137,9 +137,9 @@ namespace Services.Writers
                 WriteStateToDisk();
             }
         }
-        
+
         // ==================== PRIVATE METHODS ====================
-        
+
         /// <summary>
         /// Write current state to disk (real-time)
         /// </summary>
@@ -149,7 +149,7 @@ namespace Services.Writers
             {
                 // Serialize to JSON with pretty printing
                 string jsonContent = JsonSerializer.Serialize(_stateEntries, _jsonOptions);
-                
+
                 // Write to file (overwrite)
                 File.WriteAllText(_stateFilePath, jsonContent);
             }
@@ -163,7 +163,7 @@ namespace Services.Writers
                 Console.Error.WriteLine($"[StateWriter] Access denied to state file: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Load existing state from disk if file exists
         /// </summary>
@@ -175,22 +175,22 @@ namespace Services.Writers
                 WriteStateToDisk(); // Create empty state file
                 return;
             }
-            
+
             try
             {
                 string jsonContent = File.ReadAllText(_stateFilePath);
-                
+
                 if (string.IsNullOrWhiteSpace(jsonContent))
                 {
                     // Empty file, start fresh
                     return;
                 }
-                
+
                 var loadedStates = JsonSerializer.Deserialize<Dictionary<string, StateEntry>>(
-                    jsonContent, 
+                    jsonContent,
                     _jsonOptions
                 );
-                
+
                 if (loadedStates != null)
                 {
                     foreach (var kvp in loadedStates)
@@ -209,14 +209,14 @@ namespace Services.Writers
                 Console.Error.WriteLine($"[StateWriter] Failed to read state file: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Ensure the directory for state file exists
         /// </summary>
         private void EnsureDirectoryExists()
         {
             string? directory = Path.GetDirectoryName(_stateFilePath);
-            
+
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

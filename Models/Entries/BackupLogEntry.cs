@@ -9,42 +9,42 @@ namespace Models.Entries
     public class BackupLogEntry
     {
         // ==================== PROPERTIES ====================
-        
+
         /// <summary>
         /// Timestamp of the file transfer
         /// </summary>
         public DateTime Timestamp { get; set; }
-        
+
         /// <summary>
         /// Name of the backup job
         /// </summary>
         public string BackupName { get; set; }
-        
+
         /// <summary>
         /// Complete source path in UNC format
         /// Example: //server/share/folder/file.txt
         /// </summary>
         public string SourcePath { get; set; }
-        
+
         /// <summary>
         /// Complete target path in UNC format
         /// Example: //backup/share/folder/file.txt
         /// </summary>
         public string TargetPath { get; set; }
-        
+
         /// <summary>
         /// Size of the file in bytes
         /// </summary>
         public long FileSize { get; set; }
-        
+
         /// <summary>
         /// Transfer time in milliseconds
         /// Negative value indicates error
         /// </summary>
         public long TransferTime { get; set; }
-        
+
         // ==================== CONSTRUCTORS ====================
-        
+
         /// <summary>
         /// Parameterless constructor (REQUIRED for JSON/XML serialization)
         /// </summary>
@@ -57,9 +57,9 @@ namespace Models.Entries
             FileSize = 0;
             TransferTime = 0;
         }
-        
+
         // ==================== HELPER METHODS ====================
-        
+
         /// <summary>
         /// Check if transfer was successful
         /// </summary>
@@ -67,7 +67,7 @@ namespace Models.Entries
         {
             return TransferTime >= 0;
         }
-        
+
         /// <summary>
         /// Get human-readable file size
         /// </summary>
@@ -76,16 +76,16 @@ namespace Models.Entries
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             double len = FileSize;
             int order = 0;
-            
+
             while (len >= 1024 && order < sizes.Length - 1)
             {
                 order++;
                 len = len / 1024;
             }
-            
+
             return $"{len:0.##} {sizes[order]}";
         }
-        
+
         /// <summary>
         /// Override ToString for debugging
         /// </summary>
