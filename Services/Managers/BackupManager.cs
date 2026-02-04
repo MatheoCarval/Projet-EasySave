@@ -1,4 +1,5 @@
 using Models;
+using Models.Enums;
 using EasySave.Services;
 using Services.Writers;
 
@@ -34,16 +35,26 @@ public class BackupManager
     /// <summary>
     /// Creates a new backup job
     /// </summary>
+    /// <param name="name">Name of the backup job</param>
+    /// <param name="sourcePath">Source directory path</param>
+    /// <param name="targetPath">Target directory path</param>
+    /// <param name="backupType">Type of backup (COMPLETE or DIFFERENTIAL)</param>
     /// <returns>The created backup job</returns>
     /// <exception cref="InvalidOperationException">Thrown when the maximum number of jobs is reached</exception>
-    public BackupJob CreateJob()
+    /// <exception cref="ArgumentException">Thrown if name already exists</exception>
+    public BackupJob CreateJob(string name, string sourcePath, string targetPath, BackupType backupType)
     {
         if (_jobs.Count >= _maxJobs)
         {
             throw new InvalidOperationException($"Maximum number of jobs ({_maxJobs}) has been reached.");
         }
 
-        var job = new BackupJob();
+        if (_jobs.Any(j => j.Name == name))
+        {
+            throw new ArgumentException($"A job with name '{name}' already exists.", nameof(name));
+        }
+
+        var job = new BackupJob(name, sourcePath, targetPath, backupType);
         _jobs.Add(job);
         return job;
     }
