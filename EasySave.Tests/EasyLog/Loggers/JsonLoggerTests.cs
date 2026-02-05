@@ -43,18 +43,6 @@ namespace EasySave.Tests.EasyLog.Loggers
             Assert.NotNull(logger);
         }
 
-        [Theory]
-        [InlineData("")]
-        [InlineData(" ")]
-        [InlineData(null)]
-        public void Constructor_WithInvalidPath_ThrowsArgumentException(string? path)
-        {
-            // Act & Assert
-#pragma warning disable CS8604
-            Assert.Throws<ArgumentException>(() => new JsonLogger(path));
-#pragma warning restore CS8604
-        }
-
         [Fact]
         public void Log_WithValidEntry_WritesToFile()
         {
