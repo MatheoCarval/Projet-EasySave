@@ -101,6 +101,7 @@ public class BackupManager
             // Calculate totals BEFORE starting transfers
             job.TotalFiles = 0;
             job.TotalSize = 0;
+            job.BackupState = BackupState.ACTIVE;
 
             foreach (var sourcePath in job.SourcePath)
             {
