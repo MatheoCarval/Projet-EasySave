@@ -93,7 +93,7 @@ jobs:
     
     - name: Restore dependencies
       run: dotnet restore src/EasySave.slnx
-    
+
     - name: Run tests
       run: dotnet test src/EasySave.Tests/EasySave.Tests.csproj --configuration Release --verbosity normal
 
