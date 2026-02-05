@@ -9,25 +9,53 @@ using Models.Enums;
 namespace EasySave.View.Console.Components.Wizards;
 
 /// <summary>
-/// Job creation wizard - 5-step process to create a new backup job
-/// Steps: 1) Name, 2) Sources, 3) Destination, 4) Backup Type, 5) Validation
+/// Wizard component that guides users through a five-step process to create new backup jobs: collecting job name, source paths, destination path, backup type selection, and final validation before creation.
 /// </summary>
 public class JobCreationWizard
 {
+    /// <summary>
+    /// Maximum number of source paths that can be added to a single backup job.
+    /// </summary>
     private const int MAX_SOURCES = 5;
 
+    /// <summary>
+    /// Service for retrieving localized text strings based on the current language setting.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for creating and managing backup jobs during wizard completion.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// Reference to the frame view where wizard steps are displayed.
+    /// </summary>
     private FrameView? _frame;
+    /// <summary>
+    /// Callback action invoked when wizard completes or is cancelled by the user.
+    /// </summary>
     private Action? _onComplete;
 
-    // Wizard state
+    /// <summary>
+    /// Accumulated job name provided by the user during wizard execution.
+    /// </summary>
     private string _jobName = "";
+    /// <summary>
+    /// Accumulated list of source paths provided by the user during wizard execution.
+    /// </summary>
     private List<string> _sources = new();
+    /// <summary>
+    /// Accumulated destination path provided by the user during wizard execution.
+    /// </summary>
     private string _destination = "";
+    /// <summary>
+    /// Accumulated backup type selection (COMPLETE or DIFFERENTIAL) during wizard execution.
+    /// </summary>
     private BackupType _backupType;
 
+    /// <summary>
+    /// Initializes a new instance of the JobCreationWizard with required services for localization and backup management.
+    /// </summary>
     public JobCreationWizard(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -35,16 +63,13 @@ public class JobCreationWizard
     }
 
     /// <summary>
-    /// Starts the job creation wizard
+    /// Initiates the job creation wizard, validating that the maximum job limit has not been reached, resetting wizard state, and starting the first step to collect job name information.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when wizard completes or is cancelled</param>
     public void Start(FrameView frame, Action onComplete)
     {
         _frame = frame;
         _onComplete = onComplete;
 
-        // Check if max jobs limit reached
         var jobs = _backupManager.GetAllJobs();
         if (jobs.Count >= 5)
         {
@@ -55,17 +80,16 @@ public class JobCreationWizard
             return;
         }
 
-        // Reset wizard state
         _jobName = "";
         _sources = new List<string>();
         _destination = "";
 
-        // Start wizard
         ShowStepName();
     }
 
-    // ==================== STEP 1: JOB NAME ====================
-
+    /// <summary>
+    /// Displays the first wizard step where the user enters a backup job name, validates input, and checks for name uniqueness before proceeding.
+    /// </summary>
     private void ShowStepName()
     {
         _frame!.Title = T("create_task_step_name");
@@ -126,13 +150,17 @@ public class JobCreationWizard
         _frame!.Add(label, nameField, nextBtn, cancelBtn);
     }
 
-    // ==================== STEP 2: SOURCES ====================
-
+    /// <summary>
+    /// Initiates the second wizard step for collecting source directory paths from the user.
+    /// </summary>
     private void ShowStepSources()
     {
         AddSourceForm();
     }
 
+    /// <summary>
+    /// Displays the form for adding a single source path, allowing users to add multiple sources up to the maximum limit with option to skip or cancel at each step.
+    /// </summary>
     private void AddSourceForm()
     {
         _frame!.Title = T("create_task_step_sources", _sources.Count + 1, MAX_SOURCES);
@@ -221,8 +249,9 @@ public class JobCreationWizard
         _frame!.Add(label, sourceField, addBtn, skipBtn, cancelBtn);
     }
 
-    // ==================== STEP 3: DESTINATION ====================
-
+    /// <summary>
+    /// Displays the third wizard step where the user enters the destination path for backup files, with format guidance and validation before proceeding.
+    /// </summary>
     private void ShowStepDestination()
     {
         _frame!.Title = T("create_task_step_destination");
@@ -279,8 +308,9 @@ public class JobCreationWizard
         _frame!.Add(label, destField, infoLabel, nextBtn, cancelBtn);
     }
 
-    // ==================== STEP 4: BACKUP TYPE ====================
-
+    /// <summary>
+    /// Displays the fourth wizard step where the user selects between COMPLETE and DIFFERENTIAL backup types before proceeding to validation.
+    /// </summary>
     private void ShowStepBackupType()
     {
         _frame!.Title = T("create_task_step_backup_type");
@@ -332,8 +362,9 @@ public class JobCreationWizard
         _frame!.Add(label, listView, selectBtn, cancelBtn);
     }
 
-    // ==================== STEP 5: VALIDATION ====================
-
+    /// <summary>
+    /// Displays the fifth and final wizard step showing a summary of all collected job information for user review and confirmation before creation.
+    /// </summary>
     private void ShowStepValidation()
     {
         var sourcesText = string.Join("\n", _sources.Select((s, i) => $"  [{i + 1}/{_sources.Count}] {s}"));
@@ -356,8 +387,9 @@ public class JobCreationWizard
         }
     }
 
-    // ==================== JOB CREATION ====================
-
+    /// <summary>
+    /// Creates the backup job using the accumulated wizard data via the BackupManager, displaying success or error messages accordingly.
+    /// </summary>
     private void CreateJob()
     {
         try
@@ -377,6 +409,9 @@ public class JobCreationWizard
         }
     }
 
+    /// <summary>
+    /// Retrieves the localized text for the specified key, optionally formatting it with the provided arguments.
+    /// </summary>
     private string T(string key, params object[] args)
     {
         var text = _localizationService.GetTextTranslated(key);

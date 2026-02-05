@@ -5,20 +5,23 @@ using System.Runtime.InteropServices;
 
 namespace EasySave.Tests.Helpers
 {
+    /// <summary>
+    /// Unit tests for the PathValidator utility class, verifying path existence checks, directory detection, and UNC path conversion functionality.
+    /// </summary>
     public class PathValidatorTests
     {
+        /// <summary>
+        /// Verifies that PathExists returns true for a path that exists in the file system.
+        /// </summary>
         [Fact]
         public void PathExists_WithExistingPath_ReturnsTrue()
         {
-            // Arrange
             var tempFile = Path.GetTempFileName();
 
             try
             {
-                // Act
                 var result = PathValidator.PathExists(tempFile);
 
-                // Assert
                 Assert.True(result);
             }
             finally
@@ -27,46 +30,46 @@ namespace EasySave.Tests.Helpers
             }
         }
 
+        /// <summary>
+        /// Verifies that PathExists returns false for a path that does not exist in the file system.
+        /// </summary>
         [Fact]
         public void PathExists_WithNonExistingPath_ReturnsFalse()
         {
-            // Arrange
             var nonExistentPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
                 ? @"C:\NonExistentPath\File.txt" 
                 : "/nonexistent/path/file.txt";
 
-            // Act
             var result = PathValidator.PathExists(nonExistentPath);
 
-            // Assert
             Assert.False(result);
         }
 
+        /// <summary>
+        /// Verifies that IsDirectory returns true when given a path that points to a directory.
+        /// </summary>
         [Fact]
         public void IsDirectory_WithDirectoryPath_ReturnsTrue()
         {
-            // Arrange
             var tempDir = Path.GetTempPath();
 
-            // Act
             var result = PathValidator.IsDirectory(tempDir);
 
-            // Assert
             Assert.True(result);
         }
 
+        /// <summary>
+        /// Verifies that IsDirectory returns false when given a path that points to a file rather than a directory.
+        /// </summary>
         [Fact]
         public void IsDirectory_WithFilePath_ReturnsFalse()
         {
-            // Arrange
             var tempFile = Path.GetTempFileName();
 
             try
             {
-                // Act
                 var result = PathValidator.IsDirectory(tempFile);
 
-                // Assert
                 Assert.False(result);
             }
             finally
@@ -75,38 +78,38 @@ namespace EasySave.Tests.Helpers
             }
         }
 
+        /// <summary>
+        /// Verifies that ToUncPath correctly converts standard Windows drive paths to their equivalent UNC long path format.
+        /// </summary>
         [SkippableFact]
         public void ToUncPath_ConvertsPathCorrectly()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "UNC paths are Windows-specific");
 
-            // Arrange
             var input1 = @"C:\Test\Path";
             var expected1 = @"\\localhost\C$\Test\Path";
             var input2 = @"D:\Folder\File.txt";
             var expected2 = @"\\localhost\D$\Folder\File.txt";
 
-            // Act
             var result1 = PathValidator.ToUncPath(input1);
             var result2 = PathValidator.ToUncPath(input2);
 
-            // Assert
             Assert.Equal(expected1, result1);
             Assert.Equal(expected2, result2);
         }
 
+        /// <summary>
+        /// Verifies that ToUncPath returns an unchanged path when the input is already in UNC long path format.
+        /// </summary>
         [SkippableFact]
         public void ToUncPath_WithAlreadyUncPath_ReturnsUnchanged()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "UNC paths are Windows-specific");
 
-            // Arrange
             var uncPath = @"\\?\C:\Test\Path";
 
-            // Act
             var result = PathValidator.ToUncPath(uncPath);
 
-            // Assert
             Assert.Equal(uncPath, result);
         }
     }

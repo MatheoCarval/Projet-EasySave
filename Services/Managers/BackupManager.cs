@@ -8,15 +8,33 @@ using System.Runtime.ConstrainedExecution;
 
 namespace Services.Managers;
 
+/// <summary>
+/// Manages backup job creation, execution, modification, and persistence with support for concurrent job handling and state tracking.
+/// </summary>
 public class BackupManager
 {
+    /// <summary>
+    /// In-memory collection of all configured backup jobs.
+    /// </summary>
     private readonly List<BackupJob> _jobs;
+    /// <summary>
+    /// Maximum number of backup jobs allowed in the system.
+    /// </summary>
     private readonly int _maxJobs;
+    /// <summary>
+    /// Service responsible for transferring files and directories between source and target locations.
+    /// </summary>
     private readonly FileTransferService _fileTransferService;
+    /// <summary>
+    /// Service responsible for persisting and managing backup job state information.
+    /// </summary>
     private readonly StateWriter _stateWriter;
 
     const string JobsFilePath = "./Datas/jobs.json";
 
+    /// <summary>
+    /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
+    /// </summary>
     public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
@@ -31,6 +49,9 @@ public class BackupManager
         LoadJobs();
     }
 
+    /// <summary>
+    /// Creates a new backup job with the specified configuration, validates against job count limits and name uniqueness, and persists it to storage.
+    /// </summary>
     public BackupJob CreateJob(string name, List<string> sourcesPaths, string targetPath, BackupType backupType)
     {
         if (_jobs.Count >= _maxJobs)
@@ -49,6 +70,9 @@ public class BackupManager
         return job;
     }
 
+    /// <summary>
+    /// Deletes a backup job by ID from memory and removes its associated data from persistent storage.
+    /// </summary>
     public bool DeleteJob(string jobId)
     {
         if (string.IsNullOrWhiteSpace(jobId))
@@ -66,6 +90,9 @@ public class BackupManager
         return false;
     }
 
+    /// <summary>
+    /// Retrieves a backup job by its unique identifier, or null if not found.
+    /// </summary>
     public BackupJob? GetJob(string jobId)
     {
         if (string.IsNullOrWhiteSpace(jobId))
@@ -76,6 +103,9 @@ public class BackupManager
         return _jobs.FirstOrDefault(j => j.Id == jobId);
     }
 
+    /// <summary>
+    /// Retrieves a backup job by its name, or null if not found.
+    /// </summary>
     public BackupJob? GetJobByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -86,6 +116,9 @@ public class BackupManager
         return _jobs.FirstOrDefault(j => j.Name == name);
     }
 
+    /// <summary>
+    /// Returns a copy of all configured backup jobs to prevent external modifications to the internal collection.
+    /// </summary>
     public List<BackupJob> GetAllJobs()
     {
         return new List<BackupJob>(_jobs);
@@ -131,8 +164,6 @@ public class BackupManager
             job.RemainingSize = job.TotalSize;
             _stateWriter.UpdateJobState(job);
 
-
-            // Now transfer all sources
             foreach (var sourcePath in job.SourcePath)
             {
                 if (PathValidator.IsDirectory(sourcePath))
@@ -158,6 +189,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Executes all backup jobs sequentially, collecting exceptions and throwing an AggregateException if any jobs fail.
+    /// </summary>
     public void ExecuteAll()
     {
         var exceptions = new List<Exception>();
@@ -180,6 +214,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Executes all backup jobs sequentially without exception aggregation, stopping on first failure.
+    /// </summary>
     public void ExecuteSequence()
     {
         foreach (var job in _jobs)
@@ -188,6 +225,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Persists a single backup job to storage, either updating an existing job or creating a new entry, then reloads all jobs.
+    /// </summary>
     public void SaveJob(BackupJob job)
     {
         ArgumentNullException.ThrowIfNull(job);
@@ -219,6 +259,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Loads all backup jobs from persistent storage and populates the internal job collection.
+    /// </summary>
     public void LoadJobs()
     {
         try
@@ -234,6 +277,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Modifies an existing backup job with new configuration values and persists the changes to storage.
+    /// </summary>
     public void ModifyJob(string jobId, string? newName = null, List<string>? newSourcePaths = null, string? newTargetPath = null, BackupType? newBackupType = null)
     {
         var job = GetJob(jobId);
@@ -261,6 +307,9 @@ public class BackupManager
         }
     }
 
+    /// <summary>
+    /// Loads and deserializes backup jobs from a JSON file, returning an empty list if the file does not exist or is empty.
+    /// </summary>
     private List<BackupJob> LoadJobsFromFile(string filePath)
     {
         if (!File.Exists(filePath))
@@ -283,6 +332,9 @@ public class BackupManager
         return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
     }
 
+    /// <summary>
+    /// Serializes backup jobs to JSON format and writes them to a file using atomic write operations (temp file then move) for data integrity.
+    /// </summary>
     private void SaveJobsToFile(string filePath, List<BackupJob> jobs)
     {
         string directory = Path.GetDirectoryName(filePath) ?? "./Datas";
@@ -307,6 +359,9 @@ public class BackupManager
         File.Move(tempFile, filePath);
     }
 
+    /// <summary>
+    /// Removes a backup job from persistent storage by its ID and saves the updated job collection.
+    /// </summary>
     private void DeleteJobFile(string jobId)
     {
         try

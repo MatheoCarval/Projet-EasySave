@@ -11,15 +11,27 @@ using Models.Enums;
 namespace EasySave;
 
 /// <summary>
-/// Point d'entrée principal de l'application EasySave
-/// Supporte l'exécution par index: EasySave.exe 1-3 ou EasySave.exe 1;3
+/// Main entry point for the EasySave application, responsible for initializing services and managing backup operations.
+/// Supports execution by index: EasySave.exe 1-3 or EasySave.exe 1;3
 /// </summary>
 public class Program
 {
+    /// <summary>
+    /// Provides localization support for the application.
+    /// </summary>
     private static LocalizationService? _localizationService;
+    /// <summary>
+    /// Manages backup job execution and coordination.
+    /// </summary>
     private static BackupManager? _backupManager;
+    /// <summary>
+    /// Manages application configuration including language and log format settings.
+    /// </summary>
     private static ConfigurationManager? _configurationManager;
 
+    /// <summary>
+    /// Entry point of the application that initializes services and processes command line arguments.
+    /// </summary>
     private static void Main(string[] args)
     {
         try
@@ -47,6 +59,9 @@ public class Program
         }
     }
 
+    /// <summary>
+    /// Initializes all application services including localization, state writer, and backup manager with file transfer service and logging.
+    /// </summary>
     private static void InitializeServices()
     {
         _configurationManager = ConfigurationManager.GetInstance();
@@ -55,6 +70,21 @@ public class Program
         string appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "EasySave"
+        _localizationService = new LocalizationService("fr");
+
+
+
+        StateWriter stateWriter = new StateWriter("state.json");
+
+
+
+        _backupManager = new BackupManager(
+            new FileTransferService(
+                new JsonLogger("logs.json"),
+                stateWriter
+            ),
+            stateWriter
+>>>>>>> 1e18864 (docs: Add comprehensive XML documentation annotations to C# codebase (#17))
         );
 
         Directory.CreateDirectory(appData);
@@ -88,6 +118,9 @@ public class Program
         _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: config.GetMaxBackupJobs());
     }
 
+    /// <summary>
+    /// Parses a job selection pattern and returns indices from a pattern like "1-3" or "1;3".
+    /// </summary>
     private static List<int> ParseJobIndices(string arg)
     {
         var indices = new List<int>();
@@ -232,12 +265,18 @@ public class Program
         }
     }
 
+    /// <summary>
+    /// Launches the interactive console UI for managing backups.
+    /// </summary>
     private static void LaunchUI()
     {
         var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         consoleUI.Start();
     }
 
+    /// <summary>
+    /// Normalizes language code to lowercase and removes regional suffix.
+    /// </summary>
     private static string NormalizeLanguage(string language)
     {
         if (string.IsNullOrWhiteSpace(language))
@@ -262,12 +301,18 @@ public class Program
         }
     }
 
+    /// <summary>
+    /// Retrieves and formats the localized text for the specified translation key with optional format arguments.
+    /// </summary>
     private static string T(string key, params object[] args)
     {
         var text = _localizationService!.GetTextTranslated(key);
         return args.Length > 0 ? string.Format(text, args) : text;
     }
 
+    /// <summary>
+    /// Returns the localized display name for a backup type.
+    /// </summary>
     private static string GetBackupTypeDisplay(BackupType type)
     {
         return type switch
@@ -276,5 +321,39 @@ public class Program
             BackupType.DIFFERENTIAL => T("backup_type_differential"),
             _ => type.ToString()
         };
+    }
+}
+            if (parts.Length == 2 && int.TryParse(parts[0], out int start) && int.TryParse(parts[1], out int end))
+            {
+                start = Math.Max(1, start);
+                end = Math.Min(totalJobs, end);
+
+                if (start <= end)
+                {
+                    for (int i = start; i <= end; i++)
+                    {
+                        indices.Add(i - 1);
+                    }
+                }
+            }
+        }
+        else if (pattern.Contains(";"))
+        {
+            var parts = pattern.Split(';');
+            foreach (var part in parts)
+            {
+                if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
+                {
+                    indices.Add(jobNum - 1);
+                }
+            }
+        }
+        else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
+        {
+            indices.Add(jobNum - 1);
+        }
+
+        return indices.ToList();
+>>>>>>> 1e18864 (docs: Add comprehensive XML documentation annotations to C# codebase (#17))
     }
 }

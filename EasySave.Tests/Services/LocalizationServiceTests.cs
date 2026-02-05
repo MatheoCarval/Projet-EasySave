@@ -4,95 +4,101 @@ using System;
 
 namespace EasySave.Tests.Services
 {
+    /// <summary>
+    /// Unit tests for the LocalizationService class, verifying language initialization, translation retrieval, language switching, and error handling.
+    /// </summary>
     public class LocalizationServiceTests
     {
+        /// <summary>
+        /// Verifies that LocalizationService constructor with a valid language initializes successfully.
+        /// </summary>
         [Fact]
         public void Constructor_WithValidLanguage_InitializesCorrectly()
         {
-            // Arrange & Act
             var service = new LocalizationService("fr");
 
-            // Assert
             Assert.NotNull(service);
         }
 
+        /// <summary>
+        /// Verifies that GetTextTranslated returns non-empty translated text for a valid translation key.
+        /// </summary>
         [Fact]
         public void GetTextTranslated_WithValidKey_ReturnsTranslatedText()
         {
-            // Arrange
             var service = new LocalizationService("fr");
 
-            // Act
             var result = service.GetTextTranslated("error");
 
-            // Assert
             Assert.NotNull(result);
             Assert.NotEmpty(result);
         }
 
+        /// <summary>
+        /// Verifies that ChangeLanguage successfully switches from French to English and returns correct English translation.
+        /// </summary>
         [Fact]
         public void ChangeLanguage_ToEnglish_UpdatesLanguage()
         {
-            // Arrange
             var service = new LocalizationService("fr");
 
-            // Act
             service.ChangeLanguage("en");
             var result = service.GetTextTranslated("error");
 
-            // Assert
             Assert.Equal("Error", result);
         }
 
+        /// <summary>
+        /// Verifies that ChangeLanguage successfully switches from English to French and returns correct French translation.
+        /// </summary>
         [Fact]
         public void ChangeLanguage_ToFrench_UpdatesLanguage()
         {
-            // Arrange
             var service = new LocalizationService("en");
 
-            // Act
             service.ChangeLanguage("fr");
             var result = service.GetTextTranslated("error");
 
-            // Assert
             Assert.Equal("Erreur", result);
         }
 
+        /// <summary>
+        /// Verifies that ChangeLanguage throws ArgumentException when given an unsupported language code.
+        /// </summary>
         [Fact]
         public void ChangeLanguage_WithInvalidLanguage_ThrowsArgumentException()
         {
-            // Arrange
             var service = new LocalizationService("fr");
 
-            // Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => service.ChangeLanguage("es"));
             Assert.Contains("Language 'es' is not available", exception.Message);
         }
 
+        /// <summary>
+        /// Verifies that GetAvailableLanguages returns a collection containing both English and French language codes.
+        /// </summary>
         [Fact]
         public void GetAvailableLanguages_ReturnsAllLanguages()
         {
-            // Arrange
             var service = new LocalizationService("fr");
 
-            // Act
             var languages = service.GetAvailableLanguages();
 
-            // Assert
             Assert.NotNull(languages);
             Assert.Contains("fr", languages);
             Assert.Contains("en", languages);
         }
 
+        /// <summary>
+        /// Verifies that LocalizationService constructor initializes correctly with different language codes and retrieves translations successfully.
+        /// </summary>
         [Theory]
         [InlineData("fr")]
         [InlineData("en")]
         public void Constructor_WithDifferentLanguages_WorksCorrectly(string language)
         {
-            // Arrange & Act
             var service = new LocalizationService(language);
 
-            // Assert
             Assert.NotNull(service);
             var text = service.GetTextTranslated("ok");
             Assert.NotNull(text);

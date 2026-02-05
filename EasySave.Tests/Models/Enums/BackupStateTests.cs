@@ -3,58 +3,69 @@ using Xunit;
 
 namespace EasySave.Tests.Models.Enums
 {
+    /// <summary>
+    /// Unit tests for the BackupState enumeration, verifying all enum values are defined and accessible.
+    /// </summary>
     public class BackupStateTests
     {
+        /// <summary>
+        /// Verifies that the BackupState enumeration contains the ACTIVE value.
+        /// </summary>
         [Fact]
         public void BackupState_HasActiveValue()
         {
-            // Arrange & Act
             var state = BackupState.ACTIVE;
 
-            // Assert
             Assert.Equal(BackupState.ACTIVE, state);
         }
 
+        /// <summary>
+        /// Verifies that the BackupState enumeration contains the PAUSED value.
+        /// </summary>
         [Fact]
         public void BackupState_HasPausedValue()
         {
-            // Arrange & Act
             var state = BackupState.PAUSED;
 
-            // Assert
             Assert.Equal(BackupState.PAUSED, state);
         }
 
+        /// <summary>
+        /// Verifies that the BackupState enumeration contains the COMPLETED value.
+        /// </summary>
         [Fact]
         public void BackupState_HasCompletedValue()
         {
-            // Arrange & Act
             var state = BackupState.COMPLETED;
 
-            // Assert
             Assert.Equal(BackupState.COMPLETED, state);
         }
 
+        /// <summary>
+        /// Verifies that the BackupState enumeration contains the ERROR value.
+        /// </summary>
         [Fact]
         public void BackupState_HasErrorValue()
         {
-            // Arrange & Act
             var state = BackupState.ERROR;
 
-            // Assert
             Assert.Equal(BackupState.ERROR, state);
         }
 
+        /// <summary>
+        /// Verifies that the BackupState enumeration contains the PENDING value.
+        /// </summary>
         [Fact]
         public void BackupState_HasPendingValue()
         {
-            // Arrange & Act
             var state = BackupState.PENDING;
 
-            // Assert
             Assert.Equal(BackupState.PENDING, state);
         }
 
+        /// <summary>
+        /// Verifies that all BackupState enumeration values are valid and defined.
+        /// </summary>
         [Theory]
         [InlineData(BackupState.ACTIVE)]
         [InlineData(BackupState.PAUSED)]
@@ -63,7 +74,6 @@ namespace EasySave.Tests.Models.Enums
         [InlineData(BackupState.PENDING)]
         public void BackupState_AllValuesAreValid(BackupState state)
         {
-            // Assert
             Assert.True(System.Enum.IsDefined(typeof(BackupState), state));
         }
     }

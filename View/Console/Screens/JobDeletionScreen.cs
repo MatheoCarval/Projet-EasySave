@@ -7,13 +7,22 @@ using Services.Managers;
 namespace EasySave.View.Console.Screens;
 
 /// <summary>
-/// Job deletion screen - Handles deletion of backup jobs with confirmation
+/// Screen for selecting and deleting backup jobs with user confirmation to prevent accidental data loss.
 /// </summary>
 public class JobDeletionScreen
 {
+    /// <summary>
+    /// Service for retrieving localized text strings based on the current language setting.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for accessing and managing backup job data and operations.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// Initializes a new instance of the JobDeletionScreen with required services for localization and backup management.
+    /// </summary>
     public JobDeletionScreen(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -21,10 +30,8 @@ public class JobDeletionScreen
     }
 
     /// <summary>
-    /// Shows job selection screen for deletion
+    /// Displays a list of all available backup jobs in a frame, allowing the user to select a job for deletion with confirmation. If no jobs are available, shows an error message and invokes the completion callback.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when operation completes</param>
     public void Show(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
@@ -39,14 +46,12 @@ public class JobDeletionScreen
         frame.Title = T("delete_task_title");
         frame.RemoveAll();
 
-        // Label
         var label = new Label(T("choose_task_to_delete"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
         };
 
-        // Job list
         var jobNames = jobs.Select(j => j.Name).ToList();
         var listView = new ListView(jobNames)
         {
@@ -58,7 +63,6 @@ public class JobDeletionScreen
             CanFocus = true
         };
 
-        // Delete button
         var deleteBtn = new Button(T("delete"))
         {
             X = Pos.Center() - 15,
@@ -66,19 +70,16 @@ public class JobDeletionScreen
             IsDefault = true
         };
 
-        // Cancel button
         var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
         };
 
-        // Button actions
         deleteBtn.Clicked += () =>
         {
             var selectedJob = jobs[listView.SelectedItem];
 
-            // Confirmation dialog
             if (ConfirmDeletion(selectedJob.Name))
             {
                 DeleteJob(selectedJob.Id, onComplete);
@@ -91,10 +92,8 @@ public class JobDeletionScreen
     }
 
     /// <summary>
-    /// Shows confirmation dialog before deletion
+    /// Displays a confirmation dialog prompting the user to confirm the deletion of the specified backup job, returning true if confirmed.
     /// </summary>
-    /// <param name="jobName">Name of job to delete</param>
-    /// <returns>True if user confirms deletion</returns>
     private bool ConfirmDeletion(string jobName)
     {
         var result = MessageBox.Query(60, 10, T("delete_confirmation"),
@@ -105,10 +104,8 @@ public class JobDeletionScreen
     }
 
     /// <summary>
-    /// Deletes a backup job
+    /// Deletes the backup job with the specified name, displaying a success message upon completion or an error message if deletion fails, and invoking the completion callback in all cases.
     /// </summary>
-    /// <param name="jobName">Name of job to delete</param>
-    /// <param name="onComplete">Callback when deletion completes</param>
     private void DeleteJob(string jobName, Action onComplete)
     {
         try
@@ -126,6 +123,9 @@ public class JobDeletionScreen
         }
     }
 
+    /// <summary>
+    /// Retrieves the localized text for the specified key, optionally formatting it with the provided arguments.
+    /// </summary>
     private string T(string key, params object[] args)
     {
         var text = _localizationService.GetTextTranslated(key);

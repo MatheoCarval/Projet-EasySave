@@ -3,34 +3,41 @@ using Xunit;
 
 namespace EasySave.Tests.Models.Enums
 {
+    /// <summary>
+    /// Unit tests for the BackupType enumeration, verifying all enum values are defined and accessible.
+    /// </summary>
     public class BackupTypeTests
     {
+        /// <summary>
+        /// Verifies that the BackupType enumeration contains the COMPLETE value.
+        /// </summary>
         [Fact]
         public void BackupType_HasCompleteValue()
         {
-            // Arrange & Act
             var type = BackupType.COMPLETE;
 
-            // Assert
             Assert.Equal(BackupType.COMPLETE, type);
         }
 
+        /// <summary>
+        /// Verifies that the BackupType enumeration contains the DIFFERENTIAL value.
+        /// </summary>
         [Fact]
         public void BackupType_HasDifferentialValue()
         {
-            // Arrange & Act
             var type = BackupType.DIFFERENTIAL;
 
-            // Assert
             Assert.Equal(BackupType.DIFFERENTIAL, type);
         }
 
+        /// <summary>
+        /// Verifies that all BackupType enumeration values are valid and defined.
+        /// </summary>
         [Theory]
         [InlineData(BackupType.COMPLETE)]
         [InlineData(BackupType.DIFFERENTIAL)]
         public void BackupType_AllValuesAreValid(BackupType type)
         {
-            // Assert
             Assert.True(System.Enum.IsDefined(typeof(BackupType), type));
         }
     }

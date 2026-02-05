@@ -8,15 +8,30 @@ using EasyLog.Enums;
 namespace EasySave.View.Console.Screens;
 
 /// <summary>
-/// Settings screen - Handles application settings (language, log format)
+/// Manages the application settings screen, allowing users to configure language and log format preferences.
 /// </summary>
 public class SettingsScreen
 {
+    /// <summary>
+    /// Service for retrieving and changing localized text strings.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for application configuration including language and log format settings.
+    /// </summary>
     private readonly ConfigurationManager _configurationManager;
+    /// <summary>
+    /// The frame view for rendering settings screens and components.
+    /// </summary>
     private FrameView? _frame;
+    /// <summary>
+    /// Callback invoked when the user completes settings configuration and returns to the main menu.
+    /// </summary>
     private Action? _onComplete;
 
+    /// <summary>
+    /// Initializes a new instance of SettingsScreen with the specified localization service.
+    /// </summary>
     public SettingsScreen(LocalizationService localizationService)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -24,10 +39,8 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Shows settings menu
+    /// Displays the settings screen in the specified frame with a completion callback handler.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when user returns to menu</param>
     public void Show(FrameView frame, Action onComplete)
     {
         _frame = frame;
@@ -37,21 +50,19 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Displays the settings menu with options
+    /// Displays the main settings menu with options for language and log format configuration.
     /// </summary>
     private void ShowSettingsMenu()
     {
         _frame!.Title = T("change_settings_title");
         _frame!.RemoveAll();
 
-        // Label
         var label = new Label(T("choose_parameter"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        // Options list
         var options = new List<string>
         {
             T("choose_language"),
@@ -68,7 +79,6 @@ public class SettingsScreen
             CanFocus = true
         };
 
-        // Select button
         var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
@@ -76,14 +86,12 @@ public class SettingsScreen
             IsDefault = true
         };
 
-        // Back button
         var backBtn = new Button(T("back"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 4
         };
 
-        // Button actions
         selectBtn.Clicked += () =>
         {
             switch (listView.SelectedItem)
@@ -103,21 +111,19 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Shows language selection screen
+    /// Displays the language selection screen with available language options.
     /// </summary>
     private void ShowLanguageSelection()
     {
         _frame!.Title = T("choose_language_title");
         _frame!.RemoveAll();
 
-        // Label
         var label = new Label(T("select_language"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        // Language options
         var languages = new List<string> { T("language_french"), T("language_english") };
         var languageCodes = new List<string> { "fr", "en" };
 
@@ -131,7 +137,6 @@ public class SettingsScreen
             CanFocus = true
         };
 
-        // Select button
         var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
@@ -139,14 +144,12 @@ public class SettingsScreen
             IsDefault = true
         };
 
-        // Back button
         var backBtn = new Button(T("back"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 4
         };
 
-        // Button actions
         selectBtn.Clicked += () =>
         {
             var selectedLanguageCode = languageCodes[listView.SelectedItem];
@@ -159,21 +162,19 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Shows log format selection screen
+    /// Displays the log format selection screen with available format options.
     /// </summary>
     private void ShowLogFormatSelection()
     {
         _frame!.Title = T("choose_log_format_title");
         _frame!.RemoveAll();
 
-        // Label
         var label = new Label(T("select_format"))
         {
             X = Pos.Center() - 15,
             Y = Pos.Center() - 3
         };
 
-        // Format options
         var formats = new List<string> { "JSON", "XML" };
         var listView = new ListView(formats)
         {
@@ -185,7 +186,6 @@ public class SettingsScreen
             CanFocus = true
         };
 
-        // Select button
         var selectBtn = new Button(T("select"))
         {
             X = Pos.Center() - 10,
@@ -193,14 +193,12 @@ public class SettingsScreen
             IsDefault = true
         };
 
-        // Back button
         var backBtn = new Button(T("back"))
         {
             X = Pos.Center() + 8,
             Y = Pos.Center() + 4
         };
 
-        // Button actions
         selectBtn.Clicked += () =>
         {
             var selectedFormat = formats[listView.SelectedItem];
@@ -213,9 +211,8 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Changes the application language
+    /// Changes the application language to the specified language code and updates the settings menu display.
     /// </summary>
-    /// <param name="languageCode">Language code (fr/en)</param>
     private void ChangeLanguage(string languageCode)
     {
         try
@@ -224,8 +221,6 @@ public class SettingsScreen
             _configurationManager.UpdateLanguage(languageCode);
             MessageBox.Query(50, 7, T("success"), T("language_changed"), T("ok"));
 
-            // TODO: Refresh entire UI with new language
-            // For now, return to settings menu
             ShowSettingsMenu();
         }
         catch (Exception ex)
@@ -235,9 +230,8 @@ public class SettingsScreen
     }
 
     /// <summary>
-    /// Changes the log file format
+    /// Changes the log file format to the specified format (JSON or XML) and updates the settings menu display.
     /// </summary>
-    /// <param name="format">Format (JSON/XML)</param>
     private void ChangeLogFormat(string format)
     {
         try
@@ -257,6 +251,9 @@ public class SettingsScreen
         }
     }
 
+    /// <summary>
+    /// Retrieves and formats the localized text for the specified translation key with optional format arguments.
+    /// </summary>
     private string T(string key, params object[] args)
     {
         var text = _localizationService.GetTextTranslated(key);

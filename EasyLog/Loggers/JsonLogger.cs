@@ -7,10 +7,16 @@ using System;
 using System.IO;
 using System.Text;
 
+/// <summary>
+/// Logger implementation that persists log entries in JSON format using UTF-8 encoding without byte order mark.
+/// </summary>
 public class JsonLogger : LoggerBase
 {
     private readonly string _baseOutputPath;
 
+    /// <summary>
+    /// Initializes a new instance of the JsonLogger class with the specified output file path.
+    /// </summary>
     public JsonLogger(string outputPath) : base(GetDailyLogPath(outputPath), LogFormat.JSON)
     {
         _baseOutputPath = outputPath;
@@ -30,11 +36,8 @@ public class JsonLogger : LoggerBase
     }
 
     /// <summary>
-    /// Écrit le contenu formaté dans le fichier JSON
-    /// LOGIQUE:
-    /// - Utilise UTF-8 sans BOM pour compatibilité maximale
-    /// - Écrase le fichier existant (le contenu est déjà merged dans LoggerBase)
-    /// - Le fichier est spécifique au jour courant
+    /// Writes formatted JSON content to the specified file path using UTF-8 encoding without byte order mark. The content is already merged in LoggerBase before writing.
+    /// Handles daily log file rotation by checking if the current date has changed.
     /// </summary>
     protected override void WriteToFile(string content, string path)
     {
@@ -62,9 +65,8 @@ public class JsonLogger : LoggerBase
     }
 
     /// <summary>
-    /// Lit le contenu du fichier JSON
-    /// Retourne string.Empty si le fichier n'existe pas
-    /// Lit toujours le fichier du jour courant
+    /// Reads JSON content from the specified file path using UTF-8 encoding. Returns an empty string if the file does not exist.
+    /// Always reads from the current daily log file.
     /// </summary>
     protected override string ReadFromFile(string path)
     {
