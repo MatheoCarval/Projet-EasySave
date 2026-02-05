@@ -1,162 +1,139 @@
 # EasySave
 
-Application de sauvegarde de fichiers en ligne de commande avec interface interactive et support d'exécution automatisée.
+A reliable and efficient backup software solution built with .NET 8.0.
 
-## Fonctionnalités
+[![CI](https://github.com/YOUR-USERNAME/Projet-EasySave/actions/workflows/dotnet.yml/badge.svg)](https://github.com/YOUR-USERNAME/Projet-EasySave/actions/workflows/dotnet.yml)
+[![Release](https://github.com/YOUR-USERNAME/Projet-EasySave/actions/workflows/release.yml/badge.svg)](https://github.com/YOUR-USERNAME/Projet-EasySave/actions/workflows/release.yml)
 
-- **Créer et gérer des sauvegardes** : Configurez des tâches de sauvegarde complètes ou différentielles
-- **Interface interactive** : Menu console intuitif pour une gestion facile
-- **Mode automatisé** : Exécutez les sauvegardes en ligne de commande
-- **Logs structurés** : Fichiers de log en JSON avec horodatage
-- **Support multilingue** : Interface en français (extensible à d'autres langues)
+## Features
 
-## Installation & Configuration
+- 🔄 Multiple backup types (Full, Differential, Incremental)
+- 📁 File and directory backup support
+- 🌍 Multi-language support
+- 📊 State tracking and progress monitoring
+- 📝 Comprehensive logging (JSON/XML formats)
+- ⚡ High performance file transfer
+- 🧪 Extensive test coverage
 
-### Prérequis
+## Quick Start
 
-- .NET 8.0 ou supérieur
-- Windows (ou compatible avec .NET)
+### Prerequisites
 
-### Compilation
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Windows, Linux, or macOS
+
+### Installation
+
+#### From Release (Recommended)
+
+Download the latest release for your platform from the [Releases](https://github.com/YOUR-USERNAME/Projet-EasySave/releases) page.
+
+#### Build from Source
 
 ```bash
+# Clone the repository
+git clone https://github.com/YOUR-USERNAME/Projet-EasySave.git
 cd Projet-EasySave
+
+# Build the project
+cd src
 dotnet build
+
+# Run the application
+dotnet run --project EasySave.csproj
 ```
 
-### Exécution
+## Usage
+
+Launch the application and follow the interactive console interface to:
+
+1. Create backup jobs
+2. Configure source and destination paths
+3. Select backup type (Full/Differential/Incremental)
+4. Execute backups
+5. Monitor progress and view logs
+
+## Documentation
+
+Comprehensive documentation is available in the [docs](./docs) folder:
+
+- [API Documentation](./docs/API.md)
+- [Contributing Guidelines](./docs/CONTRIBUTING.md)
+- [Architecture Overview](./docs/README.md)
+
+## Project Structure
+
+```
+Projet-EasySave/
+├── src/                    # Source code
+│   ├── EasySave/          # Main application
+│   ├── EasyLog/           # Logging library
+│   └── EasySave.Tests/    # Unit tests
+├── docs/                  # Documentation
+├── .github/               # GitHub workflows
+└── README.md             # This file
+```
+
+## Development
+
+### Running Tests
 
 ```bash
-dotnet run
+cd src
+dotnet test
 ```
 
-ou directement avec l'exécutable:
+### Code Formatting
 
 ```bash
-EasySave.exe
+cd src
+dotnet format EasySave.slnx
 ```
 
-## Guide d'utilisation
-
-### Mode interactif
-
-Lance l'interface console interactive par défaut:
+### Building for Release
 
 ```bash
-EasySave.exe
+cd src
+dotnet publish EasySave.csproj -c Release -r win-x64 --self-contained
 ```
 
-Vous pouvez:
-- Créer une nouvelle sauvegarde
-- Voir la liste de vos sauvegardes
-- Modifier ou supprimer des sauvegardes
-- Exécuter des sauvegardes
-- Accéder aux paramètres
+## Contributing
 
-### Mode `-s` ou `-show`
+We welcome contributions! Please see our [Contributing Guidelines](./docs/CONTRIBUTING.md) for details.
 
-Affiche la liste des sauvegardes numérotées avec leurs détails:
+### Development Workflow
 
-```bash
-EasySave.exe -s
-EasySave.exe -show
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-**Exemple de sortie:**
-```
-=== Liste des sauvegardes ===
+## License
 
-1. Backup Documents
-   Type: COMPLETE
-   Source: C:\Users\User\Documents
-   Destination: D:\Backups\Documents
-   État: PENDING
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-2. Backup Photos
-   Type: DIFFERENTIAL
-   Source: C:\Users\User\Pictures
-   Destination: D:\Backups\Photos
-   État: PENDING
-```
+## Support
 
-### Mode automatisé
+- 📧 Email: your-email@example.com
+- 🐛 Issues: [GitHub Issues](https://github.com/YOUR-USERNAME/Projet-EasySave/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/YOUR-USERNAME/Projet-EasySave/discussions)
 
-Exécutez les sauvegardes directement en ligne de commande.
+## Roadmap
 
-#### Exécuter une sauvegarde
+- [ ] GUI interface (WPF/Avalonia)
+- [ ] Cloud storage integration
+- [ ] Scheduled backups
+- [ ] Encryption support
+- [ ] Compression options
+- [ ] Network backup support
 
-```bash
-EasySave.exe 1
-```
-Exécute la sauvegarde numéro 1.
+## Acknowledgments
 
-#### Exécuter une plage de sauvegardes
+- Built with [.NET 8.0](https://dotnet.microsoft.com/)
+- Testing with [xUnit](https://xunit.net/)
+- CI/CD with [GitHub Actions](https://github.com/features/actions)
 
-```bash
-EasySave.exe 1-3
-```
-Exécute les sauvegardes 1, 2 et 3 dans l'ordre.
+---
 
-#### Exécuter plusieurs sauvegardes spécifiques
-
-```bash
-EasySave.exe 1;3
-EasySave.exe 1;3;5
-```
-Exécute les sauvegardes 1 et 3 (ou 1, 3 et 5 pour le second exemple) dans l'ordre.
-
-##  Structure du projet
-
-```
-EasySave/
-├── Program.cs                    # Point d'entrée
-├── Models/                       # Modèles de données
-│   ├── BackupJob.cs             # Classe de tâche de sauvegarde
-│   └── Enums/                   # Énumérations (BackupState, BackupType, etc.)
-├── Services/                    # Services métier
-│   ├── FileTransferService.cs   # Gestion des transferts de fichiers
-│   ├── LocalizationService.cs   # Gestion de la localisation
-│   ├── Managers/
-│   │   └── BackupManager.cs     # Gestion des sauvegardes
-│   └── Writers/
-│       └── StateWriter.cs       # Écriture de l'état
-├── View/                        # Interface utilisateur
-│   └── Console/
-│       ├── ConsoleUI.cs         # Interface principale
-│       ├── Components/          # Composants UI
-│       ├── Screens/             # Différents écrans
-│       └── Helpers/             # Utilitaires UI
-├── EasyLog/                     # Bibliothèque de logging
-│   ├── Loggers/                 # Implémentations de loggers
-│   ├── Formatters/              # Formatage des logs
-│   └── Abstractions/            # Interfaces
-├── Utilities/                   # Utilitaires divers
-└── Datas/                       # Données (languages.json, jobs.json)
-```
-
-## Fichiers de configuration
-
-- **`Datas/jobs.json`** : Stockage des sauvegardes créées
-- **`Datas/Languages.json`** : Traductions de l'interface
-- **`state.json`** : État actuel des sauvegardes
-- **`logs-DD-MM-YYYY.json`** : Fichiers de log horodatés
-
-## Types de sauvegarde
-
-- **COMPLETE** : Copie complète de tous les fichiers
-- **DIFFERENTIAL** : Copie uniquement des fichiers modifiés depuis la dernière sauvegarde
-
-##  Dépannage
-
-### Aucune sauvegarde trouvée
-
-Assurez-vous d'avoir créé au moins une sauvegarde via le mode interactif avant d'utiliser les modes automatisés.
-
-### Erreur d'accès aux fichiers
-
-Vérifiez que vous avez les permissions de lecture/écriture sur les chemins source et destination.
-
-### Fichier jobs.json non trouvé
-
-Le fichier `Datas/jobs.json` est créé automatiquement lors de la première exécution. Si le dossier `Datas` n'existe pas, il sera créé.
-
+Made with ❤️ by the EasySave Team

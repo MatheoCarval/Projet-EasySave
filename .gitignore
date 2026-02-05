@@ -464,3 +464,41 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+##########################
+# EasySave Project Files #
+##########################
+
+# Application runtime state and logs
+src/state.json
+src/logs/
+src/*.log
+
+# Build outputs in src folder
+src/bin/
+src/obj/
+src/EasyLog/bin/
+src/EasyLog/obj/
+src/EasySave.Tests/bin/
+src/EasySave.Tests/obj/
+
+# Test coverage reports
+src/TestResults/
+src/coverage/
+
+# Backup job data (keep template/example but ignore actual user data)
+# Uncomment if you want to track jobs.json:
+# src/Datas/jobs.json
+
+# Publish artifacts
+publish/
+artifacts/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary backup files
+*.bak
+*.backup
