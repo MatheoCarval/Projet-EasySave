@@ -82,9 +82,9 @@ namespace EasySave.Tests.Helpers
 
             // Arrange
             var input1 = @"C:\Test\Path";
-            var expected1 = @"\\?\C:\Test\Path";
+            var expected1 = @"\\localhost\C$\Test\Path";
             var input2 = @"D:\Folder\File.txt";
-            var expected2 = @"\\?\D:\Folder\File.txt";
+            var expected2 = @"\\localhost\D$\Folder\File.txt";
 
             // Act
             var result1 = PathValidator.ToUncPath(input1);

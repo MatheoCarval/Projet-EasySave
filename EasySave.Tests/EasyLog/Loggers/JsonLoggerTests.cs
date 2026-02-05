@@ -13,12 +13,14 @@ namespace EasySave.Tests.EasyLog.Loggers
     {
         private readonly string _testDirectory;
         private readonly string _testFilePath;
+        private readonly string _dailyFilePath;
 
         public JsonLoggerTests()
         {
             _testDirectory = Path.Combine(Path.GetTempPath(), $"JsonLoggerTest_{Guid.NewGuid()}");
             Directory.CreateDirectory(_testDirectory);
             _testFilePath = Path.Combine(_testDirectory, "test.json");
+            _dailyFilePath = GetDailyPath(_testFilePath, DateTime.Now);
         }
 
         public void Dispose()
@@ -60,8 +62,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.Flush();
 
             // Assert
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
         }
 
@@ -93,8 +95,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.Flush();
 
             // Assert
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("Backup1", content);
             Assert.Contains("Backup2", content);
         }
@@ -158,8 +160,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.Flush();
 
             // Assert
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
         }
 
@@ -178,6 +180,14 @@ namespace EasySave.Tests.EasyLog.Loggers
             // Assert
             var result = logger.ReadLog<BackupLogEntry>();
             Assert.Equal(2, result.Count());
+        }
+
+        private static string GetDailyPath(string baseOutputPath, DateTime date)
+        {
+            string directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
+            string filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
+            string dateString = date.ToString("yyyy-MM-dd");
+            return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.json");
         }
     }
 }

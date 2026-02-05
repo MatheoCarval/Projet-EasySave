@@ -143,10 +143,10 @@ namespace EasySave.Tests.Services.Managers
         {
             // Arrange
             var manager = new BackupManager(_fileTransferService, _stateWriter);
-            manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
+            var job = manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
             // Act
-            var result = manager.DeleteJob("TestJob");
+            var result = manager.DeleteJob(job.Id);
 
             // Assert
             Assert.True(result);
