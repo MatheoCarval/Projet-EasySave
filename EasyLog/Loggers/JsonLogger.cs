@@ -25,7 +25,7 @@ public class JsonLogger : LoggerBase
         string directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
         string filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
         string dateString = DateTime.Now.ToString("yyyy-MM-dd");
-        
+
         return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.json");
     }
 
@@ -45,8 +45,8 @@ public class JsonLogger : LoggerBase
             if (currentDailyPath != path)
             {
                 // Mettre à jour le chemin dans la classe de base
-                typeof(LoggerBase).GetField("_outputPath", 
-                    System.Reflection.BindingFlags.NonPublic | 
+                typeof(LoggerBase).GetField("_outputPath",
+                    System.Reflection.BindingFlags.NonPublic |
                     System.Reflection.BindingFlags.Instance)
                     ?.SetValue(this, currentDailyPath);
                 path = currentDailyPath;
@@ -72,7 +72,7 @@ public class JsonLogger : LoggerBase
         {
             // Lire le fichier du jour courant
             string currentDailyPath = GetDailyLogPath(_baseOutputPath);
-            
+
             if (!File.Exists(currentDailyPath))
                 return string.Empty;
 

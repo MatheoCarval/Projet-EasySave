@@ -38,14 +38,14 @@ namespace EasySave.Services.Managers
             {
                 _currentConfig = new Configuration();
                 _currentConfig.VerifyConfigJson();
-                
+
                 // Load configuration from file
                 string configPath = GetConfigPath();
                 if (File.Exists(configPath))
                 {
                     string json = File.ReadAllText(configPath);
                     var configTemplate = JsonSerializer.Deserialize<ConfigurationTemplate>(json);
-                    
+
                     if (configTemplate != null)
                     {
                         // Update internal configuration with loaded values
@@ -63,7 +63,7 @@ namespace EasySave.Services.Managers
                 throw new ArgumentNullException(nameof(config));
 
             string configPath = GetConfigPath();
-            
+
             var configTemplate = new ConfigurationTemplate
             {
                 Language = config.GetLanguage(),
@@ -73,11 +73,11 @@ namespace EasySave.Services.Managers
                 StateFilePath = config.GetStateFilePath()
             };
 
-            string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions 
-            { 
-                WriteIndented = true 
+            string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
+            {
+                WriteIndented = true
             });
-            
+
             File.WriteAllText(configPath, json);
             _currentConfig = config;
         }
@@ -113,16 +113,16 @@ namespace EasySave.Services.Managers
         {
             var config = new Configuration();
             config.SetLanguage(template.Language);
-            
+
             if (Enum.TryParse<LogFormat>(template.LogFormat, out var logFormat))
             {
                 config.SetLogFormat(logFormat);
             }
-            
+
             config.SetMaxBackupJobs(template.MaxBackupJobs);
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
-            
+
             return config;
         }
 
@@ -130,12 +130,12 @@ namespace EasySave.Services.Managers
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string easySaveDir = Path.Combine(appDataPath, "EasySave");
-            
+
             if (!Directory.Exists(easySaveDir))
             {
                 Directory.CreateDirectory(easySaveDir);
             }
-            
+
             return Path.Combine(easySaveDir, "Config.json");
         }
 

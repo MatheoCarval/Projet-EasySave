@@ -127,7 +127,7 @@ namespace EasySave.Models
             if (!Directory.Exists(GetAppDataPath()))
             {
                 Directory.CreateDirectory(GetAppDataPath());
-            }            
+            }
 
             // Si le fichier n'existe pas, le créer avec la structure par défaut
             if (!File.Exists(configPath))
@@ -136,7 +136,7 @@ namespace EasySave.Models
                 return true;
             }
             else // Si le fichier existe, charge le contenu et vérifie la structure
-            {                
+            {
                 try
                 {
                     // Lit le contenu du fichier de configuration
@@ -158,8 +158,8 @@ namespace EasySave.Models
                         // TODO : Ajouter un log d'erreur pour indiquer que la structure du fichier de configuration est invalide
 
                         // Structure invalide, remplace par la structure par défaut
-                        File.WriteAllText(configPath, defaultConfigContent);                                        
-                        
+                        File.WriteAllText(configPath, defaultConfigContent);
+
                         return false;
                     }
                 }
@@ -169,10 +169,10 @@ namespace EasySave.Models
 
                     // Erreur de lecture ou de parsing, remplace par la structure par défaut
                     File.WriteAllText(configPath, defaultConfigContent);
-                    
+
                     return false;
                 }
-            }        
+            }
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace EasySave.Models
         private string GetConfigPath()
         {
             return Path.Combine(GetAppDataPath(), "Config.json");
-        }        
+        }
 
         /// <summary>
         /// Récupérer le chemin du dossier AppData/Roaming/EasySave
