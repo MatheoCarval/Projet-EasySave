@@ -46,14 +46,14 @@ public class BackupManager
         return job;
     }
 
-    public bool DeleteJob(string jobName)
+    public bool DeleteJob(string jobId)
     {
-        if (string.IsNullOrWhiteSpace(jobName))
+        if (string.IsNullOrWhiteSpace(jobId))
         {
-            throw new ArgumentException("Job name cannot be null or empty.", nameof(jobName));
+            throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));
         }
 
-        var job = _jobs.FirstOrDefault(j => j.Name == jobName);
+        var job = _jobs.FirstOrDefault(j => j.Id == jobId);
         if (job != null)
         {
             _jobs.Remove(job);
