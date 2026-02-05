@@ -81,15 +81,11 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/dotnet/sdk:8.0
     needs: version
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
     
     - name: Restore dependencies
       run: dotnet restore src/EasySave.slnx
@@ -100,6 +96,7 @@ jobs:
   build:
     name: Build Release
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/dotnet/sdk:8.0
     needs: [version, test]
     strategy:
       matrix:
@@ -115,11 +112,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
     
     - name: Restore dependencies
       run: dotnet restore src/EasySave.slnx
