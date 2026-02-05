@@ -115,6 +115,12 @@ public class BackupManager
                     job.TotalFiles += 1;
                     job.TotalSize += new FileInfo(sourcePath).Length;
                 }
+                else
+                {
+                    // Fail fast on misconfigured jobs: a configured source path does not exist.
+                    throw new DirectoryNotFoundException(
+                        $"Source path '{sourcePath}' does not exist for job '{jobId}'.");
+                }
             }
 
             job.RemainingFiles = job.TotalFiles;
