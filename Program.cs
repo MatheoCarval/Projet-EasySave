@@ -22,7 +22,7 @@ internal class Program
         {
             // Initialize services
             InitializeServices();
-            
+
             // If no arguments, launch UI
             if (args.Length == 0)
             {
@@ -51,13 +51,13 @@ internal class Program
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "EasySave"
         );
-        
+
         Directory.CreateDirectory(Path.Combine(appData, "logs"));
 
         var logger = new JsonLogger("logs.json");
         var stateWriter = new StateWriter("state.json");
         var fileTransferService = new FileTransferService(logger, stateWriter);
-        
+
         _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: 5);
     }
 
@@ -68,13 +68,13 @@ internal class Program
         if (arg.Contains('-'))
         {
             var parts = arg.Split('-');
-            if (parts.Length == 2 && 
-                int.TryParse(parts[0], out int start) && 
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], out int start) &&
                 int.TryParse(parts[1], out int end))
             {
                 if (start > end)
                     throw new ArgumentException($"Invalid range: {arg}");
-                
+
                 for (int i = start; i <= end; i++)
                 {
                     indices.Add(i);
@@ -185,7 +185,7 @@ internal class Program
         int successCount = indices.Count - errors.Count;
         Console.WriteLine("═══════════════════════════════════");
         Console.WriteLine($"{T("information")}: {successCount}/{indices.Count} {T("success").ToLower()}");
-        
+
         if (errors.Count > 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
