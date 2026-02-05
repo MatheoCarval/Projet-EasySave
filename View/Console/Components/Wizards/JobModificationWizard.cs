@@ -388,7 +388,7 @@ public class JobModificationWizard
 
         confirmBtn.Clicked += () =>
         {
-            var newSource = sourceField.Text.ToString()?.Trim() ?? "";
+            var newSource = SanitizePath(sourceField.Text.ToString());
             if (string.IsNullOrEmpty(newSource))
             {
                 MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
@@ -456,7 +456,7 @@ public class JobModificationWizard
 
         addBtn.Clicked += () =>
         {
-            var newSource = sourceField.Text.ToString()?.Trim() ?? "";
+            var newSource = SanitizePath(sourceField.Text.ToString());
             if (string.IsNullOrEmpty(newSource))
             {
                 MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
@@ -516,7 +516,7 @@ public class JobModificationWizard
 
         confirmBtn.Clicked += () =>
         {
-            var newDestination = destField.Text.ToString()?.Trim() ?? "";
+            var newDestination = SanitizePath(destField.Text.ToString());
             if (string.IsNullOrEmpty(newDestination))
             {
                 MessageBox.ErrorQuery(T("error"), T("error_destination_required"), T("ok"));
@@ -660,5 +660,15 @@ public class JobModificationWizard
     {
         var text = _localizationService.GetTextTranslated(key);
         return args.Length > 0 ? string.Format(text, args) : text;
+    }
+
+    private static string SanitizePath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Trim().Trim('"');
     }
 }

@@ -173,7 +173,7 @@ public class JobCreationWizard
 
         addBtn.Clicked += () =>
         {
-            var source = sourceField.Text.ToString()?.Trim() ?? "";
+            var source = SanitizePath(sourceField.Text.ToString());
             if (string.IsNullOrEmpty(source))
             {
                 MessageBox.ErrorQuery(T("error"), T("error_source_empty"), T("ok"));
@@ -263,7 +263,7 @@ public class JobCreationWizard
 
         nextBtn.Clicked += () =>
         {
-            var dest = destField.Text.ToString()?.Trim() ?? "";
+            var dest = SanitizePath(destField.Text.ToString());
             if (string.IsNullOrEmpty(dest))
             {
                 MessageBox.ErrorQuery(T("error"), T("error_destination_required"), T("ok"));
@@ -381,5 +381,15 @@ public class JobCreationWizard
     {
         var text = _localizationService.GetTextTranslated(key);
         return args.Length > 0 ? string.Format(text, args) : text;
+    }
+
+    private static string SanitizePath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Trim().Trim('"');
     }
 }

@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "Id": "fab1bb69-c662-4ac9-88be-9f768b688272",
+    "Name": "test",
+    "SourcePath": [
+      "C:\\Users\\feita\\Documents\\sae_s5\\MAQUETTES"
+    ],
+    "TargetPath": "C:\\Users\\feita\\Documents\\sae_s5_copy\\MAQUETTES",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "20a05538-6e3b-49b7-ac5c-d26f73b5ee6e",
+    "Name": "test2",
+    "SourcePath": [
+      "C:\\Users\\feita\\Documents\\sae_s5_copy\\MAQUETTES"
+    ],
+    "TargetPath": "C:\\Users\\feita\\Documents\\sae_s5_copy\\test",
+    "BackupType": 1,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  }
+]

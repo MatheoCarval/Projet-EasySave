@@ -4,6 +4,7 @@ using EasySave.Services;
 using Services.Writers;
 using Utilities;
 using System.Text.Json;
+using System.Runtime.ConstrainedExecution;
 
 namespace Services.Managers;
 
@@ -13,6 +14,8 @@ public class BackupManager
     private readonly int _maxJobs;
     private readonly FileTransferService _fileTransferService;
     private readonly StateWriter _stateWriter;
+
+    const string JobsFilePath = "./Datas/jobs.json";
 
     public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
     {
@@ -191,7 +194,7 @@ public class BackupManager
 
         try
         {
-            string path = "./Datas/jobs.json";
+            string path = JobsFilePath;
             var jobs = LoadJobsFromFile(path);
 
             // Find and remove existing job (search by ID)
@@ -220,7 +223,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = "./Datas/jobs.json";
+            string jobsFilePath = JobsFilePath;
             var jobs = LoadJobsFromFile(jobsFilePath);
             _jobs.Clear();
             _jobs.AddRange(jobs);
@@ -308,7 +311,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = "./Datas/jobs.json";
+            string jobsFilePath = JobsFilePath;
             var jobs = LoadJobsFromFile(jobsFilePath);
 
             jobs.RemoveAll(j => j.Id == jobId);

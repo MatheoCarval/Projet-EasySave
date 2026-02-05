@@ -1,7 +1,10 @@
 using EasySave.Services;
+using EasySave.Services.Managers;
 using EasySave.View.Console;
 using Services.Managers;
+using EasyLog.Abstractions;
 using EasyLog.Loggers;
+using EasyLog.Enums;
 using Services.Writers;
 using Models.Enums;
 
@@ -15,6 +18,7 @@ internal class Program
 {
     private static LocalizationService? _localizationService;
     private static BackupManager? _backupManager;
+    private static ConfigurationManager? _configurationManager;
 
     private static void Main(string[] args)
     {
@@ -45,20 +49,43 @@ internal class Program
 
     private static void InitializeServices()
     {
-        _localizationService = new LocalizationService("en");
+        _configurationManager = ConfigurationManager.GetInstance();
+        var config = _configurationManager.LoadConfiguration();
 
         string appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "EasySave"
         );
 
-        Directory.CreateDirectory(Path.Combine(appData, "logs"));
+        Directory.CreateDirectory(appData);
 
-        var logger = new JsonLogger("logs.json");
-        var stateWriter = new StateWriter("state.json");
+        var language = NormalizeLanguage(config.GetLanguage());
+        _localizationService = new LocalizationService(language);
+
+        string logPath = config.GetLogFilePath();
+        if (string.IsNullOrWhiteSpace(logPath))
+        {
+            logPath = Path.Combine(appData, "logs.json");
+        }
+
+        string statePath = config.GetStateFilePath();
+        if (string.IsNullOrWhiteSpace(statePath) ||
+            Path.GetFileName(statePath).Equals("Config.json", StringComparison.OrdinalIgnoreCase))
+        {
+            statePath = Path.Combine(appData, "state.json");
+        }
+
+        EnsureDirectoryForFile(logPath);
+        EnsureDirectoryForFile(statePath);
+
+        ILogger logger = config.GetLogFormat() == LogFormat.XML
+            ? new XmlLogger(logPath)
+            : new JsonLogger(logPath);
+
+        var stateWriter = new StateWriter(statePath);
         var fileTransferService = new FileTransferService(logger, stateWriter);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: 5);
+        _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: config.GetMaxBackupJobs());
     }
 
     private static List<int> ParseJobIndices(string arg)
@@ -209,6 +236,30 @@ internal class Program
     {
         var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         consoleUI.Start();
+    }
+
+    private static string NormalizeLanguage(string language)
+    {
+        if (string.IsNullOrWhiteSpace(language))
+        {
+            return "en";
+        }
+
+        var trimmed = language.Trim();
+        var normalized = trimmed.Contains('-')
+            ? trimmed.Split('-')[0]
+            : trimmed;
+
+        return normalized.ToLowerInvariant();
+    }
+
+    private static void EnsureDirectoryForFile(string filePath)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
     }
 
     private static string T(string key, params object[] args)
