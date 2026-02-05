@@ -15,13 +15,13 @@ namespace EasySave.View.Console.Components.Wizards;
 public class JobCreationWizard
 {
     private const int MAX_SOURCES = 5;
-    
+
     private readonly LocalizationService _localizationService;
     private readonly BackupManager _backupManager;
-    
+
     private FrameView? _frame;
     private Action? _onComplete;
-    
+
     // Wizard state
     private string _jobName = "";
     private List<string> _sources = new();
@@ -43,29 +43,29 @@ public class JobCreationWizard
     {
         _frame = frame;
         _onComplete = onComplete;
-        
+
         // Check if max jobs limit reached
         var jobs = _backupManager.GetAllJobs();
         if (jobs.Count >= 5)
         {
-            MessageBox.ErrorQuery(T("error"), 
-                string.Format(T("error_max_jobs_reached"), 5), 
+            MessageBox.ErrorQuery(T("error"),
+                string.Format(T("error_max_jobs_reached"), 5),
                 T("ok"));
             onComplete();
             return;
         }
-        
+
         // Reset wizard state
         _jobName = "";
         _sources = new List<string>();
         _destination = "";
-        
+
         // Start wizard
         ShowStepName();
     }
 
     // ==================== STEP 1: JOB NAME ====================
-    
+
     private void ShowStepName()
     {
         _frame!.Title = T("create_task_step_name");
@@ -106,17 +106,17 @@ public class JobCreationWizard
                 MessageBox.ErrorQuery(T("error"), T("error_task_name_required"), T("ok"));
                 return;
             }
-            
+
             // Check if name already exists
             var existingJob = _backupManager.GetJobByName(name);
             if (existingJob != null)
             {
-                MessageBox.ErrorQuery(T("error"), 
-                    T("error_task_name_exists", name), 
+                MessageBox.ErrorQuery(T("error"),
+                    T("error_task_name_exists", name),
                     T("ok"));
                 return;
             }
-            
+
             _jobName = name;
             ShowStepSources();
         };
@@ -127,7 +127,7 @@ public class JobCreationWizard
     }
 
     // ==================== STEP 2: SOURCES ====================
-    
+
     private void ShowStepSources()
     {
         AddSourceForm();
@@ -184,10 +184,10 @@ public class JobCreationWizard
 
             if (_sources.Count < MAX_SOURCES)
             {
-                int result = MessageBox.Query(50, 7, T("add"), 
-                    T("add_another_source"), 
+                int result = MessageBox.Query(50, 7, T("add"),
+                    T("add_another_source"),
                     T("yes"), T("no"));
-                    
+
                 if (result == 0) // Yes
                 {
                     AddSourceForm();
@@ -199,8 +199,8 @@ public class JobCreationWizard
             }
             else
             {
-                MessageBox.Query(50, 7, T("info"), 
-                    T("source_limit_reached", MAX_SOURCES), 
+                MessageBox.Query(50, 7, T("info"),
+                    T("source_limit_reached", MAX_SOURCES),
                     T("ok"));
                 ShowStepDestination();
             }
@@ -222,7 +222,7 @@ public class JobCreationWizard
     }
 
     // ==================== STEP 3: DESTINATION ====================
-    
+
     private void ShowStepDestination()
     {
         _frame!.Title = T("create_task_step_destination");
@@ -269,7 +269,7 @@ public class JobCreationWizard
                 MessageBox.ErrorQuery(T("error"), T("error_destination_required"), T("ok"));
                 return;
             }
-            
+
             _destination = dest;
             ShowStepBackupType();
         };
@@ -280,7 +280,7 @@ public class JobCreationWizard
     }
 
     // ==================== STEP 4: BACKUP TYPE ====================
-    
+
     private void ShowStepBackupType()
     {
         _frame!.Title = T("create_task_step_backup_type");
@@ -292,12 +292,12 @@ public class JobCreationWizard
             Y = Pos.Center() - 4
         };
 
-        var backupTypes = new List<string> 
-        { 
-            T("backup_type_full"), 
-            T("backup_type_differential") 
+        var backupTypes = new List<string>
+        {
+            T("backup_type_full"),
+            T("backup_type_differential")
         };
-        
+
         var listView = new ListView(backupTypes)
         {
             X = Pos.Center() - 15,
@@ -333,15 +333,15 @@ public class JobCreationWizard
     }
 
     // ==================== STEP 5: VALIDATION ====================
-    
+
     private void ShowStepValidation()
     {
         var sourcesText = string.Join("\n", _sources.Select((s, i) => $"  [{i + 1}/{_sources.Count}] {s}"));
-        
-        var summary = T("summary_creation", 
-            _jobName, 
-            sourcesText, 
-            _destination, 
+
+        var summary = T("summary_creation",
+            _jobName,
+            sourcesText,
+            _destination,
             _backupType == BackupType.COMPLETE ? T("backup_type_full") : T("backup_type_differential"));
 
         var result = MessageBox.Query(60, 18, T("validation"), summary, T("validate"), T("cancel"));
@@ -357,21 +357,21 @@ public class JobCreationWizard
     }
 
     // ==================== JOB CREATION ====================
-    
+
     private void CreateJob()
     {
         try
         {
             // Create job via BackupManager
             _backupManager.CreateJob(_jobName, _sources, _destination, _backupType);
-            
+
             MessageBox.Query(50, 7, T("success"), T("task_created"), T("ok"));
             _onComplete?.Invoke();
         }
         catch (Exception ex)
         {
-            MessageBox.ErrorQuery(T("error"), 
-                $"{T("error_creating_task")}: {ex.Message}", 
+            MessageBox.ErrorQuery(T("error"),
+                $"{T("error_creating_task")}: {ex.Message}",
                 T("ok"));
             _onComplete?.Invoke();
         }

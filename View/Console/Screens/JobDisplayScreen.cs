@@ -1,4 +1,4 @@
-    using System;
+using System;
 using System.Linq;
 using Terminal.Gui;
 using EasySave.Services;
@@ -29,7 +29,7 @@ public class JobDisplayScreen
     public void Show(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
-        
+
         if (jobs.Count == 0)
         {
             MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
@@ -106,8 +106,8 @@ public class JobDisplayScreen
     private string FormatJobDetails(BackupJob job)
     {
         var sourcesText = string.Join("\n", job.SourcePath.Select((s, i) => $"  [{i + 1}] {s}"));
-        
-        return T("task_details", 
+
+        return T("task_details",
             job.Name,                           // Job name
             job.Name,                           // Job ID (same as name for now)
             sourcesText,                        // Sources list

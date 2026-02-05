@@ -28,7 +28,7 @@ public class JobExecutionScreen
     public void ShowExecuteOne(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
-        
+
         if (jobs.Count == 0)
         {
             MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
@@ -100,15 +100,15 @@ public class JobExecutionScreen
             // 2. Write logs to logs/YYYY-MM-DD.json
             // 3. Update state.json in real-time
             _backupManager.ExecuteJob(jobId);
-            
-            MessageBox.Query(50, 7, T("success"), 
-                T("task_executed", jobId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), 
+
+            MessageBox.Query(50, 7, T("success"),
+                T("task_executed", jobId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
                 T("ok"));
         }
         catch (Exception ex)
         {
-            MessageBox.ErrorQuery(T("error"), 
-                $"{T("error_executing_task")}: {ex.Message}", 
+            MessageBox.ErrorQuery(T("error"),
+                $"{T("error_executing_task")}: {ex.Message}",
                 T("ok"));
         }
         finally

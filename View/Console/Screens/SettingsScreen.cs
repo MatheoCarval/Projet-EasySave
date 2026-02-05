@@ -24,11 +24,11 @@ public class SettingsScreen
     /// </summary>
     /// <param name="frame">Content frame to display in</param>
     /// <param name="onComplete">Callback when user returns to menu</param>
-    public void Show(FrameView frame, Action onComplete) 
+    public void Show(FrameView frame, Action onComplete)
     {
         _frame = frame;
         _onComplete = onComplete;
-        
+
         ShowSettingsMenu();
     }
 
@@ -48,12 +48,12 @@ public class SettingsScreen
         };
 
         // Options list
-        var options = new List<string> 
-        { 
-            T("choose_language"), 
-            T("choose_log_format") 
+        var options = new List<string>
+        {
+            T("choose_language"),
+            T("choose_log_format")
         };
-        
+
         var listView = new ListView(options)
         {
             X = Pos.Center() - 15,
@@ -116,7 +116,7 @@ public class SettingsScreen
         // Language options
         var languages = new List<string> { T("language_french"), T("language_english") };
         var languageCodes = new List<string> { "fr", "en" };
-        
+
         var listView = new ListView(languages)
         {
             X = Pos.Center() - 10,
@@ -218,7 +218,7 @@ public class SettingsScreen
         {
             _localizationService.ChangeLanguage(languageCode);
             MessageBox.Query(50, 7, T("success"), T("language_changed"), T("ok"));
-            
+
             // TODO: Refresh entire UI with new language
             // For now, return to settings menu
             ShowSettingsMenu();

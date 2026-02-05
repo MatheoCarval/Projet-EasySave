@@ -16,17 +16,17 @@ public class ConsoleUI
 {
     private readonly LocalizationService _localizationService;
     private readonly BackupManager _backupManager;
-    
+
     private Window? _mainWindow;
     private FrameView? _contentFrame;
-    
+
     // Screens
     private readonly MainMenuScreen _mainMenuScreen;
     private readonly JobExecutionScreen _jobExecutionScreen;
     private readonly JobDeletionScreen _jobDeletionScreen;
     private readonly JobDisplayScreen _jobDisplayScreen;
     private readonly SettingsScreen _settingsScreen;
-    
+
     // Wizards
     private readonly JobCreationWizard _jobCreationWizard;
     private readonly JobModificationWizard _jobModificationWizard;
@@ -40,14 +40,14 @@ public class ConsoleUI
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
         _backupManager = backupManager ?? throw new ArgumentNullException(nameof(backupManager));
-        
+
         // Initialize screens
         _mainMenuScreen = new MainMenuScreen(_localizationService);
         _jobExecutionScreen = new JobExecutionScreen(_localizationService, _backupManager);
         _jobDeletionScreen = new JobDeletionScreen(_localizationService, _backupManager);
         _jobDisplayScreen = new JobDisplayScreen(_localizationService, _backupManager);
         _settingsScreen = new SettingsScreen(_localizationService);
-        
+
         // Initialize wizards
         _jobCreationWizard = new JobCreationWizard(_localizationService, _backupManager);
         _jobModificationWizard = new JobModificationWizard(_localizationService, _backupManager);
@@ -59,7 +59,7 @@ public class ConsoleUI
     public void Start()
     {
         Application.Init();
-        
+
         try
         {
             var top = Application.Top;
@@ -107,10 +107,10 @@ public class ConsoleUI
         };
 
         window.Add(_contentFrame);
-        
+
         // Display main menu
         DisplayMainMenu();
-        
+
         return window;
     }
 
@@ -121,7 +121,7 @@ public class ConsoleUI
     {
         _contentFrame!.Title = T("main_menu_title");
         _contentFrame!.RemoveAll();
-        
+
         var menuView = _mainMenuScreen.GetView(HandleMenuSelection);
         _contentFrame!.Add(menuView);
     }
@@ -137,31 +137,31 @@ public class ConsoleUI
             case 0: // Create job
                 _jobCreationWizard.Start(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 1: // Modify job
                 _jobModificationWizard.Start(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 2: // Delete job
                 _jobDeletionScreen.Show(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 3: // Execute one job
                 _jobExecutionScreen.ShowExecuteOne(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 4: // Execute all jobs
                 ExecuteAllJobs();
                 break;
-                
+
             case 5: // Display jobs
                 _jobDisplayScreen.Show(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 6: // Settings
                 _settingsScreen.Show(_contentFrame!, () => DisplayMainMenu());
                 break;
-                
+
             case 7: // Quit
                 Application.RequestStop();
                 break;
@@ -174,7 +174,7 @@ public class ConsoleUI
     private void ExecuteAllJobs()
     {
         var jobs = _backupManager.GetAllJobs();
-        
+
         if (jobs.Count == 0)
         {
             MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
@@ -185,19 +185,19 @@ public class ConsoleUI
         {
             // Execute all jobs via BackupManager
             _backupManager.ExecuteAll();
-            
-            MessageBox.Query(50, 7, T("success"), 
-                T("executing_all_tasks", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")), 
+
+            MessageBox.Query(50, 7, T("success"),
+                T("executing_all_tasks", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
                 T("ok"));
         }
         catch (AggregateException ex)
         {
             var errors = string.Join("\n", ex.InnerExceptions.Select(e => $"- {e.Message}"));
-            MessageBox.ErrorQuery(T("error"), 
-                $"{T("error_executing_jobs")}\n{errors}", 
+            MessageBox.ErrorQuery(T("error"),
+                $"{T("error_executing_jobs")}\n{errors}",
                 T("ok"));
         }
-        
+
         DisplayMainMenu();
     }
 

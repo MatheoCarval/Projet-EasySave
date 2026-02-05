@@ -101,7 +101,7 @@ public class BackupManager
             // Calculate totals BEFORE starting transfers
             job.TotalFiles = 0;
             job.TotalSize = 0;
-            
+
             foreach (var sourcePath in job.SourcePath)
             {
                 if (PathValidator.IsDirectory(sourcePath))
@@ -116,12 +116,12 @@ public class BackupManager
                     job.TotalSize += new FileInfo(sourcePath).Length;
                 }
             }
-            
+
             job.RemainingFiles = job.TotalFiles;
             job.RemainingSize = job.TotalSize;
             _stateWriter.UpdateJobState(job);
 
-            
+
             // Now transfer all sources
             foreach (var sourcePath in job.SourcePath)
             {
@@ -136,7 +136,7 @@ public class BackupManager
                     _fileTransferService.TransferFile(sourcePath, targetFile, job);
                 }
             }
-            
+
             job.MarkAsCompleted();
             _stateWriter.UpdateJobState(job);
         }
@@ -199,7 +199,7 @@ public class BackupManager
             }
 
             SaveJobsToFile(path, jobs);
-            
+
             // Reload jobs to sync _jobs list
             LoadJobs();
         }
@@ -288,10 +288,10 @@ public class BackupManager
         };
 
         string jsonContent = JsonSerializer.Serialize(jobs, options);
-        
+
         string tempFile = filePath + ".tmp";
         File.WriteAllText(tempFile, jsonContent);
-        
+
         if (File.Exists(filePath))
             File.Delete(filePath);
         File.Move(tempFile, filePath);

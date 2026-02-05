@@ -17,7 +17,7 @@ namespace EasySave.Services
     {
         private readonly ILogger _logger;
         private readonly StateWriter _stateWriter;
-        
+
         public FileTransferService(
             ILogger logger,
             StateWriter stateWriter)

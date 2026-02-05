@@ -28,7 +28,7 @@ public class JobDeletionScreen
     public void Show(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
-        
+
         if (jobs.Count == 0)
         {
             MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
@@ -77,7 +77,7 @@ public class JobDeletionScreen
         deleteBtn.Clicked += () =>
         {
             var selectedJob = jobs[listView.SelectedItem];
-            
+
             // Confirmation dialog
             if (ConfirmDeletion(selectedJob.Name))
             {

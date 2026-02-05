@@ -30,13 +30,13 @@ internal class Program
         _localizationService = new LocalizationService("fr");
 
 
-    // TODO : CHANGE THE PATHS BELOW TO CONFIGURATION VALUES
+        // TODO : CHANGE THE PATHS BELOW TO CONFIGURATION VALUES
 
         StateWriter stateWriter = new StateWriter("state.json");
 
 
         // TODO: Initialiser ConfigurationManager
-        
+
         _backupManager = new BackupManager(
             new FileTransferService(
                 new JsonLogger("logs.json"),

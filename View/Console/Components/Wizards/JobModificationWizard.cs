@@ -16,13 +16,13 @@ namespace EasySave.View.Console.Components.Wizards;
 public class JobModificationWizard
 {
     private const int MAX_SOURCES = 5;
-    
+
     private readonly LocalizationService _localizationService;
     private readonly BackupManager _backupManager;
-    
+
     private FrameView? _frame;
     private Action? _onComplete;
-    
+
     // Current job being modified
     private BackupJob? _currentJob;
 
@@ -41,25 +41,25 @@ public class JobModificationWizard
     {
         _frame = frame;
         _onComplete = onComplete;
-        
+
         var jobs = _backupManager.GetAllJobs();
-        
+
         if (jobs.Count == 0)
         {
             MessageBox.ErrorQuery(T("error"), T("error_no_tasks_available"), T("ok"));
             onComplete();
             return;
         }
-        
+
         ShowJobSelection();
     }
 
     // ==================== JOB SELECTION ====================
-    
+
     private void ShowJobSelection()
     {
         var jobs = _backupManager.GetAllJobs();
-        
+
         _frame!.Title = T("modify_task_title");
         _frame!.RemoveAll();
 
@@ -105,7 +105,7 @@ public class JobModificationWizard
     }
 
     // ==================== MODIFICATION OPTIONS ====================
-    
+
     private void ShowModificationOptions()
     {
         _frame!.Title = T("modify_choose_parameter");
@@ -117,14 +117,14 @@ public class JobModificationWizard
             Y = Pos.Center() - 3
         };
 
-        var options = new List<string> 
-        { 
-            T("modify_task_name"), 
-            T("modify_sources"), 
-            T("modify_destination"), 
-            T("modify_backup_type") 
+        var options = new List<string>
+        {
+            T("modify_task_name"),
+            T("modify_sources"),
+            T("modify_destination"),
+            T("modify_backup_type")
         };
-        
+
         var listView = new ListView(options)
         {
             X = Pos.Center() - 15,
@@ -165,7 +165,7 @@ public class JobModificationWizard
     }
 
     // ==================== MODIFY NAME ====================
-    
+
     private void ModifyName()
     {
         _frame!.Title = T("modify_name_title");
@@ -213,15 +213,15 @@ public class JobModificationWizard
                 var existingJob = _backupManager.GetJobByName(newName);
                 if (existingJob != null)
                 {
-                    MessageBox.ErrorQuery(T("error"), 
-                        T("error_task_name_exists", newName), 
+                    MessageBox.ErrorQuery(T("error"),
+                        T("error_task_name_exists", newName),
                         T("ok"));
                     return;
                 }
 
                 var confirmed = ConfirmModification(
-                    T("modify_task_name"), 
-                    _currentJob!.Name, 
+                    T("modify_task_name"),
+                    _currentJob!.Name,
                     newName);
 
                 if (confirmed)
@@ -245,7 +245,7 @@ public class JobModificationWizard
     }
 
     // ==================== MODIFY SOURCES ====================
-    
+
     private void ModifySources()
     {
         _frame!.Title = T("modify_sources_title");
@@ -257,12 +257,12 @@ public class JobModificationWizard
             Y = Pos.Center() - 3
         };
 
-        var options = new List<string> 
-        { 
-            T("modify_existing_source"), 
-            T("add_new_source") 
+        var options = new List<string>
+        {
+            T("modify_existing_source"),
+            T("add_new_source")
         };
-        
+
         var listView = new ListView(options)
         {
             X = Pos.Center() - 20,
@@ -296,8 +296,8 @@ public class JobModificationWizard
             {
                 if (_currentJob!.SourcePath.Count >= MAX_SOURCES)
                 {
-                    MessageBox.ErrorQuery(T("error"), 
-                        T("source_limit_reached", MAX_SOURCES), 
+                    MessageBox.ErrorQuery(T("error"),
+                        T("source_limit_reached", MAX_SOURCES),
                         T("ok"));
                     return;
                 }
@@ -475,7 +475,7 @@ public class JobModificationWizard
     }
 
     // ==================== MODIFY DESTINATION ====================
-    
+
     private void ModifyDestination()
     {
         _frame!.Title = T("modify_destination_title");
@@ -551,7 +551,7 @@ public class JobModificationWizard
     }
 
     // ==================== MODIFY BACKUP TYPE ====================
-    
+
     private void ModifyBackupType()
     {
         _frame!.Title = T("modify_backup_type_title");
@@ -563,14 +563,14 @@ public class JobModificationWizard
             Y = Pos.Center() - 4
         };
 
-        var backupTypes = new List<string> 
-        { 
-            T("backup_type_full"), 
-            T("backup_type_differential") 
+        var backupTypes = new List<string>
+        {
+            T("backup_type_full"),
+            T("backup_type_differential")
         };
-        
+
         var currentIndex = _currentJob!.BackupType == BackupType.COMPLETE ? 0 : 1;
-        
+
         var listView = new ListView(backupTypes)
         {
             X = Pos.Center() - 15,
@@ -627,13 +627,13 @@ public class JobModificationWizard
     }
 
     // ==================== HELPERS ====================
-    
+
     private bool ConfirmModification(string parameterName, string oldValue, string newValue)
     {
-        var summary = T("modification_confirmation", 
-            _currentJob!.Name, 
-            parameterName, 
-            oldValue, 
+        var summary = T("modification_confirmation",
+            _currentJob!.Name,
+            parameterName,
+            oldValue,
             newValue);
 
         var result = MessageBox.Query(70, 20, T("confirmation"), summary, T("yes_save"), T("no_cancel"));
@@ -642,8 +642,8 @@ public class JobModificationWizard
 
     private void AskContinueModifying()
     {
-        var result = MessageBox.Query(50, 7, T("continue"), 
-            T("continue_modifying"), 
+        var result = MessageBox.Query(50, 7, T("continue"),
+            T("continue_modifying"),
             T("yes"), T("no"));
 
         if (result == 0) // Yes
