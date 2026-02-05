@@ -14,7 +14,7 @@ namespace EasySave;
 /// Point d'entrée principal de l'application EasySave
 /// Supporte l'exécution par index: EasySave.exe 1-3 ou EasySave.exe 1;3
 /// </summary>
-internal class Program
+public class Program
 {
     private static LocalizationService? _localizationService;
     private static BackupManager? _backupManager;
