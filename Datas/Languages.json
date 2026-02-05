@@ -1,4 +1,4 @@
-{
+  {
   "en": {
     "app_title": "EasySave",
     "menu_quit": "_Quit",
@@ -112,7 +112,9 @@
     "choose_log_format_title": "Choose log format",
     "select_format": "Select format:",
     "log_format_changed": "Log format changed.",
-    "error_executing_task": "Error executing task:"
+    "error_executing_task": "Error executing task:",
+    "source_added": "Source added.",
+    "error_executing_jobs": "Error executing tasks:"
   },
   "fr": {
     "app_title": "EasySave",
@@ -227,6 +229,8 @@
     "choose_log_format_title": "Choisir le format de log",
     "select_format": "Sélectionnez le format:",
     "log_format_changed": "Format de log modifié.",
-    "error_executing_task": "Erreur lors de l'exécution de la tâche:"
+    "error_executing_task": "Erreur lors de l'exécution de la tâche:",
+    "source_added": "Source ajoutée.",
+    "error_executing_jobs": "Erreur lors de l'exécution des tâches:"
   }
 }
