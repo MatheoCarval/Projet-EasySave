@@ -22,10 +22,10 @@ jobs:
         dotnet-version: 8.0.x
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/EasySave.slnx
     
     - name: Check code formatting
-      run: dotnet format EasySave.slnx --verify-no-changes --verbosity diagnostic
+      run: dotnet format src/EasySave.slnx --verify-no-changes --verbosity diagnostic
 
   build:
     name: Build
@@ -41,10 +41,10 @@ jobs:
         dotnet-version: 8.0.x
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/EasySave.slnx
     
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build src/EasySave.slnx --no-restore --configuration Release
 
   test:
     name: Test
@@ -64,10 +64,10 @@ jobs:
         dotnet-version: 8.0.x
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/EasySave.slnx
     
     - name: Run tests
-      run: dotnet test EasySave.Tests/EasySave.Tests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      run: dotnet test src/EasySave.Tests/EasySave.Tests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
     
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
@@ -88,8 +88,8 @@ jobs:
         dotnet-version: 8.0.x
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/EasySave.slnx
     
     - name: Check for vulnerable packages
-      run: dotnet list package --vulnerable --include-transitive
+      run: dotnet list src/EasySave.slnx package --vulnerable --include-transitive
 
