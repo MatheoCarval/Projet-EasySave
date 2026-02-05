@@ -19,6 +19,7 @@ namespace EasySave.Tests.Services.Managers
         private readonly StateWriter _stateWriter;
         private readonly FileTransferService _fileTransferService;
         private readonly string _testFilePath;
+        private readonly string _jobsFilePath;
 
         public BackupManagerTests()
         {
@@ -26,6 +27,16 @@ namespace EasySave.Tests.Services.Managers
             _testFilePath = Path.Combine(Path.GetTempPath(), $"test_state_{Guid.NewGuid()}.json");
             _stateWriter = new StateWriter(_testFilePath);
             _fileTransferService = new FileTransferService(_mockLogger.Object, _stateWriter);
+            
+            // BackupManager loads from ./Datas/jobs.json - clear it before each test
+            _jobsFilePath = "./Datas/jobs.json";
+            if (File.Exists(_jobsFilePath))
+            {
+                File.Delete(_jobsFilePath);
+            }
+            
+            // Ensure the Datas directory exists
+            Directory.CreateDirectory("./Datas");
         }
 
         public void Dispose()
@@ -33,6 +44,12 @@ namespace EasySave.Tests.Services.Managers
             if (File.Exists(_testFilePath))
             {
                 File.Delete(_testFilePath);
+            }
+            
+            // Clean up jobs file after each test
+            if (File.Exists(_jobsFilePath))
+            {
+                File.Delete(_jobsFilePath);
             }
         }
 
