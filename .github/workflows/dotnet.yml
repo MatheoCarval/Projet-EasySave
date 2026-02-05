@@ -63,8 +63,13 @@ jobs:
       run: dotnet restore
     
     - name: Run tests
-      run: dotnet test --configuration Release --verbosity normal
-      continue-on-error: true
+      run: dotnet test EasySave.Tests/EasySave.Tests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+    
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '**/test-results.trx'
 
   security:
     name: Security Scan
