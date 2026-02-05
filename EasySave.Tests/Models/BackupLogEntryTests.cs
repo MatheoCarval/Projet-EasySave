@@ -38,8 +38,13 @@ namespace EasySave.Tests.Models
 
             // Assert
             Assert.NotNull(entry);
-            Assert.Equal(default(DateTime), entry.Timestamp);
-            Assert.Null(entry.BackupName);
+            // Constructor sets Timestamp to DateTime.Now, so it should be close to current time
+            Assert.True((DateTime.Now - entry.Timestamp).TotalSeconds < 1);
+            Assert.Equal(string.Empty, entry.BackupName);
+            Assert.Equal(string.Empty, entry.SourcePath);
+            Assert.Equal(string.Empty, entry.TargetPath);
+            Assert.Equal(0, entry.FileSize);
+            Assert.Equal(0, entry.TransferTime);
         }
 
         [Theory]

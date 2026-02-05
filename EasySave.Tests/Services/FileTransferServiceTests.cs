@@ -94,15 +94,24 @@ namespace EasySave.Tests.Services
             // Arrange
             CreateTestFiles(_sourceDir, 3);
             var job = new BackupJob("TestJob", new List<string> { _sourceDir }, _targetDir, BackupType.COMPLETE);
+            
+            // Initialize job state as ExecuteJob would do
+            var files = Directory.GetFiles(_sourceDir, "*", SearchOption.AllDirectories);
+            job.TotalFiles = files.Length;
+            job.RemainingFiles = files.Length;
+            job.TotalSize = files.Sum(f => new FileInfo(f).Length);
+            job.RemainingSize = job.TotalSize;
+            job.BackupState = BackupState.ACTIVE;
 
             // Act
             _service.TransferDirectory(_sourceDir, _targetDir, job);
 
             // Assert
-            Assert.Equal(BackupState.COMPLETED, job.BackupState);
-            Assert.Equal(100, job.Progress);
             Assert.Equal(0, job.RemainingFiles);
+            Assert.Equal(100, job.Progress);
             Assert.Equal(3, Directory.GetFiles(_targetDir).Length);
+            // Note: BackupState is not set to COMPLETED by TransferDirectory, 
+            // that's done by BackupManager.ExecuteJob()
         }
 
         [Fact]

@@ -8,28 +8,39 @@ using Moq;
 using Xunit;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace EasySave.Tests.Services.Managers
 {
-    public class BackupManagerTests
+    public class BackupManagerTests : IDisposable
     {
         private readonly Mock<ILogger> _mockLogger;
-        private readonly Mock<StateWriter> _mockStateWriter;
+        private readonly StateWriter _stateWriter;
         private readonly FileTransferService _fileTransferService;
+        private readonly string _testFilePath;
 
         public BackupManagerTests()
         {
             _mockLogger = new Mock<ILogger>();
-            _mockStateWriter = new Mock<StateWriter>("state.json");
-            _fileTransferService = new FileTransferService(_mockLogger.Object, _mockStateWriter.Object);
+            _testFilePath = Path.Combine(Path.GetTempPath(), $"test_state_{Guid.NewGuid()}.json");
+            _stateWriter = new StateWriter(_testFilePath);
+            _fileTransferService = new FileTransferService(_mockLogger.Object, _stateWriter);
+        }
+
+        public void Dispose()
+        {
+            if (File.Exists(_testFilePath))
+            {
+                File.Delete(_testFilePath);
+            }
         }
 
         [Fact]
         public void Constructor_WithValidParameters_InitializesCorrectly()
         {
             // Arrange & Act
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Assert
             Assert.NotNull(manager);
@@ -41,7 +52,7 @@ namespace EasySave.Tests.Services.Managers
         {
             // Arrange, Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new BackupManager(null!, _mockStateWriter.Object));
+                new BackupManager(null!, _stateWriter));
         }
 
         [Fact]
@@ -57,7 +68,7 @@ namespace EasySave.Tests.Services.Managers
         {
             // Arrange, Act & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _mockStateWriter.Object, 0));
+                new BackupManager(_fileTransferService, _stateWriter, 0));
         }
 
         [Fact]
@@ -65,14 +76,14 @@ namespace EasySave.Tests.Services.Managers
         {
             // Arrange, Act & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _mockStateWriter.Object, -1));
+                new BackupManager(_fileTransferService, _stateWriter, -1));
         }
 
         [Fact]
         public void CreateJob_WithValidParameters_CreatesJob()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act
             var job = manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
@@ -87,7 +98,7 @@ namespace EasySave.Tests.Services.Managers
         public void CreateJob_WithDuplicateName_ThrowsArgumentException()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
             manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
             // Act & Assert
@@ -100,7 +111,7 @@ namespace EasySave.Tests.Services.Managers
         public void CreateJob_WhenMaxJobsReached_ThrowsInvalidOperationException()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object, maxJobs: 2);
+            var manager = new BackupManager(_fileTransferService, _stateWriter, maxJobs: 2);
             manager.CreateJob("Job1", new List<string> { @"C:\Source1" }, @"C:\Target1", BackupType.COMPLETE);
             manager.CreateJob("Job2", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.COMPLETE);
 
@@ -114,7 +125,7 @@ namespace EasySave.Tests.Services.Managers
         public void DeleteJob_WithExistingJob_ReturnsTrue()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
             manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
             // Act
@@ -129,7 +140,7 @@ namespace EasySave.Tests.Services.Managers
         public void DeleteJob_WithNonExistingJob_ReturnsFalse()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act
             var result = manager.DeleteJob("NonExistent");
@@ -145,7 +156,7 @@ namespace EasySave.Tests.Services.Managers
         public void DeleteJob_WithInvalidJobId_ThrowsArgumentException(string? jobId)
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act & Assert
 #pragma warning disable CS8604
@@ -157,7 +168,7 @@ namespace EasySave.Tests.Services.Managers
         public void GetJob_WithExistingJob_ReturnsJob()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
             manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
             // Act
@@ -172,7 +183,7 @@ namespace EasySave.Tests.Services.Managers
         public void GetJob_WithNonExistingJob_ReturnsNull()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act
             var job = manager.GetJob("NonExistent");
@@ -188,7 +199,7 @@ namespace EasySave.Tests.Services.Managers
         public void GetJob_WithInvalidJobId_ThrowsArgumentException(string? jobId)
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act & Assert
 #pragma warning disable CS8604
@@ -200,7 +211,7 @@ namespace EasySave.Tests.Services.Managers
         public void GetAllJobs_ReturnsAllJobs()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
             manager.CreateJob("Job1", new List<string> { @"C:\Source1" }, @"C:\Target1", BackupType.COMPLETE);
             manager.CreateJob("Job2", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.DIFFERENTIAL);
 
@@ -217,7 +228,7 @@ namespace EasySave.Tests.Services.Managers
         public void GetAllJobs_ReturnsEmptyList_WhenNoJobs()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act
             var jobs = manager.GetAllJobs();
@@ -230,7 +241,7 @@ namespace EasySave.Tests.Services.Managers
         public void ExecuteJob_WithNonExistingJob_ThrowsArgumentException()
         {
             // Arrange
-            var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
+            var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => manager.ExecuteJob("NonExistent"));

@@ -1,6 +1,7 @@
 using Utilities;
 using Xunit;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace EasySave.Tests.Helpers
 {
@@ -30,7 +31,9 @@ namespace EasySave.Tests.Helpers
         public void PathExists_WithNonExistingPath_ReturnsFalse()
         {
             // Arrange
-            var nonExistentPath = @"C:\NonExistentPath\File.txt";
+            var nonExistentPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+                ? @"C:\NonExistentPath\File.txt" 
+                : "/nonexistent/path/file.txt";
 
             // Act
             var result = PathValidator.PathExists(nonExistentPath);
@@ -72,21 +75,31 @@ namespace EasySave.Tests.Helpers
             }
         }
 
-        [Theory]
-        [InlineData(@"C:\Test\Path", @"\\?\C:\Test\Path")]
-        [InlineData(@"D:\Folder\File.txt", @"\\?\D:\Folder\File.txt")]
-        public void ToUncPath_ConvertsPathCorrectly(string input, string expected)
+        [SkippableFact]
+        public void ToUncPath_ConvertsPathCorrectly()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "UNC paths are Windows-specific");
+
+            // Arrange
+            var input1 = @"C:\Test\Path";
+            var expected1 = @"\\?\C:\Test\Path";
+            var input2 = @"D:\Folder\File.txt";
+            var expected2 = @"\\?\D:\Folder\File.txt";
+
             // Act
-            var result = PathValidator.ToUncPath(input);
+            var result1 = PathValidator.ToUncPath(input1);
+            var result2 = PathValidator.ToUncPath(input2);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected1, result1);
+            Assert.Equal(expected2, result2);
         }
 
-        [Fact]
+        [SkippableFact]
         public void ToUncPath_WithAlreadyUncPath_ReturnsUnchanged()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "UNC paths are Windows-specific");
+
             // Arrange
             var uncPath = @"\\?\C:\Test\Path";
 
