@@ -157,7 +157,7 @@ public class Program
                 {
                     for (int i = start; i <= end; i++)
                     {
-                        indices.Add(i - 1); 
+                        indices.Add(i - 1);
                     }
                 }
             }
@@ -169,13 +169,13 @@ public class Program
             {
                 if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
                 {
-                    indices.Add(jobNum - 1); 
+                    indices.Add(jobNum - 1);
                 }
             }
         }
         else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
         {
-            indices.Add(jobNum - 1); 
+            indices.Add(jobNum - 1);
         }
 
         return indices.ToList();
