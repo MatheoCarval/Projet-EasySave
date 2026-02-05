@@ -117,10 +117,10 @@ namespace EasySave.Tests.Services.Managers
         }
 
         /// <summary>
-        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed zero as the maximum jobs limit.
+        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed negative value as the maximum jobs limit.
         /// </summary>
         [Fact]
-        public void Constructor_WithZeroMaxJobs_ThrowsArgumentOutOfRangeException()
+        public void Constructor_WithNegativeMaxJobs_ThrowsArgumentOutOfRangeException()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new BackupManager(_fileTransferService, _stateWriter, -1));

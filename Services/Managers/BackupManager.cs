@@ -257,7 +257,6 @@ public class BackupManager
     }
 
     /// <summary>
-    /// <summary>
     /// Loads all backup jobs from persistent storage and populates the internal job collection.
     /// </summary>
     public void LoadJobs()
