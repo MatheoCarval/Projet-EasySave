@@ -22,6 +22,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         /// Path to the test JSON log file created in the temporary directory.
         /// </summary>
         private readonly string _testFilePath;
+        private readonly string _dailyFilePath;
 
         /// <summary>
         /// Initializes test fixtures by creating a temporary directory for test log files.
@@ -31,6 +32,7 @@ namespace EasySave.Tests.EasyLog.Loggers
             _testDirectory = Path.Combine(Path.GetTempPath(), $"JsonLoggerTest_{Guid.NewGuid()}");
             Directory.CreateDirectory(_testDirectory);
             _testFilePath = Path.Combine(_testDirectory, "test.json");
+            _dailyFilePath = GetDailyPath(_testFilePath, DateTime.Now);
         }
 
         /// <summary>
@@ -76,8 +78,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.Log(entry);
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
         }
 
@@ -110,8 +112,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.LogCollection(entries);
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("Backup1", content);
             Assert.Contains("Backup2", content);
         }
@@ -175,8 +177,8 @@ namespace EasySave.Tests.EasyLog.Loggers
 
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
         }
 
@@ -195,6 +197,14 @@ namespace EasySave.Tests.EasyLog.Loggers
 
             var result = logger.ReadLog<BackupLogEntry>();
             Assert.Equal(2, result.Count());
+        }
+
+        private static string GetDailyPath(string baseOutputPath, DateTime date)
+        {
+            string directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
+            string filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
+            string dateString = date.ToString("yyyy-MM-dd");
+            return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.json");
         }
     }
 }

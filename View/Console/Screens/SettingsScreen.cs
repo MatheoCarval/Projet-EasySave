@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Terminal.Gui;
 using EasySave.Services;
+using EasySave.Services.Managers;
+using EasyLog.Enums;
 
 namespace EasySave.View.Console.Screens;
 
@@ -14,6 +16,10 @@ public class SettingsScreen
     /// Service for retrieving and changing localized text strings.
     /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for application configuration including language and log format settings.
+    /// </summary>
+    private readonly ConfigurationManager _configurationManager;
     /// <summary>
     /// The frame view for rendering settings screens and components.
     /// </summary>
@@ -29,6 +35,7 @@ public class SettingsScreen
     public SettingsScreen(LocalizationService localizationService)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
+        _configurationManager = ConfigurationManager.GetInstance();
     }
 
     /// <summary>
@@ -211,6 +218,7 @@ public class SettingsScreen
         try
         {
             _localizationService.ChangeLanguage(languageCode);
+            _configurationManager.UpdateLanguage(languageCode);
             MessageBox.Query(50, 7, T("success"), T("language_changed"), T("ok"));
 
             ShowSettingsMenu();
@@ -228,6 +236,12 @@ public class SettingsScreen
     {
         try
         {
+            if (!Enum.TryParse<LogFormat>(format, out var logFormat))
+            {
+                throw new ArgumentException($"Invalid log format: {format}");
+            }
+
+            _configurationManager.UpdateLogFormat(logFormat);
             MessageBox.Query(50, 7, T("success"), T("log_format_changed"), T("ok"));
             ShowSettingsMenu();
         }

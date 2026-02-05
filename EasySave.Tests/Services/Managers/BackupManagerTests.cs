@@ -177,9 +177,9 @@ namespace EasySave.Tests.Services.Managers
         public void DeleteJob_WithExistingJob_ReturnsTrue()
         {
             var manager = new BackupManager(_fileTransferService, _stateWriter);
-            manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
+            var job = manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
-            var result = manager.DeleteJob("TestJob");
+            var result = manager.DeleteJob(job.Id);
 
             Assert.True(result);
             Assert.Empty(manager.GetAllJobs());

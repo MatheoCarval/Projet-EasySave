@@ -87,9 +87,9 @@ namespace EasySave.Tests.Helpers
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "UNC paths are Windows-specific");
 
             var input1 = @"C:\Test\Path";
-            var expected1 = @"\\?\C:\Test\Path";
+            var expected1 = @"\\localhost\C$\Test\Path";
             var input2 = @"D:\Folder\File.txt";
-            var expected2 = @"\\?\D:\Folder\File.txt";
+            var expected2 = @"\\localhost\D$\Folder\File.txt";
 
             var result1 = PathValidator.ToUncPath(input1);
             var result2 = PathValidator.ToUncPath(input2);

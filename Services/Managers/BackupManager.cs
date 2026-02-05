@@ -4,6 +4,7 @@ using EasySave.Services;
 using Services.Writers;
 using Utilities;
 using System.Text.Json;
+using System.Runtime.ConstrainedExecution;
 
 namespace Services.Managers;
 
@@ -28,6 +29,8 @@ public class BackupManager
     /// Service responsible for persisting and managing backup job state information.
     /// </summary>
     private readonly StateWriter _stateWriter;
+
+    const string JobsFilePath = "./Datas/jobs.json";
 
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
@@ -68,16 +71,16 @@ public class BackupManager
     }
 
     /// <summary>
-    /// Deletes a backup job by name from memory and removes its associated data from persistent storage.
+    /// Deletes a backup job by ID from memory and removes its associated data from persistent storage.
     /// </summary>
-    public bool DeleteJob(string jobName)
+    public bool DeleteJob(string jobId)
     {
-        if (string.IsNullOrWhiteSpace(jobName))
+        if (string.IsNullOrWhiteSpace(jobId))
         {
-            throw new ArgumentException("Job name cannot be null or empty.", nameof(jobName));
+            throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));
         }
 
-        var job = _jobs.FirstOrDefault(j => j.Name == jobName);
+        var job = _jobs.FirstOrDefault(j => j.Id == jobId);
         if (job != null)
         {
             _jobs.Remove(job);
@@ -231,7 +234,7 @@ public class BackupManager
 
         try
         {
-            string path = "./Datas/jobs.json";
+            string path = JobsFilePath;
             var jobs = LoadJobsFromFile(path);
 
             // Find and remove existing job (search by ID)
@@ -263,7 +266,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = "./Datas/jobs.json";
+            string jobsFilePath = JobsFilePath;
             var jobs = LoadJobsFromFile(jobsFilePath);
             _jobs.Clear();
             _jobs.AddRange(jobs);
@@ -363,7 +366,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = "./Datas/jobs.json";
+            string jobsFilePath = JobsFilePath;
             var jobs = LoadJobsFromFile(jobsFilePath);
 
             jobs.RemoveAll(j => j.Id == jobId);
