@@ -142,7 +142,7 @@ namespace EasySave.Tests.Services.Managers
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
-        public void DeleteJob_WithInvalidJobId_ThrowsArgumentException(string jobId)
+        public void DeleteJob_WithInvalidJobId_ThrowsArgumentException(string? jobId)
         {
             // Arrange
             var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
@@ -183,7 +183,7 @@ namespace EasySave.Tests.Services.Managers
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
-        public void GetJob_WithInvalidJobId_ThrowsArgumentException(string jobId)
+        public void GetJob_WithInvalidJobId_ThrowsArgumentException(string? jobId)
         {
             // Arrange
             var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);

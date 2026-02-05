@@ -38,7 +38,7 @@ namespace EasySave.Tests.Services.Writers
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
-        public void Constructor_WithInvalidPath_ThrowsArgumentNullException(string path)
+        public void Constructor_WithInvalidPath_ThrowsArgumentNullException(string? path)
         {
             // Arrange, Act & Assert
             Assert.Throws<ArgumentNullException>(() => new StateWriter(path));
@@ -102,7 +102,7 @@ namespace EasySave.Tests.Services.Writers
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
-        public void GetJobState_WithInvalidJobName_ThrowsArgumentNullException(string jobName)
+        public void GetJobState_WithInvalidJobName_ThrowsArgumentNullException(string? jobName)
         {
             // Arrange
             var writer = new StateWriter(_testFilePath);
@@ -144,7 +144,7 @@ namespace EasySave.Tests.Services.Writers
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
-        public void RemoveJobState_WithInvalidJobName_ThrowsArgumentNullException(string jobName)
+        public void RemoveJobState_WithInvalidJobName_ThrowsArgumentNullException(string? jobName)
         {
             // Arrange
             var writer = new StateWriter(_testFilePath);
