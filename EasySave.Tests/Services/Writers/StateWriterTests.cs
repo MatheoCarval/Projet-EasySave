@@ -41,7 +41,9 @@ namespace EasySave.Tests.Services.Writers
         public void Constructor_WithInvalidPath_ThrowsArgumentNullException(string? path)
         {
             // Arrange, Act & Assert
+#pragma warning disable CS8604
             Assert.Throws<ArgumentNullException>(() => new StateWriter(path));
+#pragma warning restore CS8604
         }
 
         [Fact]
@@ -108,7 +110,9 @@ namespace EasySave.Tests.Services.Writers
             var writer = new StateWriter(_testFilePath);
 
             // Act & Assert
+#pragma warning disable CS8604
             Assert.Throws<ArgumentNullException>(() => writer.GetJobState(jobName));
+#pragma warning restore CS8604
         }
 
         [Fact]
@@ -150,7 +154,9 @@ namespace EasySave.Tests.Services.Writers
             var writer = new StateWriter(_testFilePath);
 
             // Act & Assert
+#pragma warning disable CS8604
             Assert.Throws<ArgumentNullException>(() => writer.RemoveJobState(jobName));
+#pragma warning restore CS8604
         }
 
         [Fact]

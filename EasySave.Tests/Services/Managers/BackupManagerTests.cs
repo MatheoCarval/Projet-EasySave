@@ -148,7 +148,9 @@ namespace EasySave.Tests.Services.Managers
             var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
 
             // Act & Assert
+#pragma warning disable CS8604
             Assert.Throws<ArgumentException>(() => manager.DeleteJob(jobId));
+#pragma warning restore CS8604
         }
 
         [Fact]
@@ -189,7 +191,9 @@ namespace EasySave.Tests.Services.Managers
             var manager = new BackupManager(_fileTransferService, _mockStateWriter.Object);
 
             // Act & Assert
+#pragma warning disable CS8604
             Assert.Throws<ArgumentException>(() => manager.GetJob(jobId));
+#pragma warning restore CS8604
         }
 
         [Fact]
