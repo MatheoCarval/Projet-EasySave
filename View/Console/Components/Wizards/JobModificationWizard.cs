@@ -10,22 +10,41 @@ using Models.Enums;
 namespace EasySave.View.Console.Components.Wizards;
 
 /// <summary>
-/// Job modification wizard - Allows modifying existing backup jobs
-/// Supports modifying: Name, Sources, Destination, Backup Type
+/// Provides an interactive wizard for modifying existing backup jobs, allowing changes to job name, source directories, destination path, and backup type.
 /// </summary>
 public class JobModificationWizard
 {
+    /// <summary>
+    /// Maximum number of source directories allowed per backup job.
+    /// </summary>
     private const int MAX_SOURCES = 5;
 
+    /// <summary>
+    /// Localization service for retrieving translated text for UI elements.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Backup manager instance for retrieving, saving, and managing backup job data.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// Frame view container for displaying wizard UI components.
+    /// </summary>
     private FrameView? _frame;
+    /// <summary>
+    /// Callback action invoked when the wizard completes or is cancelled.
+    /// </summary>
     private Action? _onComplete;
 
-    // Current job being modified
+    /// <summary>
+    /// Currently selected backup job being modified.
+    /// </summary>
     private BackupJob? _currentJob;
 
+    /// <summary>
+    /// Initializes JobModificationWizard with required dependencies for localization and backup job management.
+    /// </summary>
     public JobModificationWizard(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -33,10 +52,8 @@ public class JobModificationWizard
     }
 
     /// <summary>
-    /// Starts the modification wizard
+    /// Initiates the modification wizard, displaying the job selection screen and handling the modification workflow.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when wizard completes or is cancelled</param>
     public void Start(FrameView frame, Action onComplete)
     {
         _frame = frame;
@@ -54,8 +71,9 @@ public class JobModificationWizard
         ShowJobSelection();
     }
 
-    // ==================== JOB SELECTION ====================
-
+    /// <summary>
+    /// Displays the job selection screen where users can choose which backup job to modify.
+    /// </summary>
     private void ShowJobSelection()
     {
         var jobs = _backupManager.GetAllJobs();
@@ -104,8 +122,9 @@ public class JobModificationWizard
         _frame!.Add(label, listView, modifyBtn, cancelBtn);
     }
 
-    // ==================== MODIFICATION OPTIONS ====================
-
+    /// <summary>
+    /// Displays menu options allowing users to choose which job parameter to modify.
+    /// </summary>
     private void ShowModificationOptions()
     {
         _frame!.Title = T("modify_choose_parameter");
@@ -164,8 +183,9 @@ public class JobModificationWizard
         _frame!.Add(label, listView, selectBtn, cancelBtn);
     }
 
-    // ==================== MODIFY NAME ====================
-
+    /// <summary>
+    /// Displays the interface for modifying the backup job name with validation for duplicate names.
+    /// </summary>
     private void ModifyName()
     {
         _frame!.Title = T("modify_name_title");
@@ -244,8 +264,9 @@ public class JobModificationWizard
         _frame!.Add(label, nameField, confirmBtn, cancelBtn);
     }
 
-    // ==================== MODIFY SOURCES ====================
-
+    /// <summary>
+    /// Displays options for modifying source directories: editing existing sources or adding new ones.
+    /// </summary>
     private void ModifySources()
     {
         _frame!.Title = T("modify_sources_title");
@@ -310,6 +331,9 @@ public class JobModificationWizard
         _frame!.Add(label, listView, selectBtn, cancelBtn);
     }
 
+    /// <summary>
+    /// Displays the list of current source directories for the job, allowing users to select one to edit.
+    /// </summary>
     private void ShowSourcesList()
     {
         _frame!.Title = T("modify_sources_title");
@@ -354,6 +378,9 @@ public class JobModificationWizard
         _frame!.Add(label, listView, editBtn, cancelBtn);
     }
 
+    /// <summary>
+    /// Displays the interface for editing a specific source directory at the given index.
+    /// </summary>
     private void EditSource(int index)
     {
         _frame!.Title = T("modify_sources_title");
@@ -422,6 +449,9 @@ public class JobModificationWizard
         _frame!.Add(label, sourceField, confirmBtn, cancelBtn);
     }
 
+    /// <summary>
+    /// Displays the interface for adding a new source directory to the job, enforcing the maximum source limit.
+    /// </summary>
     private void AddNewSource()
     {
         _frame!.Title = T("add_new_source");
@@ -474,8 +504,9 @@ public class JobModificationWizard
         _frame!.Add(label, sourceField, addBtn, cancelBtn);
     }
 
-    // ==================== MODIFY DESTINATION ====================
-
+    /// <summary>
+    /// Displays the interface for modifying the backup job destination path with format guidance.
+    /// </summary>
     private void ModifyDestination()
     {
         _frame!.Title = T("modify_destination_title");
@@ -550,8 +581,9 @@ public class JobModificationWizard
         _frame!.Add(label, destField, infoLabel, confirmBtn, cancelBtn);
     }
 
-    // ==================== MODIFY BACKUP TYPE ====================
-
+    /// <summary>
+    /// Displays the interface for changing the backup job type between complete and differential backups.
+    /// </summary>
     private void ModifyBackupType()
     {
         _frame!.Title = T("modify_backup_type_title");
@@ -626,8 +658,9 @@ public class JobModificationWizard
         _frame!.Add(label, listView, confirmBtn, cancelBtn);
     }
 
-    // ==================== HELPERS ====================
-
+    /// <summary>
+    /// Displays a confirmation dialog showing the parameter change details and returns true if the user confirms the modification.
+    /// </summary>
     private bool ConfirmModification(string parameterName, string oldValue, string newValue)
     {
         var summary = T("modification_confirmation",
@@ -640,6 +673,9 @@ public class JobModificationWizard
         return result == 0;
     }
 
+    /// <summary>
+    /// Prompts the user to continue modifying other job parameters or exit the wizard.
+    /// </summary>
     private void AskContinueModifying()
     {
         var result = MessageBox.Query(50, 7, T("continue"),
@@ -656,6 +692,9 @@ public class JobModificationWizard
         }
     }
 
+    /// <summary>
+    /// Retrieves translated text from the localization service, applying optional format arguments.
+    /// </summary>
     private string T(string key, params object[] args)
     {
         var text = _localizationService.GetTextTranslated(key);

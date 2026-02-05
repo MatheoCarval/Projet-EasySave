@@ -9,33 +9,61 @@ using EasySave.View.Console.Components.Wizards;
 namespace EasySave.View.Console;
 
 /// <summary>
-/// Main ConsoleUI class - Entry point and coordinator for the terminal interface
-/// Orchestrates navigation between screens and manages the application lifecycle
+/// Main entry point and coordinator for the Terminal.Gui-based user interface. Manages navigation between screens and application lifecycle.
 /// </summary>
 public class ConsoleUI
 {
+    /// <summary>
+    /// Service for retrieving localized text strings.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Service for managing backup job execution and coordination.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// The main application window.
+    /// </summary>
     private Window? _mainWindow;
+    /// <summary>
+    /// The content frame that holds the current screen display.
+    /// </summary>
     private FrameView? _contentFrame;
 
-    // Screens
+    /// <summary>
+    /// Screen for displaying and managing the main menu.
+    /// </summary>
     private readonly MainMenuScreen _mainMenuScreen;
+    /// <summary>
+    /// Screen for executing backup jobs.
+    /// </summary>
     private readonly JobExecutionScreen _jobExecutionScreen;
+    /// <summary>
+    /// Screen for deleting backup jobs.
+    /// </summary>
     private readonly JobDeletionScreen _jobDeletionScreen;
+    /// <summary>
+    /// Screen for displaying backup job details.
+    /// </summary>
     private readonly JobDisplayScreen _jobDisplayScreen;
+    /// <summary>
+    /// Screen for application settings configuration.
+    /// </summary>
     private readonly SettingsScreen _settingsScreen;
 
-    // Wizards
+    /// <summary>
+    /// Wizard for creating new backup jobs.
+    /// </summary>
     private readonly JobCreationWizard _jobCreationWizard;
+    /// <summary>
+    /// Wizard for modifying existing backup jobs.
+    /// </summary>
     private readonly JobModificationWizard _jobModificationWizard;
 
     /// <summary>
-    /// Initializes ConsoleUI with required services
+    /// Initializes the ConsoleUI with localization and backup management services, and instantiates all screens and wizards.
     /// </summary>
-    /// <param name="localizationService">Service for translations</param>
-    /// <param name="backupManager">Service for managing backup jobs</param>
     public ConsoleUI(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -127,9 +155,8 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Handles menu selection and routes to appropriate screen
+    /// Processes menu selection input and routes to the appropriate screen or wizard (0-7 for Create, Modify, Delete, Execute One, Execute All, Display, Settings, and Quit).
     /// </summary>
-    /// <param name="selected">Selected menu index (0-7)</param>
     private void HandleMenuSelection(int selected)
     {
         switch (selected)
@@ -202,7 +229,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Helper method for translations
+    /// Retrieves and formats a localized text string by key, optionally applying format arguments.
     /// </summary>
     private string T(string key, params object[] args)
     {

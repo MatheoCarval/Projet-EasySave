@@ -4,12 +4,17 @@ using System;
 
 namespace EasySave.Tests.Models
 {
+    /// <summary>
+    /// Unit tests for the BackupLogEntry class, verifying property initialization, default values, and value assignment.
+    /// </summary>
     public class BackupLogEntryTests
     {
+        /// <summary>
+        /// Verifies that BackupLogEntry constructor initializes all properties with the specified values.
+        /// </summary>
         [Fact]
         public void Constructor_InitializesPropertiesCorrectly()
         {
-            // Arrange
             var timestamp = DateTime.Now;
             var entry = new BackupLogEntry
             {
@@ -21,7 +26,6 @@ namespace EasySave.Tests.Models
                 TransferTime = 150
             };
 
-            // Assert
             Assert.Equal(timestamp, entry.Timestamp);
             Assert.Equal("TestBackup", entry.BackupName);
             Assert.Equal(@"C:\Source\file.txt", entry.SourcePath);
@@ -30,15 +34,15 @@ namespace EasySave.Tests.Models
             Assert.Equal(150, entry.TransferTime);
         }
 
+        /// <summary>
+        /// Verifies that BackupLogEntry can be instantiated with default values and initializes properties with empty strings and zero values.
+        /// </summary>
         [Fact]
         public void BackupLogEntry_CanBeInstantiatedWithDefaultValues()
         {
-            // Arrange & Act
             var entry = new BackupLogEntry();
 
-            // Assert
             Assert.NotNull(entry);
-            // Constructor sets Timestamp to DateTime.Now, so it should be close to current time
             Assert.True((DateTime.Now - entry.Timestamp).TotalSeconds < 1);
             Assert.Equal(string.Empty, entry.BackupName);
             Assert.Equal(string.Empty, entry.SourcePath);
@@ -47,30 +51,32 @@ namespace EasySave.Tests.Models
             Assert.Equal(0, entry.TransferTime);
         }
 
+        /// <summary>
+        /// Verifies that FileSize property can be set to different values including zero, standard sizes, and large file sizes.
+        /// </summary>
         [Theory]
         [InlineData(0)]
         [InlineData(1024)]
         [InlineData(1048576)]
         public void FileSize_CanBeSetToDifferentValues(long size)
         {
-            // Arrange
             var entry = new BackupLogEntry { FileSize = size };
 
-            // Assert
             Assert.Equal(size, entry.FileSize);
         }
 
+        /// <summary>
+        /// Verifies that TransferTime property can be set to various values including zero, positive durations, and negative values for error states.
+        /// </summary>
         [Theory]
         [InlineData(0)]
         [InlineData(100)]
         [InlineData(5000)]
-        [InlineData(-1)] // Pour les erreurs
+        [InlineData(-1)]
         public void TransferTime_CanBeSetToDifferentValues(long time)
         {
-            // Arrange
             var entry = new BackupLogEntry { TransferTime = time };
 
-            // Assert
             Assert.Equal(time, entry.TransferTime);
         }
     }

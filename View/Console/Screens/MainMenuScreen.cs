@@ -6,22 +6,26 @@ using EasySave.Services;
 namespace EasySave.View.Console.Screens;
 
 /// <summary>
-/// Main menu screen - Displays the 8 main menu options
+/// Displays the main menu screen with eight primary navigation options for the user interface.
 /// </summary>
 public class MainMenuScreen
 {
+    /// <summary>
+    /// Service for retrieving localized text strings for menu items and labels.
+    /// </summary>
     private readonly LocalizationService _localizationService;
 
+    /// <summary>
+    /// Initializes a new instance of MainMenuScreen with the specified localization service for menu item translation.
+    /// </summary>
     public MainMenuScreen(LocalizationService localizationService)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
     }
 
     /// <summary>
-    /// Gets the menu view with all options
+    /// Creates and returns a centered ListView containing all eight main menu options, with a callback handler for selection events.
     /// </summary>
-    /// <param name="onSelection">Callback when user selects an option</param>
-    /// <returns>ListView containing menu items</returns>
     public Terminal.Gui.View GetView(Action<int> onSelection)
     {
         var items = CreateMenuItems();
@@ -42,7 +46,7 @@ public class MainMenuScreen
     }
 
     /// <summary>
-    /// Creates the list of menu items with translations
+    /// Creates the list of localized menu item strings representing the eight main navigation options.
     /// </summary>
     private List<string> CreateMenuItems()
     {
@@ -59,5 +63,8 @@ public class MainMenuScreen
         };
     }
 
+    /// <summary>
+    /// Retrieves and returns the localized text for the specified translation key.
+    /// </summary>
     private string T(string key) => _localizationService.GetTextTranslated(key);
 }

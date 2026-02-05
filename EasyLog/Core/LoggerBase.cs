@@ -7,33 +7,40 @@ using EasyLog.Formatters;
 
 public abstract class LoggerBase : ILogger
 {
-    // Chemin du fichier de sortie
+    /// <summary>
+    /// The file path where log entries are persisted.
+    /// </summary>
     protected string _outputPath;
 
-    // Format actuel (JSON, XML, etc.)
+    /// <summary>
+    /// The current logging format (JSON, XML, etc.).
+    /// </summary>
     protected LogFormat _format;
 
-    // Dictionnaire des formatters personnalisés par type
-    // Key = Type de l'objet (ex: typeof(BackupLogEntry))
-    // Value = Formatter correspondant (ex: JsonFormatter<BackupLogEntry>)
+    /// <summary>
+    /// Dictionary of custom formatters indexed by type. Enables type-specific formatting logic.
+    /// </summary>
     private readonly Dictionary<Type, object> _formatters;
 
-    // Verrou pour la thread-safety lors des écritures concurrentes
+    /// <summary>
+    /// Lock object for thread-safe concurrent write operations.
+    /// </summary>
     protected readonly object _lock = new object();
 
+    /// <summary>
+    /// Initializes a new instance of the LoggerBase class with an output path and logging format. Ensures the output directory exists.
+    /// </summary>
     protected LoggerBase(string outputPath, LogFormat format = LogFormat.JSON)
     {
         _outputPath = outputPath;
         _format = format;
         _formatters = new Dictionary<Type, object>();
 
-        // Garantir que le répertoire existe
         EnsureDirectoryExists(_outputPath);
     }
 
     /// <summary>
-    /// Enregistre un formatter personnalisé pour un type spécifique
-    /// Exemple: RegisterFormatter(new CustomJsonFormatter&lt;BackupLogEntry&gt;())
+    /// Registers a custom formatter for a specific type to override default formatting behavior.
     /// </summary>
     public void RegisterFormatter<T>(ILogFormatter<T> formatter) where T : class
     {
@@ -42,20 +49,17 @@ public abstract class LoggerBase : ILogger
     }
 
     /// <summary>
-    /// Récupère le formatter pour le type T
-    /// Si aucun formatter personnalisé n'existe, crée un formatter par défaut
+    /// Retrieves or creates a formatter for type T. Returns a registered custom formatter if available; otherwise creates a default formatter based on the current format setting.
     /// </summary>
     protected ILogFormatter<T> GetFormatter<T>() where T : class
     {
         Type type = typeof(T);
 
-        // Si un formatter personnalisé existe, l'utiliser
         if (_formatters.ContainsKey(type))
         {
             return (ILogFormatter<T>)_formatters[type];
         }
 
-        // Sinon, créer un formatter par défaut selon le format actuel
         ILogFormatter<T> defaultFormatter = _format switch
         {
             LogFormat.JSON => new JsonFormatter<T>(prettyPrint: true, paginate: true),
@@ -63,33 +67,24 @@ public abstract class LoggerBase : ILogger
             _ => throw new NotSupportedException($"Format {_format} not supported")
         };
 
-        // Enregistrer pour réutilisation
         _formatters[type] = defaultFormatter;
         return defaultFormatter;
     }
 
     /// <summary>
-    /// Enregistre un objet dans le log
-    /// LOGIQUE:
-    /// 1. Récupère le formatter pour le type T
-    /// 2. Convertit l'objet en string avec le formatter
-    /// 3. Lit le contenu existant du fichier
-    /// 4. Ajoute la nouvelle entrée
-    /// 5. Écrit tout dans le fichier
+    /// Logs a single object of type T. Retrieves the appropriate formatter, reads existing log content, appends the new entry, and writes the complete collection back to the file in a thread-safe manner.
     /// </summary>
     public void Log<T>(T data) where T : class
     {
         if (data == null)
             throw new ArgumentNullException(nameof(data));
 
-        lock (_lock) // Thread-safety
+        lock (_lock)
         {
             try
             {
-                // 1. Récupérer le formatter approprié
                 var formatter = GetFormatter<T>();
 
-                // 2. Lire les données existantes
                 var existingContent = ReadFromFile(_outputPath);
                 var existingData = new List<T>();
 
@@ -101,18 +96,14 @@ public abstract class LoggerBase : ILogger
                     }
                     catch
                     {
-                        // Si parsing échoue, on part d'une liste vide
                         existingData = new List<T>();
                     }
                 }
 
-                // 3. Ajouter la nouvelle entrée
                 existingData.Add(data);
 
-                // 4. Formatter toute la collection
                 string formattedContent = formatter.FormatCollection(existingData);
 
-                // 5. Écrire dans le fichier
                 WriteToFile(formattedContent, _outputPath);
             }
             catch (Exception ex)
@@ -123,8 +114,7 @@ public abstract class LoggerBase : ILogger
     }
 
     /// <summary>
-    /// Enregistre une collection d'objets
-    /// Plus efficace que d'appeler Log() plusieurs fois
+    /// Logs a collection of objects of type T. More efficient than calling Log() multiple times by batching all entries in a single write operation.
     /// </summary>
     public void LogCollection<T>(IEnumerable<T> data) where T : class
     {
@@ -137,7 +127,6 @@ public abstract class LoggerBase : ILogger
             {
                 var formatter = GetFormatter<T>();
 
-                // Lire les données existantes
                 var existingContent = ReadFromFile(_outputPath);
                 var existingData = new List<T>();
 
@@ -153,10 +142,8 @@ public abstract class LoggerBase : ILogger
                     }
                 }
 
-                // Ajouter toutes les nouvelles entrées
                 existingData.AddRange(data);
 
-                // Formatter et écrire
                 string formattedContent = formatter.FormatCollection(existingData);
                 WriteToFile(formattedContent, _outputPath);
             }
@@ -167,6 +154,9 @@ public abstract class LoggerBase : ILogger
         }
     }
 
+    /// <summary>
+    /// Changes the output file path for logging operations and ensures the target directory exists.
+    /// </summary>
     public void SetOutputPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -176,13 +166,18 @@ public abstract class LoggerBase : ILogger
         EnsureDirectoryExists(_outputPath);
     }
 
+    /// <summary>
+    /// Changes the logging format and clears cached formatters to force recreation with the new format.
+    /// </summary>
     public void SetFormat(LogFormat format)
     {
         _format = format;
-        // Effacer les formatters en cache pour forcer la recréation avec le nouveau format
         _formatters.Clear();
     }
 
+    /// <summary>
+    /// Reads and retrieves all logged entries of type T from the log file, returning an empty collection if the file is empty or unreadable.
+    /// </summary>
     public IEnumerable<T> ReadLog<T>() where T : class
     {
         lock (_lock)
@@ -203,22 +198,26 @@ public abstract class LoggerBase : ILogger
         }
     }
 
+    /// <summary>
+    /// Flushes any buffered data to the underlying storage. Default implementation is empty; derived classes with buffering can override this method.
+    /// </summary>
     public virtual void Flush()
     {
-        // Implémentation par défaut : rien à faire
-        // Les classes dérivées avec buffer peuvent override
     }
 
     /// <summary>
-    /// Méthode abstraite : les classes dérivées définissent comment écrire physiquement
+    /// Abstract method that derived classes implement to define how formatted content is physically written to a file.
     /// </summary>
     protected abstract void WriteToFile(string content, string path);
 
     /// <summary>
-    /// Méthode abstraite : les classes dérivées définissent comment lire physiquement
+    /// Abstract method that derived classes implement to define how content is physically read from a file.
     /// </summary>
     protected abstract string ReadFromFile(string path);
 
+    /// <summary>
+    /// Ensures that the directory containing the specified file path exists; creates it if necessary.
+    /// </summary>
     protected void EnsureDirectoryExists(string filePath)
     {
         string? directory = Path.GetDirectoryName(filePath);

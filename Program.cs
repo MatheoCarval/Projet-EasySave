@@ -1,7 +1,6 @@
 using EasySave.Services;
 using EasySave.View.Console;
 using Services.Managers;
-
 using EasyLog.Abstractions;
 using EasyLog.Loggers;
 using Services;
@@ -9,33 +8,40 @@ using Services.Writers;
 
 namespace EasySave;
 
-/// Point d'entrée principal de l'application EasySave
+/// <summary>
+/// Main entry point for the EasySave application, responsible for initializing services and managing backup operations.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// Provides localization support for the application.
+    /// </summary>
     private static LocalizationService? _localizationService;
+    /// <summary>
+    /// Manages backup job execution and coordination.
+    /// </summary>
     private static BackupManager? _backupManager;
-    // private static ConfigurationManager? _configurationManager;
-
-    /// Point d'entrée de l'application
+    /// <summary>
+    /// Entry point of the application that initializes services and processes command line arguments.
+    /// </summary>
     private static void Main(string[] args)
     {
         InitializeServices();
         HandleCommandLineArgs(args);
     }
 
-    /// Initialise les services de l'application
+    /// <summary>
+    /// Initializes all application services including localization, state writer, and backup manager with file transfer service and logging.
+    /// </summary>
     private static void InitializeServices()
     {
-        // Initialize LocalizationService with default language (French)
         _localizationService = new LocalizationService("fr");
 
 
-        // TODO : CHANGE THE PATHS BELOW TO CONFIGURATION VALUES
 
         StateWriter stateWriter = new StateWriter("state.json");
 
 
-        // TODO: Initialiser ConfigurationManager
 
         _backupManager = new BackupManager(
             new FileTransferService(
@@ -47,29 +53,30 @@ public class Program
 
     }
 
-    /// Traite les arguments de ligne de commande et lance l'interface
+    /// <summary>
+    /// Processes command line arguments to show jobs list, execute specific jobs by pattern, or start interactive console mode.
+    /// </summary>
     private static void HandleCommandLineArgs(string[] args)
     {
-        // Afficher les jobs avec l'argument -s ou -show
         if (args.Length > 0 && (args[0] == "-s" || args[0] == "-show"))
         {
             ShowJobsList();
             return;
         }
 
-        // Exécuter les jobs spécifiés par numéros
         if (args.Length > 0 && !args[0].StartsWith("-"))
         {
             ExecuteJobsByPattern(args[0]);
             return;
         }
 
-        // Mode interactif par défaut
         var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         consoleUI.Start();
     }
 
-    /// Affiche la liste des jobs avec numérotation
+    /// <summary>
+    /// Displays all available backup jobs with their details including name, type, source, destination, and current state.
+    /// </summary>
     private static void ShowJobsList()
     {
         var jobs = _backupManager!.GetAllJobs();
@@ -92,7 +99,9 @@ public class Program
         }
     }
 
-    /// Exécute les jobs selon le pattern spécifié (1-3 ou 1;3)
+    /// <summary>
+    /// Executes backup jobs selected by a pattern string supporting range (1-3), semicolon-separated (1;3), or single number (1) formats.
+    /// </summary>
     private static void ExecuteJobsByPattern(string pattern)
     {
         var jobs = _backupManager!.GetAllJobs();
@@ -129,12 +138,13 @@ public class Program
         }
     }
 
-    /// Parse le pattern de jobs (1-3 ou 1;3) et retourne les indices
+    /// <summary>
+    /// Parses a job selection pattern and returns a sorted list of zero-based indices matching the pattern format (range, semicolon-separated, or single number).
+    /// </summary>
     private static List<int> ParseJobPattern(string pattern, int totalJobs)
     {
         var indices = new SortedSet<int>();
 
-        // Pattern avec tiret: 1-3
         if (pattern.Contains("-"))
         {
             var parts = pattern.Split('-');
@@ -147,12 +157,11 @@ public class Program
                 {
                     for (int i = start; i <= end; i++)
                     {
-                        indices.Add(i - 1); // Convertir à index 0-based
+                        indices.Add(i - 1);
                     }
                 }
             }
         }
-        // Pattern avec point-virgule: 1;3
         else if (pattern.Contains(";"))
         {
             var parts = pattern.Split(';');
@@ -160,14 +169,13 @@ public class Program
             {
                 if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
                 {
-                    indices.Add(jobNum - 1); // Convertir à index 0-based
+                    indices.Add(jobNum - 1);
                 }
             }
         }
-        // Simple numéro: 1
         else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
         {
-            indices.Add(jobNum - 1); // Convertir à index 0-based
+            indices.Add(jobNum - 1);
         }
 
         return indices.ToList();

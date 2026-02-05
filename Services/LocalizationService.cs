@@ -10,29 +10,27 @@ using System.IO;
 namespace EasySave.Services
 {
     /// <summary>
-    /// LocalizationService Class : Translation dynamic service usable in public in the project
+    /// Provides dynamic language translation services for the application, managing multiple language dictionaries and enabling runtime language switching.
     /// </summary>
     public class LocalizationService
     {
         /// <summary>
-        /// Current Language selected
+        /// Gets or sets the current language code (such as 'en' or 'fr') used for translation lookups.
         /// </summary>
         private string CurrentLanguage { get; set; }
 
         /// <summary>
-        /// Translation Datas List
+        /// Stores translation data as a nested dictionary structure mapping language codes to translation key-value pairs.
         /// </summary>
         private Dictionary<string, Dictionary<string, string>> TranslationDatas { get; set; }
 
         /// <summary>
-        /// When class is initialized
+        /// Initializes LocalizationService with the specified language and loads translation data from embedded resources, falling back to default translations if resource is unavailable.
         /// </summary>
-        /// <param name="currentLanguage"></param>
         public LocalizationService(string currentLanguage)
         {
             CurrentLanguage = currentLanguage;
 
-            // Load translations directly from embedded resource
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string resourceName = "EasySave.Datas.Languages.json";
 
@@ -49,7 +47,6 @@ namespace EasySave.Services
                 }
                 else
                 {
-                    // Fallback: create minimal default translations if resource not found
                     TranslationDatas = new Dictionary<string, Dictionary<string, string>>
                     {
                         ["en"] = new Dictionary<string, string>
@@ -68,50 +65,38 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// To get the text wanted with good translation
+        /// Retrieves the translated text for the specified string key in the current language.
         /// </summary>
-        /// <param name="stringToTranslate"></param>
-        /// <returns></returns>
         public string GetTextTranslated(string stringToTranslate)
         {
-
-            // According to the current language and the desired text,
-            // go to the "en" or "fr" section, then to the corresponding index
             return TranslationDatas[CurrentLanguage][stringToTranslate];
         }
 
         /// <summary>
-        /// To Update the language Setting
+        /// Changes the current language to the specified language code if it is available; throws ArgumentException if the language is not found.
         /// </summary>
-        /// <param name="newLanguage"></param>
         public void ChangeLanguage(string newLanguage)
         {
-            // Check if the requested language exists
             if (!TranslationDatas.ContainsKey(newLanguage))
             {
                 throw new ArgumentException($"Language '{newLanguage}' is not available.");
             }
 
-            // Update the current language
             CurrentLanguage = newLanguage;
         }
         /// <summary>
-        /// To get available languagues List in App Settings
+        /// Returns an array of all available language codes in the application settings.
         /// </summary>
-        /// <returns></returns>
         public string[] GetAvailableLanguages()
         {
-            // Retrieve available languages as an array
             return TranslationDatas.Keys.ToArray();
         }
 
         /// <summary>
-        /// Class translation to get datas with json formate
+        /// Represents the translation data structure for deserializing language and translation key-value pairs from JSON.
         /// </summary>
         private class Translation()
         {
-            // Key = language code ("en", "fr", ...)
-            // Value = dictionary of texts ("text-1" => "...")
             public Dictionary<string, Dictionary<string, string>> Languages { get; set; } = new();
         }
     }

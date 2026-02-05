@@ -6,16 +6,27 @@ using EasyLog.Abstractions;
 
 namespace EasyLog.Formatters;
 
+/// <summary>
+/// Formats and parses XML content for generic types T, with support for single objects and collections with proper serialization settings.
+/// </summary>
 public class XmlFormatter<T> : ILogFormatter<T> where T : class
 {
+    /// <summary>
+    /// XML serializer for type T used for serialization and deserialization operations.
+    /// </summary>
     private readonly XmlSerializer _serializer;
+    /// <summary>
+    /// XML writer settings configured for indented formatting, UTF-8 encoding without BOM, and XML declaration inclusion.
+    /// </summary>
     private readonly XmlWriterSettings _writerSettings;
+    /// <summary>
+    /// XML reader settings configured to ignore whitespace and comments during deserialization.
+    /// </summary>
     private readonly XmlReaderSettings _readerSettings;
 
     /// <summary>
-    /// Constructeur
+    /// Initializes a new instance of XmlFormatter with configurable XML indentation, UTF-8 encoding without BOM, and standard XML declaration.
     /// </summary>
-    /// <param name="indent">Si true, indente le XML pour lisibilité</param>
     public XmlFormatter(bool indent = true)
     {
         _serializer = new XmlSerializer(typeof(T));
@@ -37,11 +48,7 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     }
 
     /// <summary>
-    /// Convertit un objet T en XML
-    /// LOGIQUE:
-    /// 1. Crée un StringWriter
-    /// 2. Crée un XmlWriter avec les settings d'indentation
-    /// 3. Sérialise l'objet via XmlSerializer
+    /// Converts a single object of type T to formatted XML string using XmlSerializer with configured indentation and encoding.
     /// </summary>
     public string Format(T data)
     {
@@ -63,11 +70,7 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     }
 
     /// <summary>
-    /// Convertit une collection en XML
-    /// LOGIQUE:
-    /// 1. Créé un élément racine ArrayOf{TypeName}
-    /// 2. Sérialise chaque élément comme enfant de la racine
-    /// 3. Exemple: ArrayOfBackupLogEntry contenant des éléments BackupLogEntry
+    /// Converts a collection of objects to formatted XML string with an automatically generated root element (ArrayOf{TypeName}) containing serialized child elements.
     /// </summary>
     public string FormatCollection(IEnumerable<T> data)
     {
@@ -95,11 +98,7 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     }
 
     /// <summary>
-    /// Parse une chaîne XML en objet T
-    /// LOGIQUE:
-    /// 1. Crée un StringReader
-    /// 2. Crée un XmlReader
-    /// 3. Désérialise avec XmlSerializer
+    /// Parses an XML string and deserializes it into a single object of type T using XmlSerializer.
     /// </summary>
     public T Parse(string content)
     {
@@ -121,10 +120,7 @@ public class XmlFormatter<T> : ILogFormatter<T> where T : class
     }
 
     /// <summary>
-    /// Parse un XML contenant une collection en IEnumerable&lt;T&gt;
-    /// LOGIQUE:
-    /// 1. Détecte si c'est un élément racine de collection (ArrayOf...)
-    /// 2. Désérialise en List&lt;T&gt;
+    /// Parses an XML string containing a collection and deserializes it into an IEnumerable of type T, handling ArrayOf{TypeName} root elements automatically.
     /// </summary>
     public IEnumerable<T> ParseCollection(string content)
     {

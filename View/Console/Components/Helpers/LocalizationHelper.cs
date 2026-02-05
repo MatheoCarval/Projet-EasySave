@@ -5,20 +5,25 @@ using Models.Enums;
 namespace EasySave.View.Console.Helpers;
 
 /// <summary>
-/// Localization Helper - Simplifies access to translations
-/// Provides shortcuts and formatting for common translation patterns
+/// Helper utility class providing simplified access to localization services with convenience methods for translation retrieval, formatting, and type-specific display text generation.
 /// </summary>
 public class LocalizationHelper
 {
+    /// <summary>
+    /// Service for retrieving localized text strings based on the current language setting.
+    /// </summary>
     private readonly LocalizationService _localizationService;
 
+    /// <summary>
+    /// Initializes a new instance of the LocalizationHelper with a localization service for retrieving translated text.
+    /// </summary>
     public LocalizationHelper(LocalizationService localizationService)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
     }
 
     /// <summary>
-    /// Gets a translated string
+    /// Retrieves the localized text string for the specified translation key.
     /// </summary>
     public string T(string key)
     {
@@ -26,7 +31,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Gets a translated string with formatting
+    /// Retrieves the localized text string for the specified translation key and applies string formatting with the provided arguments.
     /// </summary>
     public string T(string key, params object[] args)
     {
@@ -35,7 +40,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Gets display text for backup type
+    /// Retrieves the localized display text for the specified backup type enumeration value.
     /// </summary>
     public string GetBackupTypeDisplay(BackupType type)
     {
@@ -48,7 +53,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Gets display text for backup state
+    /// Retrieves the localized display text for the specified backup state enumeration value.
     /// </summary>
     public string GetStateDisplay(BackupState state)
     {
@@ -63,7 +68,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Gets backup type from index (0 = COMPLETE, 1 = DIFFERENTIAL)
+    /// Converts a zero-based index to the corresponding backup type enumeration value (0 = COMPLETE, 1 = DIFFERENTIAL).
     /// </summary>
     public BackupType GetBackupTypeFromIndex(int index)
     {
@@ -71,7 +76,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Gets index from backup type (COMPLETE = 0, DIFFERENTIAL = 1)
+    /// Converts a backup type enumeration value to its corresponding zero-based index representation (COMPLETE = 0, DIFFERENTIAL = 1).
     /// </summary>
     public int GetIndexFromBackupType(BackupType type)
     {
@@ -79,7 +84,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Formats a list of items with numbers
+    /// Formats a list of strings into a numbered display format with optional custom separator, where each item is prefixed with its 1-based index in brackets.
     /// </summary>
     public string FormatList(System.Collections.Generic.List<string> items, string separator = "\n")
     {
@@ -92,7 +97,7 @@ public class LocalizationHelper
     }
 
     /// <summary>
-    /// Formats progress string
+    /// Formats a progress display string using the localized progress format template and the specified progress percentage, current count, and total count values.
     /// </summary>
     public string FormatProgress(int progress, int current, int total)
     {

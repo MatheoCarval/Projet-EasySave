@@ -5,15 +5,19 @@ using System;
 
 namespace EasySave.Tests.Models
 {
+    /// <summary>
+    /// Unit tests for the BackupJob class, verifying initialization, progress calculation, file tracking, and state management.
+    /// </summary>
     public class BackupJobTests
     {
+        /// <summary>
+        /// Verifies that the BackupJob constructor initializes all properties with correct values.
+        /// </summary>
         [Fact]
         public void Constructor_InitializesPropertiesCorrectly()
         {
-            // Arrange & Act
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
-            // Assert
             Assert.Equal("TestJob", job.Name);
             Assert.Single(job.SourcePath);
             Assert.Equal(@"C:\Source", job.SourcePath[0]);
@@ -30,64 +34,64 @@ namespace EasySave.Tests.Models
             Assert.Equal(0, job.Progress);
         }
 
+        /// <summary>
+        /// Verifies that UpdateProgress calculates progress percentage correctly based on transferred and total size.
+        /// </summary>
         [Fact]
         public void UpdateProgress_WithValidValues_CalculatesCorrectly()
         {
-            // Arrange
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
             job.TotalSize = 1000;
             job.RemainingSize = 500;
 
-            // Act
             job.UpdateProgress();
 
-            // Assert
             Assert.Equal(50, job.Progress);
         }
 
+        /// <summary>
+        /// Verifies that UpdateProgress handles zero total size without crashing or throwing an exception.
+        /// </summary>
         [Fact]
         public void UpdateProgress_WithZeroTotalSize_DoesNotCrash()
         {
-            // Arrange
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
             job.TotalSize = 0;
             job.RemainingSize = 0;
 
-            // Act
             job.UpdateProgress();
 
-            // Assert
             Assert.Equal(0, job.Progress);
         }
 
+        /// <summary>
+        /// Verifies that SetCurrentFile correctly updates both source and target file path properties.
+        /// </summary>
         [Fact]
         public void SetCurrentFile_UpdatesCurrentFiles()
         {
-            // Arrange
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
-            // Act
             job.SetCurrentFile(@"C:\Source\file.txt", @"C:\Target\file.txt");
 
-            // Assert
             Assert.Equal(@"C:\Source\file.txt", job.CurrentSourceFile);
             Assert.Equal(@"C:\Target\file.txt", job.CurrentTargetFile);
         }
 
+        /// <summary>
+        /// Verifies that MarkAsCompleted sets all completion properties including state, progress, and remaining counts.
+        /// </summary>
         [Fact]
         public void MarkAsCompleted_SetsPropertiesCorrectly()
         {
-            // Arrange
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
             job.RemainingFiles = 5;
             job.RemainingSize = 500;
             var beforeTime = DateTime.Now;
 
-            // Act
             job.MarkAsCompleted();
             var afterTime = DateTime.Now;
 
-            // Assert
             Assert.Equal(0, job.RemainingFiles);
             Assert.Equal(0, job.RemainingSize);
             Assert.Equal(100, job.Progress);
@@ -95,33 +99,34 @@ namespace EasySave.Tests.Models
             Assert.InRange(job.LastExecution, beforeTime, afterTime);
         }
 
+        /// <summary>
+        /// Verifies that MarkAsError resets progress and file paths, setting the state to ERROR.
+        /// </summary>
         [Fact]
         public void MarkAsError_ResetsPropertiesCorrectly()
         {
-            // Arrange
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
             job.SetCurrentFile("source.txt", "target.txt");
             job.Progress = 50;
 
-            // Act
             job.MarkAsError();
 
-            // Assert
             Assert.Equal(0, job.Progress);
             Assert.Null(job.CurrentSourceFile);
             Assert.Null(job.CurrentTargetFile);
             Assert.Equal(BackupState.ERROR, job.BackupState);
         }
 
+        /// <summary>
+        /// Verifies that the BackupJob constructor works correctly with different backup type values.
+        /// </summary>
         [Theory]
         [InlineData(BackupType.COMPLETE)]
         [InlineData(BackupType.DIFFERENTIAL)]
         public void Constructor_WithDifferentBackupTypes_WorksCorrectly(BackupType backupType)
         {
-            // Arrange & Act
             var job = new BackupJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", backupType);
 
-            // Assert
             Assert.Equal(backupType, job.BackupType);
         }
     }

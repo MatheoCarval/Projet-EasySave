@@ -6,23 +6,25 @@ using EasyLog.Exceptions;
 using System.IO;
 using System.Text;
 
+/// <summary>
+/// Logger implementation that persists log entries in JSON format using UTF-8 encoding without byte order mark.
+/// </summary>
 public class JsonLogger : LoggerBase
 {
+    /// <summary>
+    /// Initializes a new instance of the JsonLogger class with the specified output file path.
+    /// </summary>
     public JsonLogger(string outputPath) : base(outputPath, LogFormat.JSON)
     {
     }
 
     /// <summary>
-    /// Écrit le contenu formaté dans le fichier JSON
-    /// LOGIQUE:
-    /// - Utilise UTF-8 sans BOM pour compatibilité maximale
-    /// - Écrase le fichier existant (le contenu est déjà merged dans LoggerBase)
+    /// Writes formatted JSON content to the specified file path using UTF-8 encoding without byte order mark. The content is already merged in LoggerBase before writing.
     /// </summary>
     protected override void WriteToFile(string content, string path)
     {
         try
         {
-            // UTF-8 sans BOM pour compatibilité
             File.WriteAllText(path, content, new UTF8Encoding(false));
         }
         catch (IOException ex)
@@ -32,8 +34,7 @@ public class JsonLogger : LoggerBase
     }
 
     /// <summary>
-    /// Lit le contenu du fichier JSON
-    /// Retourne string.Empty si le fichier n'existe pas
+    /// Reads JSON content from the specified file path using UTF-8 encoding. Returns an empty string if the file does not exist.
     /// </summary>
     protected override string ReadFromFile(string path)
     {

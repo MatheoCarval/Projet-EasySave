@@ -11,24 +11,30 @@ using Models.Enums;
 namespace Services.Writers
 {
     /// <summary>
-    /// Manages real-time state of all backup jobs
-    /// Writes to a single state.json file that is constantly updated
+    /// Manages and persists real-time state information for all backup jobs, maintaining a single state.json file that is constantly updated during backup operations.
     /// </summary>
     public class StateWriter
     {
-        // ==================== FIELDS ====================
-
+        /// <summary>
+        /// The file path where backup job state information is persisted.
+        /// </summary>
         private readonly string _stateFilePath;
+        /// <summary>
+        /// In-memory cache of state entries indexed by job name.
+        /// </summary>
         private readonly Dictionary<string, StateEntry> _stateEntries;
+        /// <summary>
+        /// Lock object for thread-safe access to state entries.
+        /// </summary>
         private readonly object _lock = new object();
+        /// <summary>
+        /// JSON serialization options configured for pretty printing with camelCase property naming.
+        /// </summary>
         private readonly JsonSerializerOptions _jsonOptions;
 
-        // ==================== CONSTRUCTOR ====================
-
         /// <summary>
-        /// Initialize StateWriter with specified file path
+        /// Initializes a new instance of StateWriter with the specified state file path. Creates directory if needed and loads existing state from disk.
         /// </summary>
-        /// <param name="stateFilePath">Path to state.json file</param>
         public StateWriter(string stateFilePath)
         {
             if (string.IsNullOrWhiteSpace(stateFilePath))
@@ -37,48 +43,37 @@ namespace Services.Writers
             _stateFilePath = stateFilePath;
             _stateEntries = new Dictionary<string, StateEntry>();
 
-            // Configure JSON options for pretty printing
             _jsonOptions = new JsonSerializerOptions
             {
-                WriteIndented = true, // Pretty print with indentation
+                WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
             };
 
-            // Ensure directory exists
             EnsureDirectoryExists();
-
-            // Load existing state if file exists
             LoadExistingState();
         }
 
-        // ==================== PUBLIC METHODS ====================
-
         /// <summary>
-        /// Update the state of a backup job in real-time
+        /// Updates the real-time state of a backup job and immediately persists the changes to disk.
         /// </summary>
-        /// <param name="job">BackupJob to update state for</param>
         public void UpdateJobState(BackupJob job)
         {
             if (job == null)
                 throw new ArgumentNullException(nameof(job));
 
-            lock (_lock) // Thread-safe
+            lock (_lock)
             {
-                // Create or update state entry
                 var stateEntry = StateEntry.FromBackupJob(job);
                 _stateEntries[job.Name] = stateEntry;
 
-                // Write to disk immediately (real-time requirement)
                 WriteStateToDisk();
             }
         }
 
         /// <summary>
-        /// Remove a job from the state file
+        /// Removes a job state entry by name and persists the change to disk.
         /// </summary>
-        /// <param name="jobName">Name of the job to remove</param>
-        /// <returns>True if removed, false if not found</returns>
         public bool RemoveJobState(string jobName)
         {
             if (string.IsNullOrWhiteSpace(jobName))
@@ -98,23 +93,19 @@ namespace Services.Writers
         }
 
         /// <summary>
-        /// Get current state of all jobs (snapshot)
+        /// Returns a snapshot copy of the current state of all backup jobs to prevent external modifications.
         /// </summary>
-        /// <returns>Dictionary of job states</returns>
         public Dictionary<string, StateEntry> GetCurrentState()
         {
             lock (_lock)
             {
-                // Return a copy to avoid external modifications
                 return new Dictionary<string, StateEntry>(_stateEntries);
             }
         }
 
         /// <summary>
-        /// Get state of a specific job
+        /// Retrieves the state entry for a specific backup job by name, or null if not found.
         /// </summary>
-        /// <param name="jobName">Name of the job</param>
-        /// <returns>StateEntry if found, null otherwise</returns>
         public StateEntry? GetJobState(string jobName)
         {
             if (string.IsNullOrWhiteSpace(jobName))
@@ -127,7 +118,7 @@ namespace Services.Writers
         }
 
         /// <summary>
-        /// Clear all job states
+        /// Clears all job state entries and persists the empty state to disk.
         /// </summary>
         public void ClearAllStates()
         {
@@ -138,24 +129,19 @@ namespace Services.Writers
             }
         }
 
-        // ==================== PRIVATE METHODS ====================
-
         /// <summary>
-        /// Write current state to disk (real-time)
+        /// Serializes current state to JSON and writes to disk with error handling to prevent backup interruption.
         /// </summary>
         private void WriteStateToDisk()
         {
             try
             {
-                // Serialize to JSON with pretty printing
                 string jsonContent = JsonSerializer.Serialize(_stateEntries, _jsonOptions);
 
-                // Write to file (overwrite)
                 File.WriteAllText(_stateFilePath, jsonContent);
             }
             catch (IOException ex)
             {
-                // Log error but don't crash the backup
                 Console.Error.WriteLine($"[StateWriter] Failed to write state: {ex.Message}");
             }
             catch (UnauthorizedAccessException ex)
@@ -165,14 +151,13 @@ namespace Services.Writers
         }
 
         /// <summary>
-        /// Load existing state from disk if file exists
+        /// Loads existing state from disk if the state file exists, or creates an empty state file if it does not. Handles corrupted JSON gracefully.
         /// </summary>
         private void LoadExistingState()
         {
             if (!File.Exists(_stateFilePath))
             {
-                // No existing state, start fresh
-                WriteStateToDisk(); // Create empty state file
+                WriteStateToDisk();
                 return;
             }
 
@@ -182,7 +167,6 @@ namespace Services.Writers
 
                 if (string.IsNullOrWhiteSpace(jsonContent))
                 {
-                    // Empty file, start fresh
                     return;
                 }
 
@@ -202,7 +186,6 @@ namespace Services.Writers
             catch (JsonException ex)
             {
                 Console.Error.WriteLine($"[StateWriter] Corrupted state file, starting fresh: {ex.Message}");
-                // Start with empty state
             }
             catch (IOException ex)
             {
@@ -211,7 +194,7 @@ namespace Services.Writers
         }
 
         /// <summary>
-        /// Ensure the directory for state file exists
+        /// Creates the directory containing the state file if it does not already exist.
         /// </summary>
         private void EnsureDirectoryExists()
         {

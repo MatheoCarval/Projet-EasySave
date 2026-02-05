@@ -9,11 +9,23 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 
+/// <summary>
+/// Formats and parses JSON content for generic types T with support for single objects and collections, including optional pagination capabilities.
+/// </summary>
 public class JsonFormatter<T> : ILogFormatter<T> where T : class
 {
+    /// <summary>
+    /// JSON serialization options configured for camelCase property naming, null value exclusion, and safe Unicode escaping.
+    /// </summary>
     private readonly JsonSerializerOptions _options;
+    /// <summary>
+    /// Flag indicating whether to apply pagination when formatting collections.
+    /// </summary>
     private readonly bool _paginate;
 
+    /// <summary>
+    /// Initializes a new instance of JsonFormatter with optional pretty printing and pagination settings.
+    /// </summary>
     public JsonFormatter(bool prettyPrint = true, bool paginate = false)
     {
         _paginate = paginate;
@@ -26,6 +38,9 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         };
     }
 
+    /// <summary>
+    /// Converts a single object of type T to a formatted JSON string using configured serialization options.
+    /// </summary>
     public string Format(T data)
     {
         if (data == null)
@@ -41,6 +56,9 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
     }
 
+    /// <summary>
+    /// Converts a collection of objects to a formatted JSON array string. Returns empty array for empty collections.
+    /// </summary>
     public string FormatCollection(IEnumerable<T> data)
     {
         if (data == null)
@@ -53,7 +71,6 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
             if (!list.Any())
                 return "[]";
 
-            // ✅ SIMPLE : Juste sérialiser la liste complète
             return JsonSerializer.Serialize(list, _options);
         }
         catch (JsonException ex)
@@ -62,6 +79,9 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
     }
 
+    /// <summary>
+    /// Parses a JSON string and deserializes it into a single object of type T with content cleaning and null validation.
+    /// </summary>
     public T Parse(string content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -69,7 +89,6 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
 
         try
         {
-            // Nettoyer
             content = content.Replace("\f", "").Trim();
 
             var result = JsonSerializer.Deserialize<T>(content, _options);
@@ -85,6 +104,9 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
     }
 
+    /// <summary>
+    /// Parses a JSON array string and deserializes it into a collection of objects of type T. Returns empty collection if content is invalid or null.
+    /// </summary>
     public IEnumerable<T> ParseCollection(string content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -92,7 +114,6 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
 
         try
         {
-            // Nettoyer
             content = content.Replace("\f", "").Trim();
 
             var list = JsonSerializer.Deserialize<List<T>>(content, _options);
@@ -100,7 +121,6 @@ public class JsonFormatter<T> : ILogFormatter<T> where T : class
         }
         catch (JsonException ex)
         {
-            // ✅ Log l'erreur avec plus de détails
             throw new FormatterException(
                 $"Failed to parse JSON collection to {typeof(T).Name}. Content length: {content.Length}. Error: {ex.Message}",
                 ex

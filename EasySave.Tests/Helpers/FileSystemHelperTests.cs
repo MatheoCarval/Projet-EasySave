@@ -4,22 +4,25 @@ using System.IO;
 
 namespace EasySave.Tests.Helpers
 {
+    /// <summary>
+    /// Unit tests for the FileSystemHelper class, verifying file size retrieval and error handling.
+    /// </summary>
     public class FileSystemHelperTests
     {
+        /// <summary>
+        /// Verifies that GetFileSize returns the correct file size for an existing file.
+        /// </summary>
         [Fact]
         public void GetFileSize_WithExistingFile_ReturnsSize()
         {
-            // Arrange
             var tempFile = Path.GetTempFileName();
             var testData = new byte[] { 1, 2, 3, 4, 5 };
             File.WriteAllBytes(tempFile, testData);
 
             try
             {
-                // Act
                 var size = FileSystemHelper.GetFileSize(tempFile);
 
-                // Assert
                 Assert.Equal(testData.Length, size);
             }
             finally
@@ -28,13 +31,14 @@ namespace EasySave.Tests.Helpers
             }
         }
 
+        /// <summary>
+        /// Verifies that GetFileSize throws FileNotFoundException when given a path to a non-existent file.
+        /// </summary>
         [Fact]
         public void GetFileSize_WithNonExistingFile_ThrowsFileNotFoundException()
         {
-            // Arrange
             var nonExistentFile = @"C:\NonExistent\File.txt";
 
-            // Act & Assert
             Assert.Throws<FileNotFoundException>(() => FileSystemHelper.GetFileSize(nonExistentFile));
         }
     }
