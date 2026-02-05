@@ -1,175 +1,229 @@
 using EasySave.Services;
 using EasySave.View.Console;
 using Services.Managers;
-
-using EasyLog.Abstractions;
 using EasyLog.Loggers;
-using Services;
 using Services.Writers;
+using Models.Enums;
 
 namespace EasySave;
 
+/// <summary>
 /// Point d'entrée principal de l'application EasySave
+/// Supporte l'exécution par index: EasySave.exe 1-3 ou EasySave.exe 1;3
+/// </summary>
 internal class Program
 {
     private static LocalizationService? _localizationService;
     private static BackupManager? _backupManager;
-    // private static ConfigurationManager? _configurationManager;
 
-    /// Point d'entrée de l'application
     private static void Main(string[] args)
     {
-        InitializeServices();
-        HandleCommandLineArgs(args);
+        try
+        {
+            // Initialize services
+            InitializeServices();
+            
+            // If no arguments, launch UI
+            if (args.Length == 0)
+            {
+                LaunchUI();
+                return;
+            }
+
+            // Parse and execute jobs by index
+            var indices = ParseJobIndices(args[0]);
+            ExecuteJobsByIndices(indices);
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"{T("error")}: {ex.Message}");
+            Console.ResetColor();
+            Environment.Exit(1);
+        }
     }
 
-    /// Initialise les services de l'application
     private static void InitializeServices()
     {
-        // Initialize LocalizationService with default language (French)
-        _localizationService = new LocalizationService("fr");
+        _localizationService = new LocalizationService("en");
 
-
-        // TODO : CHANGE THE PATHS BELOW TO CONFIGURATION VALUES
-
-        StateWriter stateWriter = new StateWriter("state.json");
-
-
-        // TODO: Initialiser ConfigurationManager
-
-        _backupManager = new BackupManager(
-            new FileTransferService(
-                new JsonLogger("logs.json"),
-                stateWriter
-            ),
-            stateWriter
+        string appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave"
         );
+        
+        Directory.CreateDirectory(Path.Combine(appData, "logs"));
 
+        var logger = new JsonLogger("logs.json");
+        var stateWriter = new StateWriter("state.json");
+        var fileTransferService = new FileTransferService(logger, stateWriter);
+        
+        _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: 5);
     }
 
-    /// Traite les arguments de ligne de commande et lance l'interface
-    private static void HandleCommandLineArgs(string[] args)
+    private static List<int> ParseJobIndices(string arg)
     {
-        // Afficher les jobs avec l'argument -s ou -show
-        if (args.Length > 0 && (args[0] == "-s" || args[0] == "-show"))
+        var indices = new List<int>();
+
+        if (arg.Contains('-'))
         {
-            ShowJobsList();
+            var parts = arg.Split('-');
+            if (parts.Length == 2 && 
+                int.TryParse(parts[0], out int start) && 
+                int.TryParse(parts[1], out int end))
+            {
+                if (start > end)
+                    throw new ArgumentException($"Invalid range: {arg}");
+                
+                for (int i = start; i <= end; i++)
+                {
+                    indices.Add(i);
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid range format: {arg}");
+            }
+        }
+        // Handle list with semicolons (e.g., "1;3;5")
+        else if (arg.Contains(';'))
+        {
+            var parts = arg.Split(';');
+            foreach (var part in parts)
+            {
+                if (int.TryParse(part.Trim(), out int index))
+                {
+                    indices.Add(index);
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid index: {part}");
+                }
+            }
+        }
+        // Handle single index (e.g., "2")
+        else
+        {
+            if (int.TryParse(arg, out int index))
+            {
+                indices.Add(index);
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid index: {arg}");
+            }
+        }
+
+        return indices;
+    }
+
+    private static void ExecuteJobsByIndices(List<int> indices)
+    {
+        var allJobs = _backupManager!.GetAllJobs();
+
+        if (allJobs.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"{T("error_no_tasks_available")}");
+            Console.ResetColor();
+            Environment.Exit(1);
             return;
         }
 
-        // Exécuter les jobs spécifiés par numéros
-        if (args.Length > 0 && !args[0].StartsWith("-"))
+        // List available jobs
+        Console.WriteLine($"{allJobs.Count} {T("menu_display_tasks").ToLower()}");
+        for (int i = 0; i < allJobs.Count; i++)
         {
-            ExecuteJobsByPattern(args[0]);
-            return;
+            Console.WriteLine($"   [{i + 1}] {allJobs[i].Name}");
+        }
+        Console.WriteLine();
+
+        var errors = new List<string>();
+
+        foreach (var index in indices)
+        {
+            // Convert 1-based to 0-based
+            int arrayIndex = index - 1;
+
+            if (arrayIndex < 0 || arrayIndex >= allJobs.Count)
+            {
+                errors.Add($"{T("error")}: Index {index} (1-{allJobs.Count})");
+                continue;
+            }
+
+            var job = allJobs[arrayIndex];
+
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"{T("menu_execute_task")} [{index}]: {job.Name}");
+                Console.ResetColor();
+                Console.WriteLine($"   {T("source_label", "", "").Replace("{0}/{1}:", "")}: {string.Join(", ", job.SourcePath)}");
+                Console.WriteLine($"   {T("destination_label")}: {job.TargetPath}");
+                Console.WriteLine($"   {T("backup_type_label")}: {GetBackupTypeDisplay(job.BackupType)}");
+
+                _backupManager.ExecuteJob(job.Id);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"{T("success")} [{index}] '{job.Name}'");
+                Console.ResetColor();
+                Console.WriteLine($"   {allJobs.Count} files");
+                Console.WriteLine($"   {job.Progress}%");
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"[{index}] {job.Name}: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{T("error")} [{index}] {job.Name}: {ex.Message}");
+                Console.ResetColor();
+                Console.WriteLine();
+            }
         }
 
-        // Mode interactif par défaut
+        // Summary
+        int successCount = indices.Count - errors.Count;
+        Console.WriteLine("═══════════════════════════════════");
+        Console.WriteLine($"{T("information")}: {successCount}/{indices.Count} {T("success").ToLower()}");
+        
+        if (errors.Count > 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"\n{errors.Count} {T("error").ToLower()}(s):");
+            foreach (var error in errors)
+            {
+                Console.WriteLine($"  • {error}");
+            }
+            Console.ResetColor();
+            Environment.Exit(1);
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{T("executing_all_tasks").Split('\n')[2]}");
+            Console.ResetColor();
+        }
+    }
+
+    private static void LaunchUI()
+    {
         var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         consoleUI.Start();
     }
 
-    /// Affiche la liste des jobs avec numérotation
-    private static void ShowJobsList()
+    private static string T(string key, params object[] args)
     {
-        var jobs = _backupManager!.GetAllJobs();
-
-        if (jobs.Count == 0)
-        {
-            Console.WriteLine("Aucune sauvegarde disponible.");
-            return;
-        }
-
-        Console.WriteLine("=== Liste des sauvegardes ===\n");
-        for (int i = 0; i < jobs.Count; i++)
-        {
-            var job = jobs[i];
-            Console.WriteLine($"{i + 1}. {job.Name}");
-            Console.WriteLine($"   Type: {job.BackupType}");
-            Console.WriteLine($"   Source: {string.Join(", ", job.SourcePath)}");
-            Console.WriteLine($"   Destination: {job.TargetPath}");
-            Console.WriteLine($"   État: {job.BackupState}\n");
-        }
+        var text = _localizationService!.GetTextTranslated(key);
+        return args.Length > 0 ? string.Format(text, args) : text;
     }
 
-    /// Exécute les jobs selon le pattern spécifié (1-3 ou 1;3)
-    private static void ExecuteJobsByPattern(string pattern)
+    private static string GetBackupTypeDisplay(BackupType type)
     {
-        var jobs = _backupManager!.GetAllJobs();
-
-        if (jobs.Count == 0)
+        return type switch
         {
-            Console.WriteLine("Aucune sauvegarde disponible.");
-            return;
-        }
-
-        var indicesToExecute = ParseJobPattern(pattern, jobs.Count);
-
-        if (indicesToExecute.Count == 0)
-        {
-            Console.WriteLine($"Aucun index valide trouvé dans le pattern: {pattern}");
-            return;
-        }
-
-        Console.WriteLine($"Exécution de {indicesToExecute.Count} sauvegarde(s)...\n");
-
-        foreach (var index in indicesToExecute)
-        {
-            try
-            {
-                var job = jobs[index];
-                Console.WriteLine($"[{index + 1}/{indicesToExecute.Count}] Exécution de '{job.Name}'...");
-                _backupManager.ExecuteJob(job.Id);
-                Console.WriteLine($"✓ '{job.Name}' complétée avec succès.\n");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"✗ Erreur lors de l'exécution: {ex.Message}\n");
-            }
-        }
-    }
-
-    /// Parse le pattern de jobs (1-3 ou 1;3) et retourne les indices
-    private static List<int> ParseJobPattern(string pattern, int totalJobs)
-    {
-        var indices = new SortedSet<int>();
-
-        // Pattern avec tiret: 1-3
-        if (pattern.Contains("-"))
-        {
-            var parts = pattern.Split('-');
-            if (parts.Length == 2 && int.TryParse(parts[0], out int start) && int.TryParse(parts[1], out int end))
-            {
-                start = Math.Max(1, start);
-                end = Math.Min(totalJobs, end);
-
-                if (start <= end)
-                {
-                    for (int i = start; i <= end; i++)
-                    {
-                        indices.Add(i - 1); // Convertir à index 0-based
-                    }
-                }
-            }
-        }
-        // Pattern avec point-virgule: 1;3
-        else if (pattern.Contains(";"))
-        {
-            var parts = pattern.Split(';');
-            foreach (var part in parts)
-            {
-                if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
-                {
-                    indices.Add(jobNum - 1); // Convertir à index 0-based
-                }
-            }
-        }
-        // Simple numéro: 1
-        else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
-        {
-            indices.Add(jobNum - 1); // Convertir à index 0-based
-        }
-
-        return indices.ToList();
+            BackupType.COMPLETE => T("backup_type_full"),
+            BackupType.DIFFERENTIAL => T("backup_type_differential"),
+            _ => type.ToString()
+        };
     }
 }
