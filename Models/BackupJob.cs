@@ -6,6 +6,7 @@ namespace Models
 {
     public class BackupJob
     {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Name { get; set; }
         public List<string> SourcePath { get; set; }
         public string TargetPath { get; set; }
@@ -20,10 +21,28 @@ namespace Models
         public string? CurrentTargetFile { get; set; }
         public float Progress { get; set; }
 
-        public BackupJob(string name, string sourcePath, string targetPath, BackupType backupType)
+        // Parameterless constructor for JSON deserialization
+        public BackupJob()
+        {
+            Name = string.Empty;
+            SourcePath = new List<string>();
+            TargetPath = string.Empty;
+            BackupType = BackupType.COMPLETE;
+            BackupState = BackupState.PENDING;
+            LastExecution = DateTime.MinValue;
+            TotalFiles = 0;
+            TotalSize = 0;
+            RemainingFiles = 0;
+            RemainingSize = 0;
+            CurrentSourceFile = null;
+            CurrentTargetFile = null;
+            Progress = 0;
+        }
+
+        public BackupJob(string name, List<string> sourcePath, string targetPath, BackupType backupType)
         {
             Name = name;
-            SourcePath = new List<string> { sourcePath };
+            SourcePath = sourcePath;
             TargetPath = targetPath;
             BackupType = backupType;
             BackupState = BackupState.PENDING;

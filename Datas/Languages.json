@@ -1,4 +1,4 @@
-{
+  {
   "en": {
     "app_title": "EasySave",
     "menu_quit": "_Quit",
@@ -111,7 +111,11 @@
     "language_changed": "Language changed.",
     "choose_log_format_title": "Choose log format",
     "select_format": "Select format:",
-    "log_format_changed": "Log format changed."
+    "log_format_changed": "Log format changed.",
+    "error_executing_task": "Error executing task:",
+    "source_added": "Source added.",
+    "error_executing_jobs": "Error executing tasks:",
+    "error_creating_task": "Error creating task:"
   },
   "fr": {
     "app_title": "EasySave",
@@ -225,6 +229,10 @@
     "language_changed": "Langue modifiée.",
     "choose_log_format_title": "Choisir le format de log",
     "select_format": "Sélectionnez le format:",
-    "log_format_changed": "Format de log modifié."
+    "log_format_changed": "Format de log modifié.",
+    "error_executing_task": "Erreur lors de l'exécution de la tâche:",
+    "source_added": "Source ajoutée.",
+    "error_executing_jobs": "Erreur lors de l'exécution des tâches:",
+    "error_creating_task": "Erreur lors de la création de la tâche:"
   }
 }

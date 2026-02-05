@@ -2,8 +2,10 @@ using Models;
 using Models.Enums;
 using EasySave.Services;
 using Services.Writers;
+using Utilities;
+using System.Text.Json;
 
-namespace EasySave.Services.Managers;
+namespace Services.Managers;
 
 public class BackupManager
 {
@@ -12,37 +14,21 @@ public class BackupManager
     private readonly FileTransferService _fileTransferService;
     private readonly StateWriter _stateWriter;
 
-    /// <summary>
-    /// Initializes a new instance of the backup manager
-    /// </summary>
-    /// <param name="fileTransferService">File transfer service</param>
-    /// <param name="stateWriter">State writing service</param>
-    /// <param name="maxJobs">Maximum number of jobs allowed (default: 5)</param>
-    /// <exception cref="ArgumentNullException">Thrown if fileTransferService or stateWriter is null</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if maxJobs is less than or equal to 0</exception>
     public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxJobs);
 
-        _jobs = new List<BackupJob>(maxJobs);
+        _jobs = new List<BackupJob>();
         _maxJobs = maxJobs;
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
+
+        LoadJobs();
     }
 
-    /// <summary>
-    /// Creates a new backup job
-    /// </summary>
-    /// <param name="name">Name of the backup job</param>
-    /// <param name="sourcePath">Source directory path</param>
-    /// <param name="targetPath">Target directory path</param>
-    /// <param name="backupType">Type of backup (COMPLETE or DIFFERENTIAL)</param>
-    /// <returns>The created backup job</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the maximum number of jobs is reached</exception>
-    /// <exception cref="ArgumentException">Thrown if name already exists</exception>
-    public BackupJob CreateJob(string name, string sourcePath, string targetPath, BackupType backupType)
+    public BackupJob CreateJob(string name, List<string> sourcesPaths, string targetPath, BackupType backupType)
     {
         if (_jobs.Count >= _maxJobs)
         {
@@ -54,34 +40,29 @@ public class BackupManager
             throw new ArgumentException($"A job with name '{name}' already exists.", nameof(name));
         }
 
-        var job = new BackupJob(name, sourcePath, targetPath, backupType);
+        var job = new BackupJob(name, sourcesPaths, targetPath, backupType);
         _jobs.Add(job);
+        SaveJob(job);
         return job;
     }
 
-    /// <summary>
-    /// Deletes a backup job by its identifier
-    /// </summary>
-    /// <param name="jobId">Identifier of the job to delete</param>
-    /// <returns>True if the job was deleted, False if it does not exist</returns>
-    /// <exception cref="ArgumentException">Thrown if jobId is null or empty</exception>
-    public bool DeleteJob(string jobId)
+    public bool DeleteJob(string jobName)
     {
-        if (string.IsNullOrWhiteSpace(jobId))
+        if (string.IsNullOrWhiteSpace(jobName))
         {
-            throw new ArgumentException("Job identifier cannot be null or empty.", nameof(jobId));
+            throw new ArgumentException("Job name cannot be null or empty.", nameof(jobName));
         }
 
-        var job = _jobs.FirstOrDefault(j => j.Name == jobId);
-        return job != null && _jobs.Remove(job);
+        var job = _jobs.FirstOrDefault(j => j.Name == jobName);
+        if (job != null)
+        {
+            _jobs.Remove(job);
+            DeleteJobFile(job.Id);
+            return true;
+        }
+        return false;
     }
 
-    /// <summary>
-    /// Gets a backup job by its identifier
-    /// </summary>
-    /// <param name="jobId">Identifier of the job to retrieve</param>
-    /// <returns>The corresponding backup job, or null if it does not exist</returns>
-    /// <exception cref="ArgumentException">Thrown if jobId is null or empty</exception>
     public BackupJob? GetJob(string jobId)
     {
         if (string.IsNullOrWhiteSpace(jobId))
@@ -89,23 +70,24 @@ public class BackupManager
             throw new ArgumentException("Job identifier cannot be null or empty.", nameof(jobId));
         }
 
-        return _jobs.FirstOrDefault(j => j.Name == jobId);
+        return _jobs.FirstOrDefault(j => j.Id == jobId);
     }
 
-    /// <summary>
-    /// Gets all backup jobs
-    /// </summary>
-    /// <returns>A copy of the list of all backup jobs</returns>
+    public BackupJob? GetJobByName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Job name cannot be null or empty.", nameof(name));
+        }
+
+        return _jobs.FirstOrDefault(j => j.Name == name);
+    }
+
     public List<BackupJob> GetAllJobs()
     {
         return new List<BackupJob>(_jobs);
     }
 
-    /// <summary>
-    /// Executes a specific backup job
-    /// </summary>
-    /// <param name="jobId">Identifier of the job to execute</param>
-    /// <exception cref="ArgumentException">Thrown when the job does not exist or if jobId is null or empty</exception>
     public void ExecuteJob(string jobId)
     {
         var job = GetJob(jobId);
@@ -116,11 +98,54 @@ public class BackupManager
 
         try
         {
-            // Transfer all source paths
+            // Calculate totals BEFORE starting transfers
+            job.TotalFiles = 0;
+            job.TotalSize = 0;
+            job.BackupState = BackupState.ACTIVE;
+
             foreach (var sourcePath in job.SourcePath)
             {
-                _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
+                if (PathValidator.IsDirectory(sourcePath))
+                {
+                    var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
+                    job.TotalFiles += files.Length;
+                    job.TotalSize += files.Sum(f => new FileInfo(f).Length);
+                }
+                else if (File.Exists(sourcePath))
+                {
+                    job.TotalFiles += 1;
+                    job.TotalSize += new FileInfo(sourcePath).Length;
+                }
+                else
+                {
+                    // Fail fast on misconfigured jobs: a configured source path does not exist.
+                    throw new DirectoryNotFoundException(
+                        $"Source path '{sourcePath}' does not exist for job '{jobId}'.");
+                }
             }
+
+            job.RemainingFiles = job.TotalFiles;
+            job.RemainingSize = job.TotalSize;
+            _stateWriter.UpdateJobState(job);
+
+
+            // Now transfer all sources
+            foreach (var sourcePath in job.SourcePath)
+            {
+                if (PathValidator.IsDirectory(sourcePath))
+                {
+                    _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
+                }
+                else if (File.Exists(sourcePath))
+                {
+                    string fileName = Path.GetFileName(sourcePath);
+                    string targetFile = Path.Combine(job.TargetPath, fileName);
+                    _fileTransferService.TransferFile(sourcePath, targetFile, job);
+                }
+            }
+
+            job.MarkAsCompleted();
+            _stateWriter.UpdateJobState(job);
         }
         catch (Exception ex)
         {
@@ -130,10 +155,6 @@ public class BackupManager
         }
     }
 
-    /// <summary>
-    /// Executes all backup jobs
-    /// </summary>
-    /// <exception cref="AggregateException">Thrown if one or more jobs fail</exception>
     public void ExecuteAll()
     {
         var exceptions = new List<Exception>();
@@ -142,7 +163,7 @@ public class BackupManager
         {
             try
             {
-                ExecuteJob(job.Name);
+                ExecuteJob(job.Id);
             }
             catch (Exception ex)
             {
@@ -156,15 +177,147 @@ public class BackupManager
         }
     }
 
-    /// <summary>
-    /// Executes all backup jobs sequentially, stops at the first error
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if a job fails</exception>
     public void ExecuteSequence()
     {
         foreach (var job in _jobs)
         {
-            ExecuteJob(job.Name);
+            ExecuteJob(job.Id);
+        }
+    }
+
+    public void SaveJob(BackupJob job)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+
+        try
+        {
+            string path = "./Datas/jobs.json";
+            var jobs = LoadJobsFromFile(path);
+
+            // Find and remove existing job (search by ID)
+            var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
+            if (existingIndex >= 0)
+            {
+                jobs[existingIndex] = job; // Replace instead of remove/add
+            }
+            else
+            {
+                jobs.Add(job); // New job
+            }
+
+            SaveJobsToFile(path, jobs);
+
+            // Reload jobs to sync _jobs list
+            LoadJobs();
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Error saving job '{job.Id}' to jobs.json.", ex);
+        }
+    }
+
+    public void LoadJobs()
+    {
+        try
+        {
+            string jobsFilePath = "./Datas/jobs.json";
+            var jobs = LoadJobsFromFile(jobsFilePath);
+            _jobs.Clear();
+            _jobs.AddRange(jobs);
+        }
+        catch (Exception ex)
+        {
+            throw new IOException("Error loading jobs from jobs.json.", ex);
+        }
+    }
+
+    public void ModifyJob(string jobId, string? newName = null, List<string>? newSourcePaths = null, string? newTargetPath = null, BackupType? newBackupType = null)
+    {
+        var job = GetJob(jobId);
+        if (job == null)
+        {
+            throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
+        }
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(newName))
+                job.Name = newName;
+            if (newSourcePaths != null)
+                job.SourcePath = newSourcePaths;
+            if (!string.IsNullOrWhiteSpace(newTargetPath))
+                job.TargetPath = newTargetPath;
+            if (newBackupType.HasValue)
+                job.BackupType = newBackupType.Value;
+
+            SaveJob(job);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error modifying job '{jobId}'.", ex);
+        }
+    }
+
+    private List<BackupJob> LoadJobsFromFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return new List<BackupJob>();
+        }
+
+        string jsonContent = File.ReadAllText(filePath);
+        if (string.IsNullOrWhiteSpace(jsonContent))
+        {
+            return new List<BackupJob>();
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
+        return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+    }
+
+    private void SaveJobsToFile(string filePath, List<BackupJob> jobs)
+    {
+        string directory = Path.GetDirectoryName(filePath) ?? "./Datas";
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
+        string jsonContent = JsonSerializer.Serialize(jobs, options);
+
+        string tempFile = filePath + ".tmp";
+        File.WriteAllText(tempFile, jsonContent);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+        File.Move(tempFile, filePath);
+    }
+
+    private void DeleteJobFile(string jobId)
+    {
+        try
+        {
+            string jobsFilePath = "./Datas/jobs.json";
+            var jobs = LoadJobsFromFile(jobsFilePath);
+
+            jobs.RemoveAll(j => j.Id == jobId);
+
+            SaveJobsToFile(jobsFilePath, jobs);
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Error deleting job '{jobId}' from jobs.json.", ex);
         }
     }
 }

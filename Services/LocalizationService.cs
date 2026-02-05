@@ -12,7 +12,7 @@ namespace EasySave.Services
     /// <summary>
     /// LocalizationService Class : Translation dynamic service usable in public in the project
     /// </summary>
-    internal class LocalizationService
+    public class LocalizationService
     {
         /// <summary>
         /// Current Language selected
