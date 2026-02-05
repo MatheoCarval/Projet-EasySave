@@ -84,7 +84,7 @@ public class Program
                 stateWriter
             ),
             stateWriter
->>>>>>> 1e18864 (docs: Add comprehensive XML documentation annotations to C# codebase (#17))
+>>>>>>> 1e18864(docs: Add comprehensive XML documentation annotations to C# codebase (#17))
         );
 
         Directory.CreateDirectory(appData);
@@ -338,22 +338,22 @@ public class Program
             }
         }
         else if (pattern.Contains(";"))
-        {
-            var parts = pattern.Split(';');
-            foreach (var part in parts)
-            {
-                if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
-                {
-                    indices.Add(jobNum - 1);
-                }
-            }
-        }
-        else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
+{
+    var parts = pattern.Split(';');
+    foreach (var part in parts)
+    {
+        if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
         {
             indices.Add(jobNum - 1);
         }
+    }
+}
+else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
+{
+    indices.Add(jobNum - 1);
+}
 
-        return indices.ToList();
->>>>>>> 1e18864 (docs: Add comprehensive XML documentation annotations to C# codebase (#17))
+return indices.ToList();
+>>>>>>> 1e18864(docs: Add comprehensive XML documentation annotations to C# codebase (#17))
     }
 }
