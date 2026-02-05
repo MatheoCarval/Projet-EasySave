@@ -189,7 +189,7 @@ namespace EasySave.Tests.Services.Managers
             manager.CreateJob("TestJob", new List<string> { @"C:\Source" }, @"C:\Target", BackupType.COMPLETE);
 
             // Act
-            var job = manager.GetJob("TestJob");
+            var job = manager.GetJobByName("TestJob");
 
             // Assert
             Assert.NotNull(job);
@@ -203,7 +203,7 @@ namespace EasySave.Tests.Services.Managers
             var manager = new BackupManager(_fileTransferService, _stateWriter);
 
             // Act
-            var job = manager.GetJob("NonExistent");
+            var job = manager.GetJobByName("NonExistent");
 
             // Assert
             Assert.Null(job);
