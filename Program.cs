@@ -12,7 +12,6 @@ namespace EasySave;
 
 /// <summary>
 /// Main entry point for the EasySave application, responsible for initializing services and managing backup operations.
-/// Supports execution by index: EasySave.exe 1-3 or EasySave.exe 1;3
 /// </summary>
 public class Program
 {
@@ -70,21 +69,6 @@ public class Program
         string appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "EasySave"
-        _localizationService = new LocalizationService("fr");
-
-
-
-        StateWriter stateWriter = new StateWriter("state.json");
-
-
-
-        _backupManager = new BackupManager(
-            new FileTransferService(
-                new JsonLogger("logs.json"),
-                stateWriter
-            ),
-            stateWriter
->>>>>>> 1e18864(docs: Add comprehensive XML documentation annotations to C# codebase (#17))
         );
 
         Directory.CreateDirectory(appData);
@@ -177,6 +161,9 @@ public class Program
         return indices;
     }
 
+    /// <summary>
+    /// Executes backup jobs selected by their indices.
+    /// </summary>
     private static void ExecuteJobsByIndices(List<int> indices)
     {
         var allJobs = _backupManager!.GetAllJobs();
@@ -321,39 +308,5 @@ public class Program
             BackupType.DIFFERENTIAL => T("backup_type_differential"),
             _ => type.ToString()
         };
-    }
-}
-            if (parts.Length == 2 && int.TryParse(parts[0], out int start) && int.TryParse(parts[1], out int end))
-            {
-                start = Math.Max(1, start);
-                end = Math.Min(totalJobs, end);
-
-                if (start <= end)
-                {
-                    for (int i = start; i <= end; i++)
-                    {
-                        indices.Add(i - 1);
-                    }
-                }
-            }
-        }
-        else if (pattern.Contains(";"))
-{
-    var parts = pattern.Split(';');
-    foreach (var part in parts)
-    {
-        if (int.TryParse(part.Trim(), out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
-        {
-            indices.Add(jobNum - 1);
-        }
-    }
-}
-else if (int.TryParse(pattern, out int jobNum) && jobNum >= 1 && jobNum <= totalJobs)
-{
-    indices.Add(jobNum - 1);
-}
-
-return indices.ToList();
->>>>>>> 1e18864(docs: Add comprehensive XML documentation annotations to C# codebase (#17))
     }
 }
