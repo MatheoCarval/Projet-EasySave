@@ -20,4 +20,13 @@
     <EmbeddedResource Include="Datas\Languages.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="EasyLog\EasyLog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="EasySave.Tests/**" />
+    <Compile Remove="EasyLog/**" />
+  </ItemGroup>
+
 </Project>
