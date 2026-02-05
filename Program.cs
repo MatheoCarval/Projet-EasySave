@@ -10,7 +10,7 @@ using Services.Writers;
 namespace EasySave;
 
 /// Point d'entrée principal de l'application EasySave
-internal class Program
+public class Program
 {
     private static LocalizationService? _localizationService;
     private static BackupManager? _backupManager;
