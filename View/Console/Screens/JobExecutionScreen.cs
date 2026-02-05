@@ -7,13 +7,22 @@ using Services.Managers;
 namespace EasySave.View.Console.Screens;
 
 /// <summary>
-/// Job execution screen - Handles execution of backup jobs
+/// Screen for selecting and executing individual backup jobs with real-time progress tracking and status reporting.
 /// </summary>
 public class JobExecutionScreen
 {
+    /// <summary>
+    /// Service for retrieving localized text strings based on the current language setting.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for accessing and managing backup job data and execution operations.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// Initializes a new instance of the JobExecutionScreen with required services for localization and backup management.
+    /// </summary>
     public JobExecutionScreen(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -21,10 +30,8 @@ public class JobExecutionScreen
     }
 
     /// <summary>
-    /// Shows job selection screen for executing a single job
+    /// Displays a list of all available backup jobs in a frame, allowing the user to select a single job for execution. If no jobs are available, shows an error message and invokes the completion callback.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when operation completes</param>
     public void ShowExecuteOne(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
@@ -39,14 +46,12 @@ public class JobExecutionScreen
         frame.Title = T("execute_task_title");
         frame.RemoveAll();
 
-        // Label
         var label = new Label(T("choose_task_to_execute"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
         };
 
-        // Job list
         var jobNames = jobs.Select(j => j.Name).ToList();
         var listView = new ListView(jobNames)
         {
@@ -58,7 +63,6 @@ public class JobExecutionScreen
             CanFocus = true
         };
 
-        // Execute button
         var executeBtn = new Button(T("execute"))
         {
             X = Pos.Center() - 15,
@@ -66,14 +70,12 @@ public class JobExecutionScreen
             IsDefault = true
         };
 
-        // Cancel button
         var cancelBtn = new Button(T("cancel"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
         };
 
-        // Button actions
         executeBtn.Clicked += () =>
         {
             var selectedJob = jobs[listView.SelectedItem];
@@ -86,19 +88,12 @@ public class JobExecutionScreen
     }
 
     /// <summary>
-    /// Executes a specific backup job
+    /// Executes the specified backup job through the BackupManager, which handles file transfer, logging, and state persistence, displaying success or error messages accordingly.
     /// </summary>
-    /// <param name="jobId">ID of the job to execute</param>
-    /// <param name="onComplete">Callback when execution completes</param>
     private void ExecuteJob(string jobId, Action onComplete)
     {
         try
         {
-            // Execute backup job through BackupManager
-            // This will:
-            // 1. Call FileTransferService to copy files
-            // 2. Write logs to logs/YYYY-MM-DD.json
-            // 3. Update state.json in real-time
             _backupManager.ExecuteJob(jobId);
 
             MessageBox.Query(50, 7, T("success"),
@@ -117,6 +112,9 @@ public class JobExecutionScreen
         }
     }
 
+    /// <summary>
+    /// Retrieves the localized text for the specified key, optionally formatting it with the provided arguments.
+    /// </summary>
     private string T(string key, params object[] args)
     {
         var text = _localizationService.GetTextTranslated(key);

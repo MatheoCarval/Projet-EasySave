@@ -4,13 +4,12 @@ using Terminal.Gui;
 namespace EasySave.View.Console.Helpers;
 
 /// <summary>
-/// UI Helper - Utility methods for creating common UI components
-/// Centralizes positioning and styling logic
+/// Provides utility methods for creating and positioning common Terminal.Gui UI components with consistent styling and layout.
 /// </summary>
 public static class UIHelper
 {
     /// <summary>
-    /// Creates a centered label
+    /// Creates a centered label with optional vertical offset from center position.
     /// </summary>
     public static Label CreateLabel(string text, int yOffset = 0)
     {
@@ -22,7 +21,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a label at specific position
+    /// Creates a label positioned at the specified coordinates.
     /// </summary>
     public static Label CreateLabelAt(string text, int x, int y)
     {
@@ -34,7 +33,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a text field
+    /// Creates a text input field at the specified position with optional initial text and configurable width.
     /// </summary>
     public static TextField CreateTextField(string initialText, int x, int y, int width = 40)
     {
@@ -48,7 +47,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a centered text field
+    /// Creates a centered text input field with optional vertical offset and configurable width.
     /// </summary>
     public static TextField CreateCenteredTextField(string initialText, int yOffset = 0, int width = 40)
     {
@@ -62,7 +61,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a button at specific position
+    /// Creates a button at the specified position with optional click handler and default state.
     /// </summary>
     public static Button CreateButton(string text, int x, int y, Action? onClick = null, bool isDefault = false)
     {
@@ -82,7 +81,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a centered button
+    /// Creates a centered button with optional vertical offset, click handler, and default state.
     /// </summary>
     public static Button CreateCenteredButton(string text, int yOffset = 0, Action? onClick = null, bool isDefault = false)
     {
@@ -102,7 +101,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a list view
+    /// Creates a list view at the specified position with given dimensions and populated with items.
     /// </summary>
     public static ListView CreateListView(System.Collections.Generic.List<string> items, int x, int y, int width, int height)
     {
@@ -118,7 +117,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Creates a centered list view
+    /// Creates a centered list view with optional vertical offset and configurable dimensions.
     /// </summary>
     public static ListView CreateCenteredListView(System.Collections.Generic.List<string> items, int yOffset = 0, int width = 40, int height = 10)
     {
@@ -134,7 +133,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Formats bytes to human-readable format
+    /// Converts a byte count into a human-readable string with appropriate unit (B, KB, MB, GB, TB).
     /// </summary>
     public static string FormatBytes(long bytes)
     {
@@ -152,7 +151,7 @@ public static class UIHelper
     }
 
     /// <summary>
-    /// Formats a timestamp to readable format
+    /// Formats a DateTime value into a human-readable string with year, month, day, hour, minute, and second.
     /// </summary>
     public static string FormatTimestamp(DateTime timestamp)
     {

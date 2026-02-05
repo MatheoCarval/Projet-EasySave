@@ -3,50 +3,43 @@ using System;
 namespace Models.Entries
 {
     /// <summary>
-    /// Represents a single backup log entry
-    /// Used for daily log file (logs/YYYY-MM-DD.json)
+    /// Represents a single backup operation log entry, including file transfer details, timestamps, and transfer status.
     /// </summary>
     public class BackupLogEntry
     {
-        // ==================== PROPERTIES ====================
 
         /// <summary>
-        /// Timestamp of the file transfer
+        /// The date and time when the file transfer occurred.
         /// </summary>
         public DateTime Timestamp { get; set; }
 
         /// <summary>
-        /// Name of the backup job
+        /// The name of the backup job that performed this transfer.
         /// </summary>
         public string BackupName { get; set; }
 
         /// <summary>
-        /// Complete source path in UNC format
-        /// Example: //server/share/folder/file.txt
+        /// The complete source file path in UNC format (e.g., //server/share/folder/file.txt).
         /// </summary>
         public string SourcePath { get; set; }
 
         /// <summary>
-        /// Complete target path in UNC format
-        /// Example: //backup/share/folder/file.txt
+        /// The complete destination file path in UNC format (e.g., //backup/share/folder/file.txt).
         /// </summary>
         public string TargetPath { get; set; }
 
         /// <summary>
-        /// Size of the file in bytes
+        /// The size of the transferred file in bytes.
         /// </summary>
         public long FileSize { get; set; }
 
         /// <summary>
-        /// Transfer time in milliseconds
-        /// Negative value indicates error
+        /// The duration of the file transfer in milliseconds; negative values indicate transfer errors.
         /// </summary>
         public long TransferTime { get; set; }
 
-        // ==================== CONSTRUCTORS ====================
-
         /// <summary>
-        /// Parameterless constructor (REQUIRED for JSON/XML serialization)
+        /// Initializes a new instance of BackupLogEntry with default values; required for JSON and XML serialization.
         /// </summary>
         public BackupLogEntry()
         {
@@ -58,10 +51,8 @@ namespace Models.Entries
             TransferTime = 0;
         }
 
-        // ==================== HELPER METHODS ====================
-
         /// <summary>
-        /// Check if transfer was successful
+        /// Determines whether the file transfer was successful based on the transfer time value.
         /// </summary>
         public bool IsSuccess()
         {
@@ -69,7 +60,7 @@ namespace Models.Entries
         }
 
         /// <summary>
-        /// Get human-readable file size
+        /// Returns the file size formatted as a human-readable string with appropriate unit (B, KB, MB, GB, TB).
         /// </summary>
         public string GetFormattedSize()
         {
@@ -87,7 +78,7 @@ namespace Models.Entries
         }
 
         /// <summary>
-        /// Override ToString for debugging
+        /// Returns a formatted string representation of the backup log entry including timestamp, job name, source, destination, size, and transfer time.
         /// </summary>
         public override string ToString()
         {

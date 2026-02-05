@@ -9,11 +9,23 @@ using System.Collections.Generic;
 
 namespace EasySave.Tests.EasyLog.Loggers
 {
+    /// <summary>
+    /// Unit tests for the JsonLogger class, verifying JSON serialization, file I/O operations, entry logging, and collection handling.
+    /// </summary>
     public class JsonLoggerTests : IDisposable
     {
+        /// <summary>
+        /// Temporary directory path used for test file storage during test execution.
+        /// </summary>
         private readonly string _testDirectory;
+        /// <summary>
+        /// Path to the test JSON log file created in the temporary directory.
+        /// </summary>
         private readonly string _testFilePath;
 
+        /// <summary>
+        /// Initializes test fixtures by creating a temporary directory for test log files.
+        /// </summary>
         public JsonLoggerTests()
         {
             _testDirectory = Path.Combine(Path.GetTempPath(), $"JsonLoggerTest_{Guid.NewGuid()}");
@@ -21,6 +33,9 @@ namespace EasySave.Tests.EasyLog.Loggers
             _testFilePath = Path.Combine(_testDirectory, "test.json");
         }
 
+        /// <summary>
+        /// Cleans up temporary test files and directories after test execution completes.
+        /// </summary>
         public void Dispose()
         {
             if (Directory.Exists(_testDirectory))
@@ -29,24 +44,27 @@ namespace EasySave.Tests.EasyLog.Loggers
                 {
                     Directory.Delete(_testDirectory, true);
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch { }
             }
         }
 
+        /// <summary>
+        /// Verifies that JsonLogger constructor successfully creates a logger instance with a valid file path.
+        /// </summary>
         [Fact]
         public void Constructor_WithValidPath_CreatesLogger()
         {
-            // Arrange & Act
             var logger = new JsonLogger(_testFilePath);
 
-            // Assert
             Assert.NotNull(logger);
         }
 
+        /// <summary>
+        /// Verifies that Log method writes backup log entries to a JSON file with correct data serialization.
+        /// </summary>
         [Fact]
         public void Log_WithValidEntry_WritesToFile()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
             var entry = new BackupLogEntry
             {
@@ -55,32 +73,33 @@ namespace EasySave.Tests.EasyLog.Loggers
                 FileSize = 1024
             };
 
-            // Act
             logger.Log(entry);
             logger.Flush();
 
-            // Assert
             Assert.True(File.Exists(_testFilePath));
             var content = File.ReadAllText(_testFilePath);
             Assert.Contains("TestBackup", content);
         }
 
+        /// <summary>
+        /// Verifies that Log method throws ArgumentNullException when passed a null entry parameter.
+        /// </summary>
         [Fact]
         public void Log_WithNull_ThrowsArgumentNullException()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
 
-            // Act & Assert
 #pragma warning disable CS8625
             Assert.Throws<ArgumentNullException>(() => logger.Log<BackupLogEntry>(null));
 #pragma warning restore CS8625
         }
 
+        /// <summary>
+        /// Verifies that LogCollection method writes multiple backup log entries to JSON file with all data preserved.
+        /// </summary>
         [Fact]
         public void LogCollection_WithValidEntries_WritesToFile()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
             var entries = new List<BackupLogEntry>
             {
@@ -88,94 +107,92 @@ namespace EasySave.Tests.EasyLog.Loggers
                 new BackupLogEntry { BackupName = "Backup2" }
             };
 
-            // Act
             logger.LogCollection(entries);
             logger.Flush();
 
-            // Assert
             Assert.True(File.Exists(_testFilePath));
             var content = File.ReadAllText(_testFilePath);
             Assert.Contains("Backup1", content);
             Assert.Contains("Backup2", content);
         }
 
+        /// <summary>
+        /// Verifies that LogCollection method handles null and empty collections gracefully without throwing exceptions.
+        /// </summary>
         [Fact]
         public void LogCollection_WithNull_DoesNotThrow()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
 
-            // Act & Assert - LogCollection returns silently for null/empty collections
 #pragma warning disable CS8625
             logger.LogCollection<BackupLogEntry>(null);
 #pragma warning restore CS8625
             
-            // No exception should be thrown
             Assert.True(true);
         }
 
+        /// <summary>
+        /// Verifies that ReadLog method retrieves previously logged entries from an existing JSON log file.
+        /// </summary>
         [Fact]
         public void ReadLog_WithExistingFile_ReturnsEntries()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup", FileSize = 100 };
             logger.Log(entry);
             logger.Flush();
 
-            // Act
             var result = logger.ReadLog<BackupLogEntry>();
 
-            // Assert
             Assert.NotNull(result);
             Assert.Single(result);
             Assert.Equal("TestBackup", result.First().BackupName);
         }
 
+        /// <summary>
+        /// Verifies that ReadLog method returns an empty list when no log file exists.
+        /// </summary>
         [Fact]
         public void ReadLog_WithNonExistentFile_ReturnsEmptyList()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
 
-            // Act
             var result = logger.ReadLog<BackupLogEntry>();
 
-            // Assert
             Assert.NotNull(result);
             Assert.Empty(result);
         }
 
+        /// <summary>
+        /// Verifies that Flush method writes all buffered log entries to the JSON file immediately.
+        /// </summary>
         [Fact]
         public void Flush_WritesBufferedDataToFile()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup" };
             logger.Log(entry);
 
-            // Act
             logger.Flush();
 
-            // Assert
             Assert.True(File.Exists(_testFilePath));
             var content = File.ReadAllText(_testFilePath);
             Assert.Contains("TestBackup", content);
         }
 
+        /// <summary>
+        /// Verifies that calling Log multiple times with Flush between operations appends all entries to the JSON file.
+        /// </summary>
         [Fact]
         public void Log_MultipleTimes_AppendsEntries()
         {
-            // Arrange
             var logger = new JsonLogger(_testFilePath);
 
-            // Act
             logger.Log(new BackupLogEntry { BackupName = "Backup1" });
             logger.Flush();
             logger.Log(new BackupLogEntry { BackupName = "Backup2" });
             logger.Flush();
 
-            // Assert
             var result = logger.ReadLog<BackupLogEntry>();
             Assert.Equal(2, result.Count());
         }

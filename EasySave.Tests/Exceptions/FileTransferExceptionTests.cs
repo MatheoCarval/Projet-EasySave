@@ -4,32 +4,35 @@ using System;
 
 namespace EasySave.Tests.Exceptions
 {
+    /// <summary>
+    /// Unit tests for the FileTransferException class, verifying exception initialization with messages and inner exceptions.
+    /// </summary>
     public class FileTransferExceptionTests
     {
+        /// <summary>
+        /// Verifies that FileTransferException constructor with a message parameter correctly sets the exception message.
+        /// </summary>
         [Fact]
         public void Constructor_WithMessage_SetsMessage()
         {
-            // Arrange
             var message = "Test error message";
 
-            // Act
             var exception = new FileTransferException(message);
 
-            // Assert
             Assert.Equal(message, exception.Message);
         }
 
+        /// <summary>
+        /// Verifies that FileTransferException constructor with message and inner exception parameters correctly sets both properties.
+        /// </summary>
         [Fact]
         public void Constructor_WithMessageAndInnerException_SetsBoth()
         {
-            // Arrange
             var message = "Test error message";
             var innerException = new InvalidOperationException("Inner error");
 
-            // Act
             var exception = new FileTransferException(message, innerException);
 
-            // Assert
             Assert.Equal(message, exception.Message);
             Assert.Equal(innerException, exception.InnerException);
         }

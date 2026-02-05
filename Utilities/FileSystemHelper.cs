@@ -2,8 +2,14 @@ using System.IO;
 
 namespace Utilities
 {
+    /// <summary>
+    /// Provides utility methods for file system operations including file and directory size calculations, copying files with progress reporting, and directory management.
+    /// </summary>
     public static class FileSystemHelper
     {
+        /// <summary>
+        /// Retrieves the size in bytes of the specified file. Throws ArgumentException if path is null or empty, and FileNotFoundException if file does not exist.
+        /// </summary>
         public static long GetFileSize(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -16,6 +22,9 @@ namespace Utilities
             return fileInfo.Length;
         }
 
+        /// <summary>
+        /// Counts the total number of files in the specified directory and all subdirectories recursively.
+        /// </summary>
         public static long GetFileCount(string directoryPath)
         {
             if (string.IsNullOrWhiteSpace(directoryPath))
@@ -27,6 +36,9 @@ namespace Utilities
             return Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories).LongCount();
         }
 
+        /// <summary>
+        /// Calculates the total size in bytes of all files in the specified directory and all subdirectories recursively.
+        /// </summary>
         public static long GetDirectorySize(string directoryPath)
         {
             if (string.IsNullOrWhiteSpace(directoryPath))
@@ -39,6 +51,9 @@ namespace Utilities
                             .Sum(file => new FileInfo(file).Length);
         }
 
+        /// <summary>
+        /// Creates the specified directory if it does not already exist. Throws ArgumentException if the path is null or empty.
+        /// </summary>
         public static void EnsureDirectoryExists(string directoryPath)
         {
             if (string.IsNullOrWhiteSpace(directoryPath))
@@ -50,13 +65,15 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Copies a file from source to destination with optional progress reporting. Supports custom buffer size for performance tuning. Creates destination directory if needed and handles empty files.
+        /// </summary>
         public static void CopyWithProgress(
             string sourcePath,
             string destinationPath,
             IProgress<double>? progress = null,
             int bufferSize = 81920)
         {
-            // 1. Validations
             if (string.IsNullOrWhiteSpace(sourcePath))
                 throw new ArgumentException("Le chemin source ne peut pas être vide.", nameof(sourcePath));
 
@@ -66,7 +83,6 @@ namespace Utilities
             if (!File.Exists(sourcePath))
                 throw new FileNotFoundException("Le fichier source n'existe pas.", sourcePath);
 
-            // 2. S'assurer que le dossier de destination existe
             string? destinationDirectory = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrEmpty(destinationDirectory))
             {
@@ -76,7 +92,6 @@ namespace Utilities
             var fileInfo = new FileInfo(sourcePath);
             long totalBytes = fileInfo.Length;
 
-            // 3. Vérifier si le fichier est vide
             if (totalBytes == 0)
             {
                 File.Create(destinationPath).Dispose();
@@ -87,7 +102,6 @@ namespace Utilities
             long totalBytesCopied = 0;
             byte[] buffer = new byte[bufferSize];
 
-            // 4. Optimisations FileStream
             using (var sourceStream = new FileStream(
                 sourcePath,
                 FileMode.Open,

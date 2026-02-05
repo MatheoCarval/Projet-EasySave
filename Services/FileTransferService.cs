@@ -13,11 +13,23 @@ using Services.Writers;
 
 namespace EasySave.Services
 {
+    /// <summary>
+    /// Manages file transfer operations for backup jobs, including directory traversal, file copying, and progress tracking with state persistence.
+    /// </summary>
     public class FileTransferService
     {
+        /// <summary>
+        /// Logger instance for recording file transfer operations and backup events.
+        /// </summary>
         private readonly ILogger _logger;
+        /// <summary>
+        /// State writer instance for persisting backup job state during file transfer operations.
+        /// </summary>
         private readonly StateWriter _stateWriter;
 
+        /// <summary>
+        /// Initializes FileTransferService with required dependencies for logging and state persistence.
+        /// </summary>
         public FileTransferService(
             ILogger logger,
             StateWriter stateWriter)
@@ -26,11 +38,8 @@ namespace EasySave.Services
             _stateWriter = stateWriter ?? throw new ArgumentNullException(nameof(stateWriter));
         }
 
-        // ==================== PUBLIC METHODS ====================
-
         /// <summary>
-        /// Transfer an entire directory (recursive) from source to target
-        /// NOTE: TotalFiles/TotalSize should be initialized by BackupManager.ExecuteJob() before calling this
+        /// Recursively transfers all files from the source directory to the target directory, skipping files based on the backup type and updating job progress.
         /// </summary>
         public void TransferDirectory(string sourceDir, string targetDir, BackupJob job)
         {
@@ -42,7 +51,6 @@ namespace EasySave.Services
 
             var allFiles = GetAllFiles(sourceDir);
 
-            // Don't reinitialize totals - they're already set in BackupManager.ExecuteJob
             foreach (var sourceFile in allFiles)
             {
                 string relativePath = Path.GetRelativePath(sourceDir, sourceFile);
@@ -54,7 +62,6 @@ namespace EasySave.Services
                 }
                 else
                 {
-                    // File skipped (differential backup)
                     job.RemainingFiles--;
                     job.RemainingSize -= FileSystemHelper.GetFileSize(sourceFile);
                 }
@@ -65,8 +72,7 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// Transfer a single file from source to target
-        /// NOTE: TotalFiles/TotalSize should be initialized by BackupManager.ExecuteJob() before calling this
+        /// Transfers a single file from source to target, records transfer metrics in the log, and updates job progress; throws FileTransferException on failure.
         /// </summary>
         public void TransferFile(string sourceFile, string targetFile, BackupJob job)
         {
@@ -131,16 +137,13 @@ namespace EasySave.Services
             }
         }
 
-        // ==================== PRIVATE METHODS ====================
-
         /// <summary>
-        /// Copy a file from source to destination and return elapsed time
+        /// Copies a file from source to destination using File.Copy with overwrite and measures elapsed time.
         /// </summary>
         private long CopyFile(string source, string destination)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            // Use File.Copy with overwrite
             File.Copy(source, destination, overwrite: true);
 
             stopwatch.Stop();
@@ -148,7 +151,7 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// Get all files recursively from a directory
+        /// Recursively retrieves all files from a directory and its subdirectories, throwing FileTransferException on access denied errors.
         /// </summary>
         private List<string> GetAllFiles(string directory)
         {
@@ -156,10 +159,8 @@ namespace EasySave.Services
 
             try
             {
-                // Get files in current directory
                 files.AddRange(Directory.GetFiles(directory));
 
-                // Get files in subdirectories (recursive)
                 foreach (var subDir in Directory.GetDirectories(directory))
                 {
                     files.AddRange(GetAllFiles(subDir));
@@ -174,7 +175,7 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// Create directory structure for target path
+        /// Creates the target directory structure if it does not already exist.
         /// </summary>
         private void CreateDirectoryStructure(string targetPath)
         {
@@ -185,20 +186,16 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// Determine if a file should be copied based on backup type
+        /// Determines whether a file should be copied based on the backup type: always copies for complete backups, and only if target does not exist or source is newer for differential backups.
         /// </summary>
         private bool ShouldCopyFile(string sourceFile, string targetFile, BackupType type)
         {
             switch (type)
             {
                 case BackupType.COMPLETE:
-                    // Always copy in complete backup
                     return true;
 
                 case BackupType.DIFFERENTIAL:
-                    // Copy only if:
-                    // 1. Target doesn't exist
-                    // 2. Source is newer than target
                     if (!File.Exists(targetFile))
                         return true;
 
@@ -214,9 +211,18 @@ namespace EasySave.Services
     }
 
 
+    /// <summary>
+    /// Exception thrown when a file transfer operation fails during backup execution.
+    /// </summary>
     public class FileTransferException : Exception
     {
+        /// <summary>
+        /// Initializes FileTransferException with a descriptive error message.
+        /// </summary>
         public FileTransferException(string message) : base(message) { }
+        /// <summary>
+        /// Initializes FileTransferException with a descriptive error message and the underlying exception that caused the failure.
+        /// </summary>
         public FileTransferException(string message, Exception innerException)
             : base(message, innerException) { }
     }

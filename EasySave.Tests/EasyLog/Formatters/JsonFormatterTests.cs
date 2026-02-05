@@ -8,12 +8,17 @@ using System.Linq;
 
 namespace EasySave.Tests.EasyLog.Formatters
 {
+    /// <summary>
+    /// Unit tests for the JsonFormatter class, verifying serialization, deserialization, collection handling, and formatting options.
+    /// </summary>
     public class JsonFormatterTests
     {
+        /// <summary>
+        /// Verifies that Format with a valid object successfully serializes it to JSON with camelCase naming convention.
+        /// </summary>
         [Fact]
         public void Format_WithValidObject_ReturnsJson()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var entry = new BackupLogEntry
             {
@@ -33,22 +38,25 @@ namespace EasySave.Tests.EasyLog.Formatters
             Assert.Contains("backupName", result); // camelCase naming policy
         }
 
+        /// <summary>
+        /// Verifies that Format throws ArgumentNullException when given a null object to serialize.
+        /// </summary>
         [Fact]
         public void Format_WithNull_ThrowsArgumentNullException()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
 
-            // Act & Assert
 #pragma warning disable CS8625
             Assert.Throws<ArgumentNullException>(() => formatter.Format(null));
 #pragma warning restore CS8625
         }
 
+        /// <summary>
+        /// Verifies that FormatCollection with a valid list serializes all entries into a JSON array format.
+        /// </summary>
         [Fact]
         public void FormatCollection_WithValidList_ReturnsJsonArray()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var entries = new List<BackupLogEntry>
             {
@@ -67,40 +75,43 @@ namespace EasySave.Tests.EasyLog.Formatters
             Assert.EndsWith("]", result.Trim());
         }
 
+        /// <summary>
+        /// Verifies that FormatCollection with an empty list returns an empty JSON array.
+        /// </summary>
         [Fact]
         public void FormatCollection_WithEmptyList_ReturnsEmptyArray()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var entries = new List<BackupLogEntry>();
 
-            // Act
             var result = formatter.FormatCollection(entries);
 
             // Assert
             Assert.Equal("[]", result);
         }
 
+        /// <summary>
+        /// Verifies that FormatCollection throws ArgumentNullException when given a null collection.
+        /// </summary>
         [Fact]
         public void FormatCollection_WithNull_ThrowsArgumentNullException()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
 
-            // Act & Assert
 #pragma warning disable CS8625
             Assert.Throws<ArgumentNullException>(() => formatter.FormatCollection(null));
 #pragma warning restore CS8625
         }
 
+        /// <summary>
+        /// Verifies that Parse with valid JSON string successfully deserializes it into the correct object with proper values.
+        /// </summary>
         [Fact]
         public void Parse_WithValidJson_ReturnsObject()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var json = "{\"backupName\":\"TestBackup\",\"sourcePath\":\"C:\\\\Source\",\"fileSize\":1024}";
 
-            // Act
             var result = formatter.Parse(json);
 
             // Assert
@@ -109,40 +120,43 @@ namespace EasySave.Tests.EasyLog.Formatters
             Assert.Equal(1024, result.FileSize);
         }
 
+        /// <summary>
+        /// Verifies that Parse throws ArgumentException when given null, empty, or whitespace JSON content.
+        /// </summary>
         [Theory]
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
         public void Parse_WithInvalidContent_ThrowsArgumentException(string? content)
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
 
-            // Act & Assert
 #pragma warning disable CS8604
             Assert.Throws<ArgumentException>(() => formatter.Parse(content));
 #pragma warning restore CS8604
         }
 
+        /// <summary>
+        /// Verifies that Parse throws FormatterException when given malformed JSON that cannot be deserialized.
+        /// </summary>
         [Fact]
         public void Parse_WithInvalidJson_ThrowsFormatterException()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var invalidJson = "{invalid json}";
 
-            // Act & Assert
             Assert.Throws<FormatterException>(() => formatter.Parse(invalidJson));
         }
 
+        /// <summary>
+        /// Verifies that ParseCollection with a valid JSON array deserializes it into a list of objects with correct values.
+        /// </summary>
         [Fact]
         public void ParseCollection_WithValidJsonArray_ReturnsList()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
             var json = "[{\"backupName\":\"Backup1\"},{\"backupName\":\"Backup2\"}]";
 
-            // Act
             var result = formatter.ParseCollection(json);
 
             // Assert
@@ -151,16 +165,17 @@ namespace EasySave.Tests.EasyLog.Formatters
             Assert.Equal("Backup1", result.First().BackupName);
         }
 
+        /// <summary>
+        /// Verifies that ParseCollection with null, empty, or whitespace content returns an empty enumerable collection.
+        /// </summary>
         [Theory]
         [InlineData("")]
         [InlineData(" ")]
         [InlineData(null)]
         public void ParseCollection_WithEmptyContent_ReturnsEmptyEnumerable(string? content)
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>();
 
-            // Act
 #pragma warning disable CS8604
             var result = formatter.ParseCollection(content);
 #pragma warning restore CS8604
@@ -170,28 +185,30 @@ namespace EasySave.Tests.EasyLog.Formatters
             Assert.Empty(result);
         }
 
+        /// <summary>
+        /// Verifies that JsonFormatter with prettyPrint enabled formats output with indentation and newlines for readability.
+        /// </summary>
         [Fact]
         public void Constructor_WithPrettyPrint_FormatsWithIndentation()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>(prettyPrint: true);
             var entry = new BackupLogEntry { BackupName = "Test" };
 
-            // Act
             var result = formatter.Format(entry);
 
             // Assert
             Assert.Contains("\n", result); // Has newlines when pretty printed
         }
 
+        /// <summary>
+        /// Verifies that JsonFormatter with prettyPrint disabled formats output in compact form without indentation or extra whitespace.
+        /// </summary>
         [Fact]
         public void Constructor_WithoutPrettyPrint_FormatsCompact()
         {
-            // Arrange
             var formatter = new JsonFormatter<BackupLogEntry>(prettyPrint: false);
             var entry = new BackupLogEntry { BackupName = "Test" };
 
-            // Act
             var result = formatter.Format(entry);
 
             // Assert

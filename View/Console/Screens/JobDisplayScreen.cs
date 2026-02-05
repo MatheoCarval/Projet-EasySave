@@ -8,13 +8,22 @@ using Models;
 namespace EasySave.View.Console.Screens;
 
 /// <summary>
-/// Job display screen - Shows list of jobs and their detailed information
+/// Screen for displaying a list of all backup jobs with the ability to view detailed information for each job.
 /// </summary>
 public class JobDisplayScreen
 {
+    /// <summary>
+    /// Service for retrieving localized text strings based on the current language setting.
+    /// </summary>
     private readonly LocalizationService _localizationService;
+    /// <summary>
+    /// Manager for accessing and managing backup job data and operations.
+    /// </summary>
     private readonly BackupManager _backupManager;
 
+    /// <summary>
+    /// Initializes a new instance of the JobDisplayScreen with required services for localization and backup management.
+    /// </summary>
     public JobDisplayScreen(LocalizationService localizationService, BackupManager backupManager)
     {
         _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
@@ -22,10 +31,8 @@ public class JobDisplayScreen
     }
 
     /// <summary>
-    /// Shows list of all jobs with option to view details
+    /// Displays a list of all available backup jobs in a frame, allowing the user to select and view job details. If no jobs are available, shows an error message and invokes the completion callback.
     /// </summary>
-    /// <param name="frame">Content frame to display in</param>
-    /// <param name="onComplete">Callback when user returns to menu</param>
     public void Show(FrameView frame, Action onComplete)
     {
         var jobs = _backupManager.GetAllJobs();
@@ -40,14 +47,12 @@ public class JobDisplayScreen
         frame.Title = T("display_tasks_title");
         frame.RemoveAll();
 
-        // Label
         var label = new Label(T("choose_task_for_details"))
         {
             X = Pos.Center() - 20,
             Y = Pos.Center() - 5
         };
 
-        // Job list
         var jobNames = jobs.Select(j => j.Name).ToList();
         var listView = new ListView(jobNames)
         {
@@ -59,7 +64,6 @@ public class JobDisplayScreen
             CanFocus = true
         };
 
-        // Details button
         var detailBtn = new Button(T("details"))
         {
             X = Pos.Center() - 15,
@@ -67,19 +71,16 @@ public class JobDisplayScreen
             IsDefault = true
         };
 
-        // Back button
         var backBtn = new Button(T("back"))
         {
             X = Pos.Center() + 5,
             Y = Pos.Center() + 5
         };
 
-        // Button actions
         detailBtn.Clicked += () =>
         {
             var selectedJob = jobs[listView.SelectedItem];
             ShowJobDetails(selectedJob);
-            // Refresh the list after viewing details
             Show(frame, onComplete);
         };
 
@@ -89,9 +90,8 @@ public class JobDisplayScreen
     }
 
     /// <summary>
-    /// Shows detailed information about a specific job in a message box
+    /// Displays detailed information about the specified backup job in a modal message box.
     /// </summary>
-    /// <param name="job">Job to display details for</param>
     private void ShowJobDetails(BackupJob job)
     {
         var details = FormatJobDetails(job);
@@ -99,29 +99,27 @@ public class JobDisplayScreen
     }
 
     /// <summary>
-    /// Formats job information for display
+    /// Formats all job information including name, sources, destination, backup type, state, and progress into a formatted localized string for display.
     /// </summary>
-    /// <param name="job">Job to format</param>
-    /// <returns>Formatted string with all job details</returns>
     private string FormatJobDetails(BackupJob job)
     {
         var sourcesText = string.Join("\n", job.SourcePath.Select((s, i) => $"  [{i + 1}] {s}"));
 
         return T("task_details",
-            job.Name,                           // Job name
-            job.Name,                           // Job ID (same as name for now)
-            sourcesText,                        // Sources list
-            job.TargetPath,                     // Destination
-            job.BackupType.ToString(),          // Backup type (COMPLETE/DIFFERENTIAL)
-            job.BackupState.ToString(),               // Current state
-            job.Progress,                       // Progress percentage
-            job.TotalFiles,                     // Total files count
-            FormatBytes(job.TotalSize)          // Total size formatted
+            job.Name,
+            job.Name,
+            sourcesText,
+            job.TargetPath,
+            job.BackupType.ToString(),
+            job.BackupState.ToString(),
+            job.Progress,
+            job.TotalFiles,
+            FormatBytes(job.TotalSize)
         );
     }
 
     /// <summary>
-    /// Formats bytes to human-readable format (B, KB, MB, GB)
+    /// Converts a byte count into a human-readable string with appropriate unit (B, KB, MB, GB, or TB).
     /// </summary>
     private string FormatBytes(long bytes)
     {

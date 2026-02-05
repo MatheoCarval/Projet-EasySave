@@ -9,12 +9,26 @@ using System.Text.RegularExpressions;
 
 namespace Utilities
 {
+    /// <summary>
+    /// Provides path validation utilities including checks for valid paths, network paths, directory verification, and write access permissions.
+    /// </summary>
     public static class PathValidator
     {
+        /// <summary>
+        /// Maximum allowed path length in characters.
+        /// </summary>
         private const int MaxPathLength = 260;
+        /// <summary>
+        /// Array of characters that are invalid in file system paths.
+        /// </summary>
         private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+        /// <summary>
+        /// Regular expression pattern for detecting path traversal attempts using ".." notation.
+        /// </summary>
         private static readonly Regex PathTraversalPattern = new Regex(@"\.\.[/\\]", RegexOptions.Compiled);
-
+        /// <summary>
+        /// Validates that a path is non-null, non-empty, within maximum length, free of invalid characters, and does not contain path traversal patterns.
+        /// </summary>        
         public static bool IsValidPath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -66,6 +80,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Determines whether the specified path is a network (UNC) path.
+        /// </summary>
         public static bool IsNetworkPath(string path)
         {
             if (!IsValidPath(path))
@@ -92,6 +109,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Converts a local drive path to its UNC equivalent format, or returns the path unchanged if already a network path.
+        /// </summary>
         public static string ToUncPath(string path)
         {
             if (!IsValidPath(path))
@@ -132,6 +152,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Checks whether the specified path exists as either a file or directory.
+        /// </summary>
         public static bool PathExists(string path)
         {
             if (!IsValidPath(path))
@@ -149,6 +172,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Determines whether the specified path points to a directory rather than a file.
+        /// </summary>
         public static bool IsDirectory(string path)
         {
             if (!IsValidPath(path))
@@ -175,6 +201,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Verifies that the current user has write permissions for the specified path using Windows ACL rules on Windows platforms, or a fallback file creation test on other platforms.
+        /// </summary>
         public static bool HasWriteAccess(string path)
         {
             if (!IsValidPath(path))
@@ -267,6 +296,9 @@ namespace Utilities
             }
         }
 
+        /// <summary>
+        /// Performs a write access check by attempting to create a temporary file in the target directory or by opening the file for write operations.
+        /// </summary>
         private static bool FallbackWriteAccessCheck(string path)
         {
             try
