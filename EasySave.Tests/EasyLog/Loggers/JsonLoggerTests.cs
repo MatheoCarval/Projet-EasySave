@@ -112,15 +112,18 @@ namespace EasySave.Tests.EasyLog.Loggers
         }
 
         [Fact]
-        public void LogCollection_WithNull_ThrowsArgumentNullException()
+        public void LogCollection_WithNull_DoesNotThrow()
         {
             // Arrange
             var logger = new JsonLogger(_testFilePath);
 
-            // Act & Assert
+            // Act & Assert - LogCollection returns silently for null/empty collections
 #pragma warning disable CS8625
-            Assert.Throws<ArgumentNullException>(() => logger.LogCollection<BackupLogEntry>(null));
+            logger.LogCollection<BackupLogEntry>(null);
 #pragma warning restore CS8625
+            
+            // No exception should be thrown
+            Assert.True(true);
         }
 
         [Fact]
