@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.View.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="EasySave.View.GUI.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="EasySave - Backup Manager"
+        Width="900"
+        Height="600">
+
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource SystemAccentColor}" 
+                CornerRadius="8" 
+                Padding="20"
+                Margin="0,0,0,20">
+            <TextBlock Text="EasySave Backup Manager" 
+                       FontSize="24" 
+                       FontWeight="Bold"
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                CornerRadius="8"
+                Padding="30"
+                Margin="0,0,0,20">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                <TextBlock Text="Welcome to EasySave!" 
+                           FontSize="20" 
+                           HorizontalAlignment="Center"
+                           FontWeight="SemiBold"/>
+                
+                <TextBlock Text="{Binding WelcomeMessage}" 
+                           FontSize="14" 
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="500"
+                           TextAlignment="Center"/>
+
+                <Button Content="Get Started" 
+                        HorizontalAlignment="Center"
+                        Padding="30,10"
+                        FontSize="14"
+                        Command="{Binding GetStartedCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                CornerRadius="8"
+                Padding="15">
+            <TextBlock Text="Ready to configure your backups" 
+                       FontSize="12" 
+                       HorizontalAlignment="Center"
+                       Opacity="0.7"/>
+        </Border>
+    </Grid>
+</Window>
