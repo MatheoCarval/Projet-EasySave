@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace EasySave.View.GUI.ViewModels;
+namespace EasySave.ViewModels;
 
 /// <summary>
 /// Main ViewModel for the application

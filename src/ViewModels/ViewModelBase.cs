@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace EasySave.View.GUI.ViewModels;
+namespace EasySave.ViewModels;
 
 /// <summary>
 /// Base class for ViewModels that implements INotifyPropertyChanged

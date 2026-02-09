@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using EasySave.View.GUI.ViewModels;
+using EasySave.ViewModels;
 
 namespace EasySave.View.GUI;
 
