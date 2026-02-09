@@ -257,8 +257,9 @@ public class Program
     /// </summary>
     private static void LaunchUI()
     {
-        var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
-        consoleUI.Start();
+        //var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
+        //consoleUI.Start();
+        EasySave.View.GUI.GUILauncher.Launch();
     }
 
     /// <summary>
