@@ -110,6 +110,7 @@
             <Setter Property="BorderBrush" Value="#E0E0E0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#212121"/>
         </Style>
 
         <Style Selector="TextBox.ModernTextBox:focus">

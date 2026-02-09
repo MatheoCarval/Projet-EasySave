@@ -1,5 +1,8 @@
 using Avalonia;
 using System;
+using EasySave.Services;
+using EasySave.Services.Managers;
+using Services.Managers;
 
 namespace EasySave.View.GUI;
 
@@ -9,10 +12,13 @@ namespace EasySave.View.GUI;
 public static class GUILauncher
 {
     /// <summary>
-    /// Starts the Avalonia application
+    /// Starts the Avalonia application with required services
     /// </summary>
-    public static void Launch()
+    public static void Launch(LocalizationService localizationService, BackupManager backupManager)
     {
+        App.LocalizationService = localizationService;
+        App.BackupManager = backupManager;
+
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(Array.Empty<string>());
     }

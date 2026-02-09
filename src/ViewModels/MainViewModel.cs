@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using Models;
 using Models.Enums;
+using Services.Managers;
 
 namespace EasySave.ViewModels;
 
@@ -13,6 +13,7 @@ namespace EasySave.ViewModels;
 /// </summary>
 public class MainViewModel : ViewModelBase
 {
+    private readonly BackupManager _backupManager;
     private BackupJobViewModel? _selectedBackupJob;
     private bool _isAddEditModalOpen;
     private BackupJobViewModel? _editingBackupJob;
@@ -23,8 +24,10 @@ public class MainViewModel : ViewModelBase
     private string _modalTargetPath = string.Empty;
     private int _modalBackupTypeIndex = 0;
 
-    public MainViewModel()
+    public MainViewModel(BackupManager backupManager)
     {
+        _backupManager = backupManager ?? throw new ArgumentNullException(nameof(backupManager));
+
         BackupJobs = new ObservableCollection<BackupJobViewModel>();
         ModalSourcePaths = new ObservableCollection<SourcePathViewModel>();
 
@@ -43,8 +46,8 @@ public class MainViewModel : ViewModelBase
         RemoveSourcePathCommand = new RelayCommand<SourcePathViewModel>(RemoveSourcePath);
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
 
-        // Load sample data
-        LoadSampleData();
+        // Load real data from BackupManager
+        LoadBackupJobs();
     }
 
     #region Properties
@@ -174,29 +177,18 @@ public class MainViewModel : ViewModelBase
         {
             // Edit existing
             var job = _editingBackupJob.GetBackupJob();
-            job.Name = ModalName;
-            job.SourcePath.Clear();
-            job.SourcePath.AddRange(sourcePaths);
-            job.TargetPath = ModalTargetPath;
-            job.BackupType = backupType;
-            _editingBackupJob.RefreshDisplay();
+            _backupManager.ModifyJob(job.Id, ModalName, sourcePaths, ModalTargetPath, backupType);
+
+            // Reload the list to reflect changes
+            ReloadBackupJobs();
         }
         else
         {
             // Add new
-            var backupJob = new BackupJob(ModalName, sourcePaths, ModalTargetPath, backupType);
-            var viewModel = new BackupJobViewModel(backupJob);
-            viewModel.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(BackupJobViewModel.IsSelected))
-                {
-                    ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
-                    ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
-                    OnPropertyChanged(nameof(HasSelectedJobs));
-                }
-            };
-            BackupJobs.Add(viewModel);
-            OnPropertyChanged(nameof(HasNoJobs));
+            var backupJob = _backupManager.CreateJob(ModalName, sourcePaths, ModalTargetPath, backupType);
+
+            // Reload the list to include the new job
+            ReloadBackupJobs();
         }
 
         CloseModal();
@@ -212,9 +204,9 @@ public class MainViewModel : ViewModelBase
     {
         if (SelectedBackupJob != null)
         {
-            BackupJobs.Remove(SelectedBackupJob);
+            _backupManager.DeleteJob(SelectedBackupJob.Id);
             SelectedBackupJob = null;
-            OnPropertyChanged(nameof(HasNoJobs));
+            ReloadBackupJobs();
         }
     }
 
@@ -223,12 +215,9 @@ public class MainViewModel : ViewModelBase
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
         foreach (var job in selectedJobs)
         {
-            BackupJobs.Remove(job);
+            _backupManager.DeleteJob(job.Id);
         }
-        ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
-        ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
-        OnPropertyChanged(nameof(HasSelectedJobs));
-        OnPropertyChanged(nameof(HasNoJobs));
+        ReloadBackupJobs();
     }
 
     private void ViewLogs()
@@ -244,13 +233,35 @@ public class MainViewModel : ViewModelBase
     private void ExecuteBackup()
     {
         if (SelectedBackupJob == null) return;
-        // TODO: Implement backup execution
+
+        try
+        {
+            _backupManager.ExecuteJob(SelectedBackupJob.Id);
+            SelectedBackupJob.RefreshDisplay();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Show error message to user
+            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
+        }
     }
 
     private void ExecuteSelected()
     {
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
-        // TODO: Implement backup execution for selected jobs
+        foreach (var job in selectedJobs)
+        {
+            try
+            {
+                _backupManager.ExecuteJob(job.Id);
+                job.RefreshDisplay();
+            }
+            catch (Exception ex)
+            {
+                // TODO: Show error message to user
+                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+            }
+        }
     }
 
     private void AddSourcePath()
@@ -266,55 +277,40 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    private void LoadSampleData()
+    private void LoadBackupJobs()
     {
-        // Add some sample backup jobs for demonstration
-        var job1 = new BackupJob(
-            "Documents Backup",
-            new List<string> { "C:\\Users\\Documents", "C:\\Users\\Downloads" },
-            "D:\\Backups\\Documents",
-            BackupType.COMPLETE
-        )
+        // Load all backup jobs from BackupManager
+        var jobs = _backupManager.GetAllJobs();
+
+        foreach (var job in jobs)
         {
-            BackupState = BackupState.COMPLETED,
-            Progress = 100,
-            LastExecution = DateTime.Now.AddHours(-2)
-        };
+            var viewModel = new BackupJobViewModel(job);
+            viewModel.PropertyChanged += OnJobSelectionChanged;
+            BackupJobs.Add(viewModel);
+        }
 
-        var job2 = new BackupJob(
-            "Photos Backup",
-            new List<string> { "C:\\Users\\Pictures" },
-            "E:\\Backups\\Photos",
-            BackupType.DIFFERENTIAL
-        )
+        OnPropertyChanged(nameof(HasNoJobs));
+    }
+
+    private void ReloadBackupJobs()
+    {
+        // Clear existing jobs
+        BackupJobs.Clear();
+
+        // Reload all jobs from BackupManager
+        var jobs = _backupManager.GetAllJobs();
+
+        foreach (var job in jobs)
         {
-            BackupState = BackupState.PENDING,
-            Progress = 0
-        };
+            var viewModel = new BackupJobViewModel(job);
+            viewModel.PropertyChanged += OnJobSelectionChanged;
+            BackupJobs.Add(viewModel);
+        }
 
-        var job3 = new BackupJob(
-            "Project Files",
-            new List<string> { "C:\\Projects", "C:\\Workspace" },
-            "D:\\Backups\\Projects",
-            BackupType.COMPLETE
-        )
-        {
-            BackupState = BackupState.ACTIVE,
-            Progress = 45,
-            LastExecution = DateTime.Now
-        };
-
-        var vm1 = new BackupJobViewModel(job1);
-        var vm2 = new BackupJobViewModel(job2);
-        var vm3 = new BackupJobViewModel(job3);
-
-        vm1.PropertyChanged += OnJobSelectionChanged;
-        vm2.PropertyChanged += OnJobSelectionChanged;
-        vm3.PropertyChanged += OnJobSelectionChanged;
-
-        BackupJobs.Add(vm1);
-        BackupJobs.Add(vm2);
-        BackupJobs.Add(vm3);
+        OnPropertyChanged(nameof(HasNoJobs));
+        ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
+        OnPropertyChanged(nameof(HasSelectedJobs));
     }
 
     private void OnJobSelectionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

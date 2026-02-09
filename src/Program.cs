@@ -259,7 +259,7 @@ public class Program
     {
         //var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         //consoleUI.Start();
-        EasySave.View.GUI.GUILauncher.Launch();
+        EasySave.View.GUI.GUILauncher.Launch(_localizationService!, _backupManager!);
     }
 
     /// <summary>

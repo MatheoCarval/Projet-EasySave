@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using EasySave.Services;
+using Services.Managers;
 
 namespace EasySave.View.GUI;
 
@@ -9,6 +11,16 @@ namespace EasySave.View.GUI;
 /// </summary>
 public class App : Application
 {
+    /// <summary>
+    /// Shared localization service instance
+    /// </summary>
+    public static LocalizationService? LocalizationService { get; set; }
+
+    /// <summary>
+    /// Shared backup manager instance
+    /// </summary>
+    public static BackupManager? BackupManager { get; set; }
+
     /// <summary>
     /// Initializes the application by loading XAML
     /// </summary>
