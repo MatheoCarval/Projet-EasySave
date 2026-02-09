@@ -4,5 +4,140 @@
              RequestedThemeVariant="Default">
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Custom Styles -->
+        <Style Selector="Button.SidebarButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pointerover">
+            <Setter Property="Background" Value="#2A2A2A"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pressed">
+            <Setter Property="Background" Value="#363636"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton Path">
+            <Setter Property="Fill" Value="#B0B0B0"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pointerover Path">
+            <Setter Property="Fill" Value="#2196F3"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton:pointerover">
+            <Setter Property="Background" Value="#1976D2"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton:pressed">
+            <Setter Property="Background" Value="#1565C0"/>
+        </Style>
+
+        <Style Selector="Button.SecondaryButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2196F3"/>
+            <Setter Property="BorderBrush" Value="#2196F3"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.SecondaryButton:pointerover">
+            <Setter Property="Background" Value="#E3F2FD"/>
+        </Style>
+
+        <Style Selector="Button.AddButton">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.AddButton:pointerover">
+            <Setter Property="Background" Value="#45A049"/>
+        </Style>
+
+        <Style Selector="Button.AddButton:pressed">
+            <Setter Property="Background" Value="#388E3C"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem">
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A2A2A"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#363636"/>
+        </Style>
+
+        <Style Selector="TextBox.ModernTextBox">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+
+        <Style Selector="TextBox.ModernTextBox:focus">
+            <Setter Property="BorderBrush" Value="#2196F3"/>
+        </Style>
+
+        <Style Selector="ComboBox.ModernComboBox">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style Selector="ComboBox.ModernComboBox:focus">
+            <Setter Property="BorderBrush" Value="#2196F3"/>
+        </Style>
+
+        <Style Selector="Border.Card">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #20000000"/>
+        </Style>
+
+        <Style Selector="Border.Sidebar">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="BoxShadow" Value="2 0 8 0 #40000000"/>
+        </Style>
+
     </Application.Styles>
 </Application>
