@@ -1,0 +1,38 @@
+[
+  {
+    "Id": "a09e05e7-da45-4861-bd44-c7b1aeaedad6",
+    "Name": "pppppp",
+    "SourcePath": [
+      "qsfsqf"
+    ],
+    "TargetPath": "sfsfsf",
+    "BackupType": 1,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "c1e4acdd-b906-4c56-b7dc-7d78b3c4fd27",
+    "Name": "qdhbh",
+    "SourcePath": [
+      "gh"
+    ],
+    "TargetPath": "ghgh",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  }
+]
