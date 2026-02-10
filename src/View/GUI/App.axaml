@@ -7,16 +7,15 @@
                 <!-- ===== LIGHT THEME ===== -->
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="AppBackground" Color="#F5F5F5"/>
-                    <SolidColorBrush x:Key="CardBackground" Color="White"/>
-                    <SolidColorBrush x:Key="SidebarBackground" Color="#1E1E1E"/>
-                    <SolidColorBrush x:Key="SidebarShadow" Color="#40000000"/>
-                    <SolidColorBrush x:Key="SidebarHover" Color="#2A2A2A"/>
-                    <SolidColorBrush x:Key="SidebarPressed" Color="#363636"/>
-                    <SolidColorBrush x:Key="SidebarIcon" Color="#B0B0B0"/>
+                    <SolidColorBrush x:Key="SidebarBackground" Color="#E8EAF0"/>
+                    <SolidColorBrush x:Key="SidebarShadow" Color="#20000000"/>
+                    <SolidColorBrush x:Key="SidebarHover" Color="#D8DCE6"/>
+                    <SolidColorBrush x:Key="SidebarPressed" Color="#CDD1DB"/>
+                    <SolidColorBrush x:Key="SidebarIcon" Color="#5C6370"/>
                     <SolidColorBrush x:Key="SidebarIconHover" Color="#2196F3"/>
-                    <SolidColorBrush x:Key="TextPrimary" Color="#212121"/>
-                    <SolidColorBrush x:Key="TextSecondary" Color="#757575"/>
-                    <SolidColorBrush x:Key="TextTertiary" Color="#9E9E9E"/>
+                    <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="TextSecondary" Color="#555555"/>
+                    <SolidColorBrush x:Key="TextTertiary" Color="#7A7A7A"/>
                     <SolidColorBrush x:Key="TextLabel" Color="#616161"/>
                     <SolidColorBrush x:Key="AccentBlue" Color="#2196F3"/>
                     <SolidColorBrush x:Key="AccentBlueHover" Color="#1976D2"/>

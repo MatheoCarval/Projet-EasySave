@@ -39,7 +39,7 @@ public class Program
             InitializeServices();
 
             // Check for theme argument
-            bool darkMode = true; // default to dark
+            bool darkMode = false; // default to light
             var remainingArgs = new System.Collections.Generic.List<string>();
             foreach (var arg in args)
             {

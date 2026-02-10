@@ -16,8 +16,8 @@ public static class GUILauncher
     /// </summary>
     /// <param name="localizationService">Localization service instance</param>
     /// <param name="backupManager">Backup manager instance</param>
-    /// <param name="darkMode">True for dark theme, false for light theme</param>
-    public static void Launch(LocalizationService localizationService, BackupManager backupManager, bool darkMode = true)
+    /// <param name="darkMode">True for dark theme, false for light theme (default: light)</param>
+    public static void Launch(LocalizationService localizationService, BackupManager backupManager, bool darkMode = false)
     {
         App.LocalizationService = localizationService;
         App.BackupManager = backupManager;

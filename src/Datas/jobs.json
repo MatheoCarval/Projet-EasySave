@@ -1,13 +1,13 @@
 [
   {
-    "Id": "a09e05e7-da45-4861-bd44-c7b1aeaedad6",
-    "Name": "pppppp",
+    "Id": "0a955bec-95ea-4b6e-8845-5b140320bbd3",
+    "Name": "--dark",
     "SourcePath": [
-      "C:\\Users\\allan\\Projet 2 github\\Projet-EasySave\\src\\EasyLog\\bin"
+      "--dark"
     ],
-    "TargetPath": "C:\\Users\\allan\\OneDrive\\Documents",
+    "TargetPath": "--dark",
     "BackupType": 0,
-    "BackupState": 3,
+    "BackupState": 4,
     "LastExecution": "0001-01-01T00:00:00",
     "TotalFiles": 0,
     "TotalSize": 0,
@@ -18,12 +18,156 @@
     "Progress": 0
   },
   {
-    "Id": "c1e4acdd-b906-4c56-b7dc-7d78b3c4fd27",
-    "Name": "qdhbh",
+    "Id": "68157a36-c248-40b2-a502-937bedcd60c2",
+    "Name": "sfsf",
     "SourcePath": [
-      "gh"
+      "--dark"
     ],
-    "TargetPath": "ghgh",
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "f594ffa4-cb92-47c4-94d0-97f9dc8e0f48",
+    "Name": "dfdf",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "91b98f29-2625-4309-beab-274cf1d5c263",
+    "Name": "sfsfsfsef",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "209289b0-4d19-404d-bf0d-fab262462525",
+    "Name": "--dark",
+    "SourcePath": [
+      "Humam Sakhnini"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "992d37c3-9004-42ea-b81f-01e15f4d62a6",
+    "Name": "sdfqsfsef",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "0b2a4eda-c37a-49f3-8441-ec51f65c3cd4",
+    "Name": "bzrta anb",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "0fa032f3-ebd0-46b3-8819-53e4d67930db",
+    "Name": "trgssgfbaetsgf",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "f2bd83eb-f59c-40b3-a02e-742661887aa6",
+    "Name": "vfvfvfvfv",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0
+  },
+  {
+    "Id": "2a4c0eb6-5ac3-4b30-9c99-6c11b80affa1",
+    "Name": "aqsdfez",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
     "BackupType": 0,
     "BackupState": 4,
     "LastExecution": "0001-01-01T00:00:00",

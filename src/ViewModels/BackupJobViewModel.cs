@@ -11,6 +11,7 @@ public class BackupJobViewModel : ViewModelBase
 {
     private readonly BackupJob _backupJob;
     private bool _isSelected;
+    private int _orderIndex;
 
     public BackupJobViewModel(BackupJob backupJob)
     {
@@ -18,6 +19,12 @@ public class BackupJobViewModel : ViewModelBase
     }
 
     public string Id => _backupJob.Id;
+
+    public int OrderIndex
+    {
+        get => _orderIndex;
+        set => SetProperty(ref _orderIndex, value);
+    }
 
     public bool IsSelected
     {

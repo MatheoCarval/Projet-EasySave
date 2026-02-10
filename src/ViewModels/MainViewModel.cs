@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,11 +22,24 @@ public class MainViewModel : ViewModelBase
     private BackupJobViewModel? _editingBackupJob;
     private string _modalTitle = "Add Backup Task";
     private bool _isProgressPopupOpen;
+    private bool _isExecuteOrderOpen;
+    private bool _isDeleteConfirmOpen;
+    private string _deleteConfirmMessage = string.Empty;
+
+    public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
 
     // Modal form fields
     private string _modalName = string.Empty;
     private string _modalTargetPath = string.Empty;
     private int _modalBackupTypeIndex = 0;
+    private string _modalValidationError = string.Empty;
+    private string _searchText = string.Empty;
+    private bool _isFilterOpen;
+    private readonly HashSet<string> _selectedTypes = new(StringComparer.OrdinalIgnoreCase) { "COMPLETE", "DIFFERENTIAL" };
+    private readonly HashSet<string> _selectedStates = new(StringComparer.OrdinalIgnoreCase) { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
+
+    private static readonly string[] AllTypes = { "COMPLETE", "DIFFERENTIAL" };
+    private static readonly string[] AllStates = { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
 
     // Progress tracking
     private readonly ProgressViewModel _progressViewModel;
@@ -35,6 +49,7 @@ public class MainViewModel : ViewModelBase
         _backupManager = backupManager ?? throw new ArgumentNullException(nameof(backupManager));
 
         BackupJobs = new ObservableCollection<BackupJobViewModel>();
+        FilteredBackupJobs = new ObservableCollection<BackupJobViewModel>();
         ModalSourcePaths = new ObservableCollection<SourcePathViewModel>();
         _progressViewModel = new ProgressViewModel();
 
@@ -57,6 +72,23 @@ public class MainViewModel : ViewModelBase
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
         ExecuteEditingJobCommand = new RelayCommand(ExecuteEditingJob, () => _editingBackupJob != null);
         CloseProgressCommand = new RelayCommand(CloseProgress);
+        ShowExecuteOrderCommand = new RelayCommand(ShowExecuteOrder, () => BackupJobs.Any(j => j.IsSelected));
+        CancelExecuteOrderCommand = new RelayCommand(() => IsExecuteOrderOpen = false);
+        ConfirmExecuteOrderCommand = new RelayCommand(ConfirmExecuteOrder);
+        MoveJobUpCommand = new RelayCommand<BackupJobViewModel>(MoveJobUp);
+        MoveJobDownCommand = new RelayCommand<BackupJobViewModel>(MoveJobDown);
+        ShowDeleteConfirmCommand = new RelayCommand(ShowDeleteConfirm, () => BackupJobs.Any(j => j.IsSelected));
+        CancelDeleteCommand = new RelayCommand(() => IsDeleteConfirmOpen = false);
+        ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
+        DeselectAllCommand = new RelayCommand(DeselectAll);
+        SelectAllCommand = new RelayCommand(ToggleSelectAll);
+        ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
+        ToggleFilterCommand = new RelayCommand(() => IsFilterOpen = !IsFilterOpen);
+        ToggleFilterTypeCommand = new RelayCommand<string>(ToggleFilterType);
+        ToggleFilterStateCommand = new RelayCommand<string>(ToggleFilterState);
+        ToggleAllTypesCommand = new RelayCommand(ToggleAllTypes);
+        ToggleAllStatesCommand = new RelayCommand(ToggleAllStates);
+        ClearFiltersCommand = new RelayCommand(ClearFilters);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -65,6 +97,20 @@ public class MainViewModel : ViewModelBase
     #region Properties
 
     public ObservableCollection<BackupJobViewModel> BackupJobs { get; }
+
+    public ObservableCollection<BackupJobViewModel> FilteredBackupJobs { get; }
+
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetProperty(ref _searchText, value))
+            {
+                ApplyFilter();
+            }
+        }
+    }
 
     public ObservableCollection<SourcePathViewModel> ModalSourcePaths { get; }
 
@@ -112,11 +158,44 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _modalBackupTypeIndex, value);
     }
 
+    public string ModalValidationError
+    {
+        get => _modalValidationError;
+        set => SetProperty(ref _modalValidationError, value);
+    }
+
     public bool IsEditMode => _editingBackupJob != null;
 
     public bool HasSelectedJobs => BackupJobs.Any(j => j.IsSelected);
 
+    public int SelectedJobsCount => BackupJobs.Count(j => j.IsSelected);
+
+    public bool AreAllSelected => BackupJobs.Count > 0 && BackupJobs.All(j => j.IsSelected);
+
     public bool HasNoJobs => BackupJobs.Count == 0;
+
+    public bool HasNoFilteredJobs => FilteredBackupJobs.Count == 0 && !HasNoJobs;
+
+    public bool IsFilterOpen
+    {
+        get => _isFilterOpen;
+        set => SetProperty(ref _isFilterOpen, value);
+    }
+
+    // Type filter booleans
+    public bool IsTypeAllSelected => _selectedTypes.Count == AllTypes.Length;
+    public bool IsTypeCompleteSelected => _selectedTypes.Contains("COMPLETE");
+    public bool IsTypeDifferentialSelected => _selectedTypes.Contains("DIFFERENTIAL");
+
+    // State filter booleans
+    public bool IsStateAllSelected => _selectedStates.Count == AllStates.Length;
+    public bool IsStatePendingSelected => _selectedStates.Contains("PENDING");
+    public bool IsStateActiveSelected => _selectedStates.Contains("ACTIVE");
+    public bool IsStateCompletedSelected => _selectedStates.Contains("COMPLETED");
+    public bool IsStatePausedSelected => _selectedStates.Contains("PAUSED");
+    public bool IsStateErrorSelected => _selectedStates.Contains("ERROR");
+
+    public bool HasActiveFilters => _selectedTypes.Count < AllTypes.Length || _selectedStates.Count < AllStates.Length;
 
     public bool IsProgressPopupOpen
     {
@@ -125,6 +204,24 @@ public class MainViewModel : ViewModelBase
     }
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
+
+    public bool IsExecuteOrderOpen
+    {
+        get => _isExecuteOrderOpen;
+        set => SetProperty(ref _isExecuteOrderOpen, value);
+    }
+
+    public bool IsDeleteConfirmOpen
+    {
+        get => _isDeleteConfirmOpen;
+        set => SetProperty(ref _isDeleteConfirmOpen, value);
+    }
+
+    public string DeleteConfirmMessage
+    {
+        get => _deleteConfirmMessage;
+        set => SetProperty(ref _deleteConfirmMessage, value);
+    }
 
     #endregion
 
@@ -145,6 +242,23 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenEditModalForJobCommand { get; }
     public ICommand ExecuteEditingJobCommand { get; }
     public ICommand CloseProgressCommand { get; }
+    public ICommand ShowExecuteOrderCommand { get; }
+    public ICommand CancelExecuteOrderCommand { get; }
+    public ICommand ConfirmExecuteOrderCommand { get; }
+    public ICommand MoveJobUpCommand { get; }
+    public ICommand MoveJobDownCommand { get; }
+    public ICommand ShowDeleteConfirmCommand { get; }
+    public ICommand CancelDeleteCommand { get; }
+    public ICommand ConfirmDeleteCommand { get; }
+    public ICommand DeselectAllCommand { get; }
+    public ICommand SelectAllCommand { get; }
+    public ICommand ClearSearchCommand { get; }
+    public ICommand ToggleFilterCommand { get; }
+    public ICommand ToggleFilterTypeCommand { get; }
+    public ICommand ToggleFilterStateCommand { get; }
+    public ICommand ToggleAllTypesCommand { get; }
+    public ICommand ToggleAllStatesCommand { get; }
+    public ICommand ClearFiltersCommand { get; }
 
     #endregion
 
@@ -159,6 +273,7 @@ public class MainViewModel : ViewModelBase
         ModalSourcePaths.Add(new SourcePathViewModel());
         ModalTargetPath = string.Empty;
         ModalBackupTypeIndex = 0;
+        ModalValidationError = string.Empty;
         IsAddEditModalOpen = true;
         OnPropertyChanged(nameof(IsEditMode));
         ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
@@ -177,6 +292,7 @@ public class MainViewModel : ViewModelBase
         ModalTitle = "Edit Backup Task";
         _editingBackupJob = job;
         ModalName = job.Name;
+        ModalValidationError = string.Empty;
         ModalSourcePaths.Clear();
         foreach (var source in job.GetBackupJob().SourcePath)
         {
@@ -201,25 +317,38 @@ public class MainViewModel : ViewModelBase
         var backupType = ModalBackupTypeIndex == 0 ? BackupType.COMPLETE : BackupType.DIFFERENTIAL;
         var sourcePaths = ModalSourcePaths.Where(s => !string.IsNullOrWhiteSpace(s.Path)).Select(s => s.Path).ToList();
 
-        if (_editingBackupJob != null)
+        try
         {
-            // Edit existing
-            var job = _editingBackupJob.GetBackupJob();
-            _backupManager.ModifyJob(job.Id, ModalName, sourcePaths, ModalTargetPath, backupType);
+            if (_editingBackupJob != null)
+            {
+                // Edit existing
+                var job = _editingBackupJob.GetBackupJob();
+                _backupManager.ModifyJob(job.Id, ModalName, sourcePaths, ModalTargetPath, backupType);
 
-            // Reload the list to reflect changes
-            ReloadBackupJobs();
+                // Reload the list to reflect changes
+                ReloadBackupJobs();
+            }
+            else
+            {
+                // Add new
+                var backupJob = _backupManager.CreateJob(ModalName, sourcePaths, ModalTargetPath, backupType);
+
+                // Reload the list to include the new job
+                ReloadBackupJobs();
+            }
+
+            CloseModal();
         }
-        else
+        catch (ArgumentException)
         {
-            // Add new
-            var backupJob = _backupManager.CreateJob(ModalName, sourcePaths, ModalTargetPath, backupType);
-
-            // Reload the list to include the new job
-            ReloadBackupJobs();
+            // Duplicate name — just keep the modal open so the user can fix it
+            ModalValidationError = "A job with this name already exists.";
         }
-
-        CloseModal();
+        catch (InvalidOperationException)
+        {
+            // Max jobs reached
+            ModalValidationError = "Maximum number of jobs reached.";
+        }
     }
 
     private void CloseModal()
@@ -248,6 +377,87 @@ public class MainViewModel : ViewModelBase
             _backupManager.DeleteJob(job.Id);
         }
         ReloadBackupJobs();
+    }
+
+    private void ShowDeleteConfirm()
+    {
+        var selected = BackupJobs.Where(j => j.IsSelected).ToList();
+        if (selected.Count == 0) return;
+        DeleteConfirmMessage = selected.Count == 1
+            ? $"Are you sure you want to delete \"{selected[0].Name}\"?"
+            : $"Are you sure you want to delete {selected.Count} backup jobs?";
+        IsDeleteConfirmOpen = true;
+    }
+
+    private void ConfirmDelete()
+    {
+        IsDeleteConfirmOpen = false;
+        DeleteSelected();
+    }
+
+    private void ShowExecuteOrder()
+    {
+        ExecuteOrderJobs.Clear();
+        foreach (var job in BackupJobs.Where(j => j.IsSelected))
+            ExecuteOrderJobs.Add(job);
+        if (ExecuteOrderJobs.Count == 0) return;
+        UpdateOrderIndices();
+        IsExecuteOrderOpen = true;
+    }
+
+    private void MoveJobUp(BackupJobViewModel? job)
+    {
+        if (job == null) return;
+        var idx = ExecuteOrderJobs.IndexOf(job);
+        if (idx > 0)
+        {
+            ExecuteOrderJobs.Move(idx, idx - 1);
+            UpdateOrderIndices();
+        }
+    }
+
+    private void MoveJobDown(BackupJobViewModel? job)
+    {
+        if (job == null) return;
+        var idx = ExecuteOrderJobs.IndexOf(job);
+        if (idx >= 0 && idx < ExecuteOrderJobs.Count - 1)
+        {
+            ExecuteOrderJobs.Move(idx, idx + 1);
+            UpdateOrderIndices();
+        }
+    }
+
+    public void UpdateOrderIndices()
+    {
+        for (int i = 0; i < ExecuteOrderJobs.Count; i++)
+            ExecuteOrderJobs[i].OrderIndex = i + 1;
+    }
+
+    private async void ConfirmExecuteOrder()
+    {
+        IsExecuteOrderOpen = false;
+        var orderedJobs = ExecuteOrderJobs.ToList();
+        for (int i = 0; i < orderedJobs.Count; i++)
+        {
+            var job = orderedJobs[i];
+            var isLastJob = i == orderedJobs.Count - 1;
+            try
+            {
+                ShowProgressPopup(job.Name);
+                var jobId = job.Id;
+                var jobToRefresh = job;
+                await Task.Run(() => _backupManager.ExecuteJob(jobId));
+                jobToRefresh.RefreshDisplay();
+                if (isLastJob)
+                    _progressViewModel.IsCompleted = true;
+            }
+            catch (Exception ex)
+            {
+                HideProgressPopup();
+                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                break;
+            }
+        }
     }
 
     private void ViewLogs()
@@ -375,6 +585,7 @@ public class MainViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(HasNoJobs));
+        ApplyFilter();
     }
 
     private void ReloadBackupJobs()
@@ -395,7 +606,114 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasNoJobs));
         ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
         ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)ShowExecuteOrderCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)ShowDeleteConfirmCommand).RaiseCanExecuteChanged();
         OnPropertyChanged(nameof(HasSelectedJobs));
+        OnPropertyChanged(nameof(SelectedJobsCount));
+        OnPropertyChanged(nameof(AreAllSelected));
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        FilteredBackupJobs.Clear();
+        var query = _searchText?.Trim() ?? string.Empty;
+
+        IEnumerable<BackupJobViewModel> filtered = BackupJobs;
+
+        // Text search: name only
+        if (!string.IsNullOrEmpty(query))
+            filtered = filtered.Where(j => j.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
+
+        // Type filter
+        if (_selectedTypes.Count < AllTypes.Length)
+            filtered = filtered.Where(j => _selectedTypes.Contains(j.BackupTypeDisplay));
+
+        // State filter
+        if (_selectedStates.Count < AllStates.Length)
+            filtered = filtered.Where(j => _selectedStates.Contains(j.BackupStateDisplay));
+
+        foreach (var job in filtered)
+            FilteredBackupJobs.Add(job);
+
+        OnPropertyChanged(nameof(HasNoFilteredJobs));
+    }
+
+    private void ToggleFilterType(string? type)
+    {
+        if (type == null) return;
+        if (_selectedTypes.Contains(type))
+        {
+            if (_selectedTypes.Count > 1) // keep at least one
+                _selectedTypes.Remove(type);
+        }
+        else
+            _selectedTypes.Add(type);
+        NotifyFilterTypeChanged();
+        ApplyFilter();
+    }
+
+    private void ToggleFilterState(string? state)
+    {
+        if (state == null) return;
+        if (_selectedStates.Contains(state))
+        {
+            if (_selectedStates.Count > 1)
+                _selectedStates.Remove(state);
+        }
+        else
+            _selectedStates.Add(state);
+        NotifyFilterStateChanged();
+        ApplyFilter();
+    }
+
+    private void ToggleAllTypes()
+    {
+        if (_selectedTypes.Count == AllTypes.Length)
+            _selectedTypes.Clear();
+        else
+            foreach (var t in AllTypes) _selectedTypes.Add(t);
+        NotifyFilterTypeChanged();
+        ApplyFilter();
+    }
+
+    private void ToggleAllStates()
+    {
+        if (_selectedStates.Count == AllStates.Length)
+            _selectedStates.Clear();
+        else
+            foreach (var s in AllStates) _selectedStates.Add(s);
+        NotifyFilterStateChanged();
+        ApplyFilter();
+    }
+
+    private void ClearFilters()
+    {
+        foreach (var t in AllTypes) _selectedTypes.Add(t);
+        foreach (var s in AllStates) _selectedStates.Add(s);
+        NotifyFilterTypeChanged();
+        NotifyFilterStateChanged();
+        ApplyFilter();
+        IsFilterOpen = false;
+    }
+
+    private void NotifyFilterTypeChanged()
+    {
+        OnPropertyChanged(nameof(IsTypeAllSelected));
+        OnPropertyChanged(nameof(IsTypeCompleteSelected));
+        OnPropertyChanged(nameof(IsTypeDifferentialSelected));
+        OnPropertyChanged(nameof(HasActiveFilters));
+    }
+
+    private void NotifyFilterStateChanged()
+    {
+        OnPropertyChanged(nameof(IsStateAllSelected));
+        OnPropertyChanged(nameof(IsStatePendingSelected));
+        OnPropertyChanged(nameof(IsStateActiveSelected));
+        OnPropertyChanged(nameof(IsStateCompletedSelected));
+        OnPropertyChanged(nameof(IsStatePausedSelected));
+        OnPropertyChanged(nameof(IsStateErrorSelected));
+        OnPropertyChanged(nameof(HasActiveFilters));
     }
 
     private void OnJobSelectionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -404,8 +722,25 @@ public class MainViewModel : ViewModelBase
         {
             ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
             ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)ShowExecuteOrderCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)ShowDeleteConfirmCommand).RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(HasSelectedJobs));
+            OnPropertyChanged(nameof(SelectedJobsCount));
+            OnPropertyChanged(nameof(AreAllSelected));
         }
+    }
+
+    private void DeselectAll()
+    {
+        foreach (var job in BackupJobs)
+            job.IsSelected = false;
+    }
+
+    private void ToggleSelectAll()
+    {
+        bool selectAll = !AreAllSelected;
+        foreach (var job in BackupJobs)
+            job.IsSelected = selectAll;
     }
 
     private void ShowProgressPopup(string jobName)

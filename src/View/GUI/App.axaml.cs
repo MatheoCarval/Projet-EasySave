@@ -26,7 +26,7 @@ public class App : Application
     /// Controls whether the app uses dark mode (true) or light mode (false).
     /// Must be set before calling Launch().
     /// </summary>
-    public static bool IsDarkMode { get; set; } = true;
+    public static bool IsDarkMode { get; set; } = false;
 
     /// <summary>
     /// Initializes the application by loading XAML and applying the theme

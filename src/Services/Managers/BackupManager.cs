@@ -86,11 +86,6 @@ public class BackupManager
     /// </summary>
     public BackupJob CreateJob(string name, List<string> sourcesPaths, string targetPath, BackupType backupType)
     {
-        if (_jobs.Count >= _maxJobs)
-        {
-            throw new InvalidOperationException($"Maximum number of jobs ({_maxJobs}) has been reached.");
-        }
-
         if (_jobs.Any(j => j.Name == name))
         {
             throw new ArgumentException($"A job with name '{name}' already exists.", nameof(name));
@@ -318,6 +313,12 @@ public class BackupManager
         if (job == null)
         {
             throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
+        }
+
+        // Check for duplicate name (exclude current job)
+        if (!string.IsNullOrWhiteSpace(newName) && newName != job.Name && _jobs.Any(j => j.Id != jobId && j.Name == newName))
+        {
+            throw new ArgumentException($"A job with name '{newName}' already exists.", nameof(newName));
         }
 
         try
