@@ -1,10 +1,12 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Models;
 using Models.Enums;
 using Services.Managers;
+using Avalonia.Threading;
 
 namespace EasySave.ViewModels;
 
@@ -18,11 +20,15 @@ public class MainViewModel : ViewModelBase
     private bool _isAddEditModalOpen;
     private BackupJobViewModel? _editingBackupJob;
     private string _modalTitle = "Add Backup Task";
+    private bool _isProgressPopupOpen;
 
     // Modal form fields
     private string _modalName = string.Empty;
     private string _modalTargetPath = string.Empty;
     private int _modalBackupTypeIndex = 0;
+
+    // Progress tracking
+    private readonly ProgressViewModel _progressViewModel;
 
     public MainViewModel(BackupManager backupManager)
     {
@@ -30,6 +36,10 @@ public class MainViewModel : ViewModelBase
 
         BackupJobs = new ObservableCollection<BackupJobViewModel>();
         ModalSourcePaths = new ObservableCollection<SourcePathViewModel>();
+        _progressViewModel = new ProgressViewModel();
+
+        // Subscribe to progress events
+        _backupManager.FileTransferred += OnFileTransferred;
 
         // Commands
         AddBackupCommand = new RelayCommand(OpenAddModal);
@@ -45,6 +55,8 @@ public class MainViewModel : ViewModelBase
         AddSourcePathCommand = new RelayCommand(AddSourcePath);
         RemoveSourcePathCommand = new RelayCommand<SourcePathViewModel>(RemoveSourcePath);
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
+        ExecuteEditingJobCommand = new RelayCommand(ExecuteEditingJob, () => _editingBackupJob != null);
+        CloseProgressCommand = new RelayCommand(CloseProgress);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -100,9 +112,19 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _modalBackupTypeIndex, value);
     }
 
+    public bool IsEditMode => _editingBackupJob != null;
+
     public bool HasSelectedJobs => BackupJobs.Any(j => j.IsSelected);
 
     public bool HasNoJobs => BackupJobs.Count == 0;
+
+    public bool IsProgressPopupOpen
+    {
+        get => _isProgressPopupOpen;
+        set => SetProperty(ref _isProgressPopupOpen, value);
+    }
+
+    public ProgressViewModel ProgressViewModel => _progressViewModel;
 
     #endregion
 
@@ -121,6 +143,8 @@ public class MainViewModel : ViewModelBase
     public ICommand AddSourcePathCommand { get; }
     public ICommand RemoveSourcePathCommand { get; }
     public ICommand OpenEditModalForJobCommand { get; }
+    public ICommand ExecuteEditingJobCommand { get; }
+    public ICommand CloseProgressCommand { get; }
 
     #endregion
 
@@ -136,6 +160,8 @@ public class MainViewModel : ViewModelBase
         ModalTargetPath = string.Empty;
         ModalBackupTypeIndex = 0;
         IsAddEditModalOpen = true;
+        OnPropertyChanged(nameof(IsEditMode));
+        ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
     }
 
     private void OpenEditModal()
@@ -159,6 +185,8 @@ public class MainViewModel : ViewModelBase
         ModalTargetPath = job.TargetPath;
         ModalBackupTypeIndex = job.BackupType == BackupType.COMPLETE ? 0 : 1;
         IsAddEditModalOpen = true;
+        OnPropertyChanged(nameof(IsEditMode));
+        ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
     }
 
     private void SaveModal()
@@ -198,6 +226,8 @@ public class MainViewModel : ViewModelBase
     {
         IsAddEditModalOpen = false;
         _editingBackupJob = null;
+        OnPropertyChanged(nameof(IsEditMode));
+        ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
     }
 
     private void DeleteBackup()
@@ -230,37 +260,92 @@ public class MainViewModel : ViewModelBase
         // TODO: Implement settings view
     }
 
-    private void ExecuteBackup()
+    private async void ExecuteBackup()
     {
         if (SelectedBackupJob == null) return;
 
+        var jobId = SelectedBackupJob.Id;
+        var jobToRefresh = SelectedBackupJob;
+
         try
         {
-            _backupManager.ExecuteJob(SelectedBackupJob.Id);
-            SelectedBackupJob.RefreshDisplay();
+            ShowProgressPopup(SelectedBackupJob.Name);
+
+            // Execute on background thread to keep UI responsive
+            await Task.Run(() => _backupManager.ExecuteJob(jobId));
+
+            // Back on UI thread after await - refresh and mark as completed
+            jobToRefresh.RefreshDisplay();
+            _progressViewModel.IsCompleted = true;
         }
         catch (Exception ex)
         {
+            HideProgressPopup();
             // TODO: Show error message to user
             System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
         }
     }
 
-    private void ExecuteSelected()
+    private async void ExecuteSelected()
     {
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
-        foreach (var job in selectedJobs)
+        for (int i = 0; i < selectedJobs.Count; i++)
         {
+            var job = selectedJobs[i];
+            var isLastJob = i == selectedJobs.Count - 1;
+
             try
             {
-                _backupManager.ExecuteJob(job.Id);
-                job.RefreshDisplay();
+                ShowProgressPopup(job.Name);
+
+                var jobId = job.Id;
+                var jobToRefresh = job;
+
+                // Execute on background thread
+                await Task.Run(() => _backupManager.ExecuteJob(jobId));
+
+                // Back on UI thread after await - refresh
+                jobToRefresh.RefreshDisplay();
+
+                // Only mark as completed on the last job
+                if (isLastJob)
+                {
+                    _progressViewModel.IsCompleted = true;
+                }
             }
             catch (Exception ex)
             {
+                HideProgressPopup();
                 // TODO: Show error message to user
                 System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                break;
             }
+        }
+    }
+
+    private async void ExecuteEditingJob()
+    {
+        if (_editingBackupJob == null) return;
+
+        var jobId = _editingBackupJob.Id;
+        var jobToRefresh = _editingBackupJob;
+
+        try
+        {
+            ShowProgressPopup(_editingBackupJob.Name);
+
+            // Execute on background thread
+            await Task.Run(() => _backupManager.ExecuteJob(jobId));
+
+            // Back on UI thread after await - refresh and mark as completed
+            jobToRefresh.RefreshDisplay();
+            _progressViewModel.IsCompleted = true;
+        }
+        catch (Exception ex)
+        {
+            HideProgressPopup();
+            // TODO: Show error message to user
+            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
         }
     }
 
@@ -321,6 +406,39 @@ public class MainViewModel : ViewModelBase
             ((RelayCommand)ExecuteSelectedCommand).RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(HasSelectedJobs));
         }
+    }
+
+    private void ShowProgressPopup(string jobName)
+    {
+        _progressViewModel.Reset();
+        _progressViewModel.JobName = jobName;
+        IsProgressPopupOpen = true;
+    }
+
+    private void HideProgressPopup()
+    {
+        IsProgressPopupOpen = false;
+        _progressViewModel.Reset();
+    }
+
+    private void CloseProgress()
+    {
+        HideProgressPopup();
+    }
+
+    private void OnFileTransferred(object? sender, FileProgressEventArgs e)
+    {
+        // Update UI on the UI thread
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.JobName = e.JobName;
+            _progressViewModel.CurrentFile = e.CurrentFile;
+            _progressViewModel.TotalFiles = e.TotalFiles;
+            _progressViewModel.FilesProcessed = e.FilesProcessed;
+            _progressViewModel.ProgressPercentage = e.ProgressPercentage;
+            _progressViewModel.TotalSize = e.TotalSize;
+            _progressViewModel.ProcessedSize = e.TotalSize - e.RemainingSize;
+        });
     }
 
     #endregion

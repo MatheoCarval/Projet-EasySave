@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using EasySave.ViewModels;
+using System.Linq;
 
 namespace EasySave.View.GUI;
 
@@ -42,6 +44,50 @@ public partial class MainWindow : Window
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.OpenEditModalForJobCommand.Execute(job);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click for source paths
+    /// </summary>
+    private async void BrowseSourcePath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is SourcePathViewModel sourcePathVm)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select Source Folder",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                sourcePathVm.Path = result[0].Path.LocalPath;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click for target path
+    /// </summary>
+    private async void BrowseTargetPath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select Destination Folder",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                viewModel.ModalTargetPath = result[0].Path.LocalPath;
             }
         }
     }

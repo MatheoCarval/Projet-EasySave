@@ -374,12 +374,20 @@
                                     <ItemsControl ItemsSource="{Binding ModalSourcePaths}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
                                                     <TextBox Grid.Column="0"
                                                              Classes="ModernTextBox"
                                                              Text="{Binding Path, Mode=TwoWay}"
-                                                             Watermark="e.g., C:\Documents"/>
+                                                             Watermark="e.g., C:\Documents"
+                                                             Name="SourcePathTextBox"/>
                                                     <Button Grid.Column="1"
+                                                            Classes="BrowseButton"
+                                                            Content="..."
+                                                            Width="40"
+                                                            Margin="8,0,0,0"
+                                                            Click="BrowseSourcePath_Click"
+                                                            Tag="{Binding}"/>
+                                                    <Button Grid.Column="2"
                                                             Command="{Binding $parent[Window].DataContext.RemoveSourcePathCommand}"
                                                             CommandParameter="{Binding}"
                                                             Background="#F44336"
@@ -406,9 +414,19 @@
                         <!-- Target Path Field -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Destination Path" FontWeight="SemiBold" Foreground="#616161"/>
-                            <TextBox Classes="ModernTextBox"
-                                     Text="{Binding ModalTargetPath}"
-                                     Watermark="e.g., D:\Backups\Documents"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         Classes="ModernTextBox"
+                                         Text="{Binding ModalTargetPath}"
+                                         Watermark="e.g., D:\Backups\Documents"
+                                         Name="TargetPathTextBox"/>
+                                <Button Grid.Column="1"
+                                        Classes="BrowseButton"
+                                        Content="..."
+                                        Width="40"
+                                        Margin="8,0,0,0"
+                                        Click="BrowseTargetPath_Click"/>
+                            </Grid>
                         </StackPanel>
 
                         <!-- Backup Type Field -->
@@ -430,12 +448,143 @@
                                     Content="Cancel"
                                     Command="{Binding CancelModalCommand}"/>
                             <Button Classes="PrimaryButton"
+                                    Content="Execute"
+                                    Command="{Binding ExecuteEditingJobCommand}"
+                                    IsVisible="{Binding IsEditMode}"/>
+                            <Button Classes="PrimaryButton"
                                     Content="Save"
                                     Command="{Binding SaveModalCommand}"/>
                         </StackPanel>
 
                     </StackPanel>
                 </ScrollViewer>
+            </Border>
+        </Panel>
+
+        <!-- Progress Popup -->
+        <Panel IsVisible="{Binding IsProgressPopupOpen}" Background="#DD000000">
+            <Border Background="White"
+                    Width="600"
+                    CornerRadius="12"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 24 4 #30000000">
+
+                <StackPanel>
+                    <!-- Header - In Progress -->
+                    <Border Background="#2196F3"
+                            CornerRadius="12,12,0,0"
+                            Padding="24,20"
+                            IsVisible="{Binding !ProgressViewModel.IsCompleted}">
+                        <TextBlock Text="Backup in Progress"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Header - Completed -->
+                    <Border Background="#4CAF50"
+                            CornerRadius="12,12,0,0"
+                            Padding="24,20"
+                            IsVisible="{Binding ProgressViewModel.IsCompleted}">
+                        <TextBlock Text="Backup Complete"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Content -->
+                    <StackPanel Margin="24,20" Spacing="20">
+
+                        <!-- Job Name -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Job Name"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#757575"/>
+                            <TextBlock Text="{Binding ProgressViewModel.JobName}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#212121"/>
+                        </StackPanel>
+
+                        <!-- Current File -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Current File"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#757575"/>
+                            <TextBlock Text="{Binding ProgressViewModel.CurrentFile}"
+                                       FontSize="14"
+                                       Foreground="#424242"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="NoWrap"/>
+                        </StackPanel>
+
+                        <!-- Progress Bar -->
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="Progress"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#757575"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding ProgressViewModel.ProgressPercentage, StringFormat='{}{0}%'}"
+                                           FontWeight="Bold"
+                                           FontSize="18"
+                                           Foreground="#2196F3"/>
+                            </Grid>
+
+                            <ProgressBar Value="{Binding ProgressViewModel.ProgressPercentage}"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Height="8"
+                                         Foreground="#2196F3"
+                                         Background="#E0E0E0"/>
+                        </StackPanel>
+
+                        <!-- Stats -->
+                        <Grid ColumnDefinitions="*,*">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0">
+                                <TextBlock Text="Files"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#757575"/>
+                                <TextBlock Text="{Binding ProgressViewModel.FilesDisplay}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="#212121"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
+                                <TextBlock Text="Size"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#757575"/>
+                                <TextBlock Text="{Binding ProgressViewModel.SizeDisplay}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="#212121"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Close Button -->
+                        <Button Classes="PrimaryButton"
+                                Content="Close"
+                                HorizontalAlignment="Stretch"
+                                Height="40"
+                                FontSize="15"
+                                Command="{Binding CloseProgressCommand}"
+                                IsVisible="{Binding ProgressViewModel.IsCompleted}"
+                                Margin="0,4,0,0"/>
+
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Panel>
 
