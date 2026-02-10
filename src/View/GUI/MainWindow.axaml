@@ -628,7 +628,8 @@
             </Border>
 
             <!-- Floating Selection Action Bar -->
-            <Border HorizontalAlignment="Center"
+            <Border Grid.Column="1"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     Margin="0,0,0,30"
                     CornerRadius="16"
