@@ -10,7 +10,7 @@
         Height="700"
         MinWidth="900"
         MinHeight="600"
-        Background="#F5F5F5">
+        Background="{DynamicResource AppBackground}">
 
     <Grid>
         <!-- Main Layout: Sidebar + Content -->
@@ -66,10 +66,10 @@
                                 <TextBlock Text="Backup Tasks"
                                            FontSize="28"
                                            FontWeight="Bold"
-                                           Foreground="#212121"/>
+                                           Foreground="{DynamicResource TextPrimary}"/>
                                 <TextBlock Text="Select tasks and execute them together"
                                            FontSize="14"
-                                           Foreground="#757575"/>
+                                           Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
                             <!-- Logo -->
                             <Image Grid.Column="1"
@@ -126,17 +126,17 @@
                             <StackPanel Spacing="16" HorizontalAlignment="Center">
                                 <Viewbox Width="80" Height="80" Opacity="0.3">
                                     <Canvas Width="24" Height="24">
-                                        <Path Fill="#9E9E9E" Data="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                                        <Path Fill="{DynamicResource EmptyStateIcon}" Data="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
                                     </Canvas>
                                 </Viewbox>
                                 <TextBlock Text="No backup tasks yet"
                                            FontSize="18"
                                            FontWeight="SemiBold"
-                                           Foreground="#9E9E9E"
+                                           Foreground="{DynamicResource TextTertiary}"
                                            HorizontalAlignment="Center"/>
                                 <TextBlock Text="Click the 'Add Backup Task' button below to create your first backup"
                                            FontSize="14"
-                                           Foreground="#BDBDBD"
+                                           Foreground="{DynamicResource EmptyStateText}"
                                            HorizontalAlignment="Center"
                                            TextAlignment="Center"/>
                             </StackPanel>
@@ -164,10 +164,10 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="18"
                                                            FontWeight="Bold"
-                                                           Foreground="#212121"/>
+                                                           Foreground="{DynamicResource TextPrimary}"/>
                                                 <TextBlock Text="{Binding BackupTypeDisplay}"
                                                            FontSize="13"
-                                                           Foreground="#757575"/>
+                                                           Foreground="{DynamicResource TextSecondary}"/>
                                             </StackPanel>
 
                                             <!-- Status Badge -->
@@ -197,7 +197,7 @@
                                                      VerticalAlignment="Center"
                                                      Margin="12,0,0,0">
                                                 <Canvas Width="24" Height="24">
-                                                    <Path Fill="#BDBDBD" Data="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+                                                    <Path Fill="{DynamicResource ChevronFill}" Data="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
                                                 </Canvas>
                                             </Viewbox>
 
@@ -206,8 +206,8 @@
                                                         Orientation="Horizontal"
                                                         Spacing="8"
                                                         Margin="0,12,0,0">
-                                                <TextBlock Text="Last Execution:" FontWeight="SemiBold" Foreground="#616161"/>
-                                                <TextBlock Text="{Binding LastExecutionDisplay}" Foreground="#212121"/>
+                                                <TextBlock Text="Last Execution:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Text="{Binding LastExecutionDisplay}" Foreground="{DynamicResource TextPrimary}"/>
                                             </StackPanel>
 
                                             <!-- Progress Bar -->
@@ -215,7 +215,7 @@
                                                         Spacing="8"
                                                         Margin="0,12,0,0">
                                                 <Grid ColumnDefinitions="120,*,Auto">
-                                                    <TextBlock Grid.Column="0" Text="Progress:" FontWeight="SemiBold" Foreground="#616161" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="0" Text="Progress:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
                                                     <ProgressBar Grid.Column="1"
                                                                  Value="{Binding Progress}"
                                                                  Minimum="0"
@@ -227,7 +227,7 @@
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding ProgressDisplay}"
                                                                FontSize="13"
-                                                               Foreground="#757575"
+                                                               Foreground="{DynamicResource TextSecondary}"
                                                                Margin="12,0,0,0"
                                                                VerticalAlignment="Center"/>
                                                 </Grid>
@@ -320,7 +320,7 @@
         </Grid>
 
         <!-- Modal Overlay -->
-        <Panel IsVisible="{Binding IsAddEditModalOpen}" Background="#CC000000">
+        <Panel IsVisible="{Binding IsAddEditModalOpen}" Background="#DD000000">
             <Border Classes="Card"
                     Width="1200"
                     MaxHeight="650"
@@ -334,14 +334,14 @@
                         <TextBlock Text="{Binding ModalTitle}"
                                    FontSize="24"
                                    FontWeight="Bold"
-                                   Foreground="#212121"/>
+                                   Foreground="{DynamicResource TextPrimary}"/>
 
                         <!-- Form Fields -->
                         <StackPanel Spacing="16">
 
                         <!-- Name Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Backup Name" FontWeight="SemiBold" Foreground="#616161"/>
+                            <TextBlock Text="Backup Name" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <TextBox Classes="ModernTextBox"
                                      Text="{Binding ModalName}"
                                      Watermark="Enter backup name"/>
@@ -350,7 +350,7 @@
                         <!-- Source Paths Field -->
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0" Text="Source Paths" FontWeight="SemiBold" Foreground="#616161" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0" Text="Source Paths" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1"
                                         Command="{Binding AddSourcePathCommand}"
                                         Background="#4CAF50"
@@ -368,7 +368,7 @@
                             </Grid>
 
                             <!-- Scrollable Source Paths Container -->
-                            <Border BorderBrush="#E0E0E0"
+                            <Border BorderBrush="{DynamicResource BorderSubtle}"
                                     BorderThickness="2"
                                     CornerRadius="8"
                                     Padding="8,8,4,8">
@@ -418,7 +418,7 @@
 
                         <!-- Target Path Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Destination Path" FontWeight="SemiBold" Foreground="#616161"/>
+                            <TextBlock Text="Destination Path" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox Grid.Column="0"
                                          Classes="ModernTextBox"
@@ -436,7 +436,7 @@
 
                         <!-- Backup Type Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Backup Type" FontWeight="SemiBold" Foreground="#616161"/>
+                            <TextBlock Text="Backup Type" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <ComboBox Classes="ModernComboBox"
                                       SelectedIndex="{Binding ModalBackupTypeIndex}"
                                       HorizontalAlignment="Stretch">
@@ -467,8 +467,8 @@
         </Panel>
 
         <!-- Progress Popup -->
-        <Panel IsVisible="{Binding IsProgressPopupOpen}" Background="#DD000000">
-            <Border Background="White"
+        <Panel IsVisible="{Binding IsProgressPopupOpen}" Background="#EE000000">
+            <Border Background="{DynamicResource PopupBackground}"
                     Width="600"
                     CornerRadius="12"
                     Padding="0"
@@ -509,11 +509,11 @@
                             <TextBlock Text="Job Name"
                                        FontSize="12"
                                        FontWeight="SemiBold"
-                                       Foreground="#757575"/>
+                                       Foreground="{DynamicResource TextSecondary}"/>
                             <TextBlock Text="{Binding ProgressViewModel.JobName}"
                                        FontSize="16"
                                        FontWeight="SemiBold"
-                                       Foreground="#212121"/>
+                                       Foreground="{DynamicResource TextPrimary}"/>
                         </StackPanel>
 
                         <!-- Current File -->
@@ -521,10 +521,10 @@
                             <TextBlock Text="Current File"
                                        FontSize="12"
                                        FontWeight="SemiBold"
-                                       Foreground="#757575"/>
+                                       Foreground="{DynamicResource TextSecondary}"/>
                             <TextBlock Text="{Binding ProgressViewModel.CurrentFile}"
                                        FontSize="14"
-                                       Foreground="#424242"
+                                       Foreground="{DynamicResource TextSecondary}"
                                        TextTrimming="CharacterEllipsis"
                                        TextWrapping="NoWrap"/>
                         </StackPanel>
@@ -536,21 +536,21 @@
                                            Text="Progress"
                                            FontSize="12"
                                            FontWeight="SemiBold"
-                                           Foreground="#757575"
+                                           Foreground="{DynamicResource TextSecondary}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding ProgressViewModel.ProgressPercentage, StringFormat='{}{0}%'}"
                                            FontWeight="Bold"
                                            FontSize="18"
-                                           Foreground="#2196F3"/>
+                                           Foreground="{DynamicResource AccentBlueLight}"/>
                             </Grid>
 
                             <ProgressBar Value="{Binding ProgressViewModel.ProgressPercentage}"
                                          Minimum="0"
                                          Maximum="100"
                                          Height="8"
-                                         Foreground="#2196F3"
-                                         Background="#E0E0E0"/>
+                                         Foreground="{DynamicResource AccentBlueLight}"
+                                         Background="{DynamicResource ProgressBarBg}"/>
                         </StackPanel>
 
                         <!-- Stats -->
@@ -559,22 +559,22 @@
                                 <TextBlock Text="Files"
                                            FontSize="12"
                                            FontWeight="SemiBold"
-                                           Foreground="#757575"/>
+                                           Foreground="{DynamicResource TextSecondary}"/>
                                 <TextBlock Text="{Binding ProgressViewModel.FilesDisplay}"
                                            FontSize="15"
                                            FontWeight="SemiBold"
-                                           Foreground="#212121"/>
+                                           Foreground="{DynamicResource TextPrimary}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
                                 <TextBlock Text="Size"
                                            FontSize="12"
                                            FontWeight="SemiBold"
-                                           Foreground="#757575"/>
+                                           Foreground="{DynamicResource TextSecondary}"/>
                                 <TextBlock Text="{Binding ProgressViewModel.SizeDisplay}"
                                            FontSize="15"
                                            FontWeight="SemiBold"
-                                           Foreground="#212121"/>
+                                           Foreground="{DynamicResource TextPrimary}"/>
                             </StackPanel>
                         </Grid>
 

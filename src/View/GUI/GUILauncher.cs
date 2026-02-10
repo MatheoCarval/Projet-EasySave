@@ -14,10 +14,14 @@ public static class GUILauncher
     /// <summary>
     /// Starts the Avalonia application with required services
     /// </summary>
-    public static void Launch(LocalizationService localizationService, BackupManager backupManager)
+    /// <param name="localizationService">Localization service instance</param>
+    /// <param name="backupManager">Backup manager instance</param>
+    /// <param name="darkMode">True for dark theme, false for light theme</param>
+    public static void Launch(LocalizationService localizationService, BackupManager backupManager, bool darkMode = true)
     {
         App.LocalizationService = localizationService;
         App.BackupManager = backupManager;
+        App.IsDarkMode = darkMode;
 
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(Array.Empty<string>());

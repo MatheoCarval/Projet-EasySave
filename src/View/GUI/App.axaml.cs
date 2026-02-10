@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
 using EasySave.Services;
 using Services.Managers;
 
@@ -22,11 +23,18 @@ public class App : Application
     public static BackupManager? BackupManager { get; set; }
 
     /// <summary>
-    /// Initializes the application by loading XAML
+    /// Controls whether the app uses dark mode (true) or light mode (false).
+    /// Must be set before calling Launch().
+    /// </summary>
+    public static bool IsDarkMode { get; set; } = true;
+
+    /// <summary>
+    /// Initializes the application by loading XAML and applying the theme
     /// </summary>
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        RequestedThemeVariant = IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
     }
 
     /// <summary>
