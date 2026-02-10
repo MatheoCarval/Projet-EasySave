@@ -20,8 +20,20 @@
             <Border Grid.Column="0" Classes="Sidebar">
                 <Grid RowDefinitions="Auto,*,Auto,Auto">
 
+                    <!-- Home Button -->
+                    <Button Grid.Row="0"
+                            Classes="SidebarButton"
+                            ToolTip.Tip="Home"
+                            Margin="12,16,12,8">
+                        <Viewbox Width="24" Height="24">
+                            <Canvas Width="24" Height="24">
+                                <!-- Home Icon -->
+                                <Path Fill="#E0E0E0" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+
                     <!-- Spacer -->
-                    <Border Grid.Row="0"/>
                     <Border Grid.Row="1"/>
 
                     <!-- View Logs Button -->
