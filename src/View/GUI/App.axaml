@@ -34,9 +34,9 @@
                     <SolidColorBrush x:Key="EmptyStateText" Color="#BDBDBD"/>
                     <SolidColorBrush x:Key="ProgressBarBg" Color="#E0E0E0"/>
                     <SolidColorBrush x:Key="PopupBackground" Color="White"/>
-                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#757575"/>
-                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#616161"/>
-                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#424242"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#3F51B5"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#303F9F"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#F0F0F0"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#E3F2FD"/>
                 </ResourceDictionary>
@@ -71,9 +71,9 @@
                     <SolidColorBrush x:Key="EmptyStateText" Color="#616161"/>
                     <SolidColorBrush x:Key="ProgressBarBg" Color="#333333"/>
                     <SolidColorBrush x:Key="PopupBackground" Color="#1E1E1E"/>
-                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#424242"/>
-                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#525252"/>
-                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#616161"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#7986CB"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#3F51B5"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#333333"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#404040"/>
                 </ResourceDictionary>
@@ -237,12 +237,12 @@
             <Setter Property="Background" Value="{DynamicResource BrowseBtnBg}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,10"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style Selector="Button.BrowseButton:pointerover">

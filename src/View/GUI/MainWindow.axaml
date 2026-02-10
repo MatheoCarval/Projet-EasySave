@@ -1176,11 +1176,17 @@
                                                              Name="SourcePathTextBox"/>
                                                     <Button Grid.Column="1"
                                                             Classes="BrowseButton"
-                                                            Content="..."
-                                                            Width="40"
+                                                            Width="42"
                                                             Margin="8,0,0,0"
                                                             Click="BrowseSourcePath_Click"
-                                                            Tag="{Binding}"/>
+                                                            Tag="{Binding}"
+                                                            ToolTip.Tip="Browse...">
+                                                        <Viewbox Width="18" Height="18">
+                                                            <Canvas Width="24" Height="24">
+                                                                <Path Fill="White" Data="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                                            </Canvas>
+                                                        </Viewbox>
+                                                    </Button>
                                                     <Button Grid.Column="2"
                                                             Command="{Binding $parent[Window].DataContext.RemoveSourcePathCommand}"
                                                             CommandParameter="{Binding}"
@@ -1216,10 +1222,16 @@
                                          Name="TargetPathTextBox"/>
                                 <Button Grid.Column="1"
                                         Classes="BrowseButton"
-                                        Content="..."
-                                        Width="40"
+                                        Width="42"
                                         Margin="8,0,0,0"
-                                        Click="BrowseTargetPath_Click"/>
+                                        Click="BrowseTargetPath_Click"
+                                        ToolTip.Tip="Browse...">
+                                    <Viewbox Width="18" Height="18">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="White" Data="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
                             </Grid>
                         </StackPanel>
 
