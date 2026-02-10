@@ -146,18 +146,13 @@
                         <ItemsControl ItemsSource="{Binding BackupJobs}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Classes="Card"
+                                    <Border Classes="ClickableCard"
                                             Padding="24"
                                             Margin="0,0,0,16"
                                             Cursor="Hand"
                                             Tapped="BackupCard_Tapped">
-                                        <Border.Styles>
-                                            <Style Selector="Border:pointerover">
-                                                <Setter Property="BoxShadow" Value="0 4 12 0 #30000000"/>
-                                            </Style>
-                                        </Border.Styles>
 
-                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
                                             <!-- Checkbox -->
                                             <CheckBox Grid.Column="0" Grid.Row="0"
                                                       IsChecked="{Binding IsSelected, Mode=TwoWay}"
@@ -195,6 +190,16 @@
                                                     Padding="16,8"
                                                     Command="{Binding $parent[Window].DataContext.EditBackupCommand}"
                                                     VerticalAlignment="Top"/>
+
+                                            <!-- Chevron Arrow -->
+                                            <Viewbox Grid.Column="4" Grid.Row="0" Grid.RowSpan="3"
+                                                     Width="20" Height="20"
+                                                     VerticalAlignment="Center"
+                                                     Margin="12,0,0,0">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#BDBDBD" Data="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+                                                </Canvas>
+                                            </Viewbox>
 
                                             <!-- Last Execution -->
                                             <StackPanel Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1"
