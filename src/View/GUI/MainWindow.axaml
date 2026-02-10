@@ -41,18 +41,30 @@
                 <Grid RowDefinitions="Auto,*,Auto,Auto">
 
                     <!-- Home Button -->
-                    <Button Grid.Row="0"
-                            Classes="SidebarButton"
-                            Command="{Binding GoHomeCommand}"
-                            ToolTip.Tip="Home"
-                            Margin="12,16,12,8">
-                        <Viewbox Width="32" Height="32">
-                            <Canvas Width="24" Height="24">
-                                <!-- Home Icon -->
-                                <Path Fill="{DynamicResource SidebarIcon}" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
+                    <Grid Grid.Row="0" Margin="12,16,12,8">
+                        <Button Classes="SidebarButton"
+                                Command="{Binding GoHomeCommand}"
+                                ToolTip.Tip="Home">
+                            <Panel>
+                                <Viewbox Width="32" Height="32">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{DynamicResource SidebarIcon}" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <!-- Active/Error badge -->
+                                <Ellipse Width="8" Height="8" Fill="#F44336"
+                                         HorizontalAlignment="Right" VerticalAlignment="Top"
+                                         Margin="0,-2,-2,0"
+                                         IsVisible="{Binding HasActiveOrErrorJobs}"/>
+                            </Panel>
+                        </Button>
+                        <!-- Active indicator -->
+                        <Border Height="3" Width="28" CornerRadius="1.5"
+                                Background="{DynamicResource AccentBlue}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                IsVisible="{Binding IsHomeActive}"/>
+                    </Grid>
 
                     <!-- Spacer -->
                     <Border Grid.Row="1"/>
@@ -65,25 +77,29 @@
                             Margin="12,8">
                         <Viewbox Width="32" Height="32">
                             <Canvas Width="24" Height="24">
-                                <!-- Document Icon -->
                                 <Path Fill="{DynamicResource SidebarIcon}" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                             </Canvas>
                         </Viewbox>
                     </Button>
 
                     <!-- Settings Button -->
-                    <Button Grid.Row="3"
-                            Classes="SidebarButton"
-                            Command="{Binding OpenSettingsCommand}"
-                            ToolTip.Tip="Settings"
-                            Margin="12,8,12,16">
-                        <Viewbox Width="32" Height="32">
-                            <Canvas Width="24" Height="24">
-                                <!-- Settings Icon -->
-                                <Path Fill="{DynamicResource SidebarIcon}" Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
+                    <Grid Grid.Row="3" Margin="12,8,12,16">
+                        <Button Classes="SidebarButton"
+                                Command="{Binding OpenSettingsCommand}"
+                                ToolTip.Tip="Settings">
+                            <Viewbox Width="32" Height="32">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{DynamicResource SidebarIcon}" Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Button>
+                        <!-- Active indicator -->
+                        <Border Height="3" Width="28" CornerRadius="1.5"
+                                Background="{DynamicResource AccentBlue}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                IsVisible="{Binding IsSettingsOpen}"/>
+                    </Grid>
 
                 </Grid>
             </Border>
@@ -113,6 +129,70 @@
                                    Stretch="Uniform"
                                    VerticalAlignment="Top"
                                    Margin="0,4,16,0"/>
+                        </Grid>
+
+                        <!-- Dashboard Stats -->
+                        <Grid ColumnDefinitions="*,12,*,12,*,12,*" IsVisible="{Binding !HasNoJobs}">
+                            <Border Grid.Column="0" Classes="Card" Padding="16,14">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#222196F3">
+                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#2196F3" Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TotalJobsCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="Total" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Classes="Card" Padding="16,14">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#224CAF50">
+                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#4CAF50" Data="M8 5v14l11-7z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ActiveJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#4CAF50"/>
+                                        <TextBlock Text="Active" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="4" Classes="Card" Padding="16,14">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#222196F3">
+                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#2196F3" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding CompletedJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#2196F3"/>
+                                        <TextBlock Text="Done" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="6" Classes="Card" Padding="16,14">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#22F44336">
+                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#F44336" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ErrorJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#F44336"/>
+                                        <TextBlock Text="Errors" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                         </Grid>
 
                         <!-- Select All Button -->
@@ -460,7 +540,7 @@
                         <!-- Empty State -->
                         <Border Classes="Card"
                                 Padding="48"
-                                Margin="0,0,0,16"
+                                Margin="0,8,0,16"
                                 IsVisible="{Binding HasNoJobs}">
                             <StackPanel Spacing="16" HorizontalAlignment="Center">
                                 <Viewbox Width="80" Height="80" Opacity="0.3">
@@ -501,7 +581,7 @@
                         </Border>
 
                         <!-- Backup Jobs List -->
-                        <ItemsControl ItemsSource="{Binding FilteredBackupJobs}">
+                        <ItemsControl ItemsSource="{Binding FilteredBackupJobs}" Margin="0,4,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Classes="ClickableCard"
@@ -510,10 +590,10 @@
                                             Cursor="Hand"
                                             Tapped="BackupCard_Tapped">
 
-                                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
 
                                             <!-- Selection Zone (full height, left side) -->
-                                            <Border Grid.Column="0" Grid.RowSpan="3"
+                                            <Border Grid.Column="0" Grid.RowSpan="4"
                                                     Background="Transparent"
                                                     Width="56"
                                                     Cursor="Hand"
@@ -548,8 +628,34 @@
                                                            Foreground="White"/>
                                             </Border>
 
+                                            <!-- Source → Destination -->
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"
+                                                        Orientation="Horizontal"
+                                                        Spacing="6"
+                                                        Margin="0,8,24,0">
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" Opacity="0.5">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="{DynamicResource TextSecondary}" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                                <TextBlock Text="{Binding SourcePathDisplay}" FontSize="12" Foreground="{DynamicResource TextTertiary}"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="280"/>
+                                                <Viewbox Width="12" Height="12" VerticalAlignment="Center" Opacity="0.4" Margin="2,0">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="{DynamicResource TextSecondary}" Data="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" Opacity="0.5">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="{DynamicResource TextSecondary}" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                                <TextBlock Text="{Binding TargetPath}" FontSize="12" Foreground="{DynamicResource TextTertiary}"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="280"/>
+                                            </StackPanel>
+
                                             <!-- Last Execution -->
-                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1"
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"
                                                         Orientation="Horizontal"
                                                         Spacing="8"
                                                         Margin="0,12,24,0">
@@ -558,7 +664,7 @@
                                             </StackPanel>
 
                                             <!-- Progress Bar -->
-                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="2"
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"
                                                         Spacing="8"
                                                         Margin="0,12,24,24">
                                                 <Grid ColumnDefinitions="120,*,Auto">
@@ -639,11 +745,13 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
 
                     <!-- Selected count -->
-                    <TextBlock Text="{Binding SelectedJobsCount, StringFormat='{}{0} selected'}"
-                               Foreground="{DynamicResource TextSecondary}"
-                               VerticalAlignment="Center"
-                               FontSize="13"
-                               Margin="10,0,6,0"/>
+                    <Border Background="{DynamicResource AccentBlue}" CornerRadius="12" Padding="10,4" Margin="6,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SelectedJobsCount, StringFormat='{}{0} selected'}"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"/>
+                    </Border>
 
                     <!-- Deselect All -->
                     <Button Command="{Binding DeselectAllCommand}"
@@ -1111,7 +1219,7 @@
         </Grid>
         <Panel IsVisible="{Binding IsAddEditModalOpen}" Background="#DD000000">
             <Border Classes="Card"
-                    Width="1200"
+                    Width="650"
                     MaxHeight="650"
                     Padding="32"
                     HorizontalAlignment="Center"
@@ -1160,21 +1268,47 @@
                             <Border BorderBrush="{DynamicResource BorderSubtle}"
                                     BorderThickness="2"
                                     CornerRadius="8"
-                                    Padding="8,8,4,8">
+                                    Padding="8,8,4,8"
+                                    ClipToBounds="True">
                                 <ScrollViewer MaxHeight="200"
                                               VerticalScrollBarVisibility="Auto"
                                               HorizontalScrollBarVisibility="Disabled"
                                               Padding="0,0,8,0">
-                                    <ItemsControl ItemsSource="{Binding ModalSourcePaths}">
+                                    <ItemsControl ItemsSource="{Binding ModalSourcePaths}" HorizontalAlignment="Stretch">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel HorizontalAlignment="Stretch"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.Styles>
+                                            <Style Selector="ItemsControl > ContentPresenter">
+                                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                            </Style>
+                                        </ItemsControl.Styles>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
-                                                    <TextBox Grid.Column="0"
-                                                             Classes="ModernTextBox"
-                                                             Text="{Binding Path, Mode=TwoWay}"
-                                                             Watermark="e.g., C:\Documents"
-                                                             Name="SourcePathTextBox"/>
-                                                    <Button Grid.Column="1"
+                                                <DockPanel Margin="0,0,0,8" LastChildFill="True" ClipToBounds="True">
+                                                    <Button DockPanel.Dock="Right"
+                                                            Command="{Binding $parent[Window].DataContext.RemoveSourcePathCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="#F44336"
+                                                            Foreground="White"
+                                                            BorderThickness="0"
+                                                            Padding="0"
+                                                            CornerRadius="10"
+                                                            Width="42"
+                                                            Height="40"
+                                                            Margin="8,0,0,0"
+                                                            Cursor="Hand"
+                                                            HorizontalContentAlignment="Center"
+                                                            VerticalContentAlignment="Center">
+                                                        <Viewbox Width="18" Height="18">
+                                                            <Canvas Width="24" Height="24">
+                                                                <Path Fill="White" Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                                            </Canvas>
+                                                        </Viewbox>
+                                                    </Button>
+                                                    <Button DockPanel.Dock="Right"
                                                             Classes="BrowseButton"
                                                             Width="42"
                                                             Margin="8,0,0,0"
@@ -1187,23 +1321,13 @@
                                                             </Canvas>
                                                         </Viewbox>
                                                     </Button>
-                                                    <Button Grid.Column="2"
-                                                            Command="{Binding $parent[Window].DataContext.RemoveSourcePathCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            Background="#F44336"
-                                                            Foreground="White"
-                                                            BorderThickness="0"
-                                                            Padding="8"
-                                                            CornerRadius="6"
-                                                            Margin="8,0,0,0"
-                                                            Cursor="Hand">
-                                                        <Viewbox Width="16" Height="16">
-                                                            <Canvas Width="24" Height="24">
-                                                                <Path Fill="White" Data="M19 13H5v-2h14v2z"/>
-                                                            </Canvas>
-                                                        </Viewbox>
-                                                    </Button>
-                                                </Grid>
+                                                    <Border ClipToBounds="True">
+                                                        <TextBox Classes="ModernTextBox"
+                                                                 Text="{Binding Path, Mode=TwoWay}"
+                                                                 Watermark="e.g., C:\Documents"
+                                                                 Name="SourcePathTextBox"/>
+                                                    </Border>
+                                                </DockPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -1287,27 +1411,49 @@
 
                 <StackPanel>
                     <!-- Header - In Progress -->
-                    <Border Background="#2196F3"
-                            CornerRadius="12,12,0,0"
+                    <Border CornerRadius="12,12,0,0"
                             Padding="24,20"
                             IsVisible="{Binding !ProgressViewModel.IsCompleted}">
-                        <TextBlock Text="Backup in Progress"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"/>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#2196F3" Offset="0"/>
+                                <GradientStop Color="#1565C0" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                            <Viewbox Width="22" Height="22" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="White" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Backup in Progress"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Header - Completed -->
-                    <Border Background="#4CAF50"
-                            CornerRadius="12,12,0,0"
+                    <Border CornerRadius="12,12,0,0"
                             Padding="24,20"
                             IsVisible="{Binding ProgressViewModel.IsCompleted}">
-                        <TextBlock Text="Backup Complete"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"/>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#4CAF50" Offset="0"/>
+                                <GradientStop Color="#2E7D32" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                            <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Backup Complete"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Content -->
@@ -1387,6 +1533,42 @@
                             </StackPanel>
                         </Grid>
 
+                        <!-- Speed & Time -->
+                        <Grid ColumnDefinitions="*,*,*">
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="Elapsed"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding ProgressViewModel.ElapsedTimeDisplay}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="4" Margin="12,0">
+                                <TextBlock Text="Speed"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding ProgressViewModel.TransferSpeedDisplay}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0">
+                                <TextBlock Text="Remaining"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding ProgressViewModel.EstimatedTimeDisplay}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+                        </Grid>
+
                         <!-- Close Button -->
                         <Button Classes="PrimaryButton"
                                 Content="Close"
@@ -1414,9 +1596,14 @@
                     BoxShadow="0 8 24 4 #30000000">
                 <StackPanel>
                     <!-- Header -->
-                    <Border Background="#2196F3"
-                            CornerRadius="16,16,0,0"
+                    <Border CornerRadius="16,16,0,0"
                             Padding="24,18">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#2196F3" Offset="0"/>
+                                <GradientStop Color="#1565C0" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                         <TextBlock Text="Execution Order"
                                    FontSize="20"
                                    FontWeight="Bold"
@@ -1561,9 +1748,14 @@
                     BoxShadow="0 8 24 4 #30000000">
                 <StackPanel>
                     <!-- Header -->
-                    <Border Background="#F44336"
-                            CornerRadius="16,16,0,0"
+                    <Border CornerRadius="16,16,0,0"
                             Padding="24,18">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#F44336" Offset="0"/>
+                                <GradientStop Color="#C62828" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                             <Viewbox Width="22" Height="22" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
@@ -1623,6 +1815,35 @@
                 </StackPanel>
             </Border>
         </Panel>
+
+        <!-- Toast Notification -->
+        <Border IsVisible="{Binding IsToastVisible}"
+                Background="#4CAF50"
+                CornerRadius="12"
+                Padding="16,12"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,32,24"
+                BoxShadow="0 4 16 0 #40000000"
+                MaxWidth="400">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Fill="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </Canvas>
+                </Viewbox>
+                <TextBlock Grid.Column="1" Text="{Binding ToastMessage}" Foreground="White" FontWeight="SemiBold"
+                           FontSize="14" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Command="{Binding DismissToastCommand}" Background="Transparent"
+                        BorderThickness="0" Padding="4" Margin="10,0,0,0" Cursor="Hand">
+                    <Viewbox Width="14" Height="14">
+                        <Canvas Width="24" Height="24">
+                            <Path Fill="White" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+            </Grid>
+        </Border>
 
     </Grid>
 </Window>

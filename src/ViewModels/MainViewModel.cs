@@ -26,6 +26,9 @@ public class MainViewModel : ViewModelBase
     private bool _isDeleteConfirmOpen;
     private string _deleteConfirmMessage = string.Empty;
     private bool _isSettingsOpen;
+    private string _toastMessage = string.Empty;
+    private bool _isToastVisible;
+    private DispatcherTimer? _toastTimer;
 
     public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
     public SettingsViewModel SettingsVM { get; }
@@ -93,6 +96,7 @@ public class MainViewModel : ViewModelBase
         ToggleAllTypesCommand = new RelayCommand(ToggleAllTypes);
         ToggleAllStatesCommand = new RelayCommand(ToggleAllStates);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
+        DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -224,13 +228,41 @@ public class MainViewModel : ViewModelBase
     public bool IsSettingsOpen
     {
         get => _isSettingsOpen;
-        set => SetProperty(ref _isSettingsOpen, value);
+        set
+        {
+            if (SetProperty(ref _isSettingsOpen, value))
+            {
+                OnPropertyChanged(nameof(IsHomeActive));
+            }
+        }
     }
 
     public string DeleteConfirmMessage
     {
         get => _deleteConfirmMessage;
         set => SetProperty(ref _deleteConfirmMessage, value);
+    }
+
+    public bool IsHomeActive => !IsSettingsOpen;
+
+    // Dashboard stats
+    public int TotalJobsCount => BackupJobs.Count;
+    public int ActiveJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ACTIVE);
+    public int CompletedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.COMPLETED);
+    public int ErrorJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ERROR);
+    public bool HasActiveOrErrorJobs => BackupJobs.Any(j => j.BackupState == BackupState.ACTIVE || j.BackupState == BackupState.ERROR);
+
+    // Toast notification
+    public string ToastMessage
+    {
+        get => _toastMessage;
+        set => SetProperty(ref _toastMessage, value);
+    }
+
+    public bool IsToastVisible
+    {
+        get => _isToastVisible;
+        set => SetProperty(ref _isToastVisible, value);
     }
 
     #endregion
@@ -270,6 +302,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ToggleAllTypesCommand { get; }
     public ICommand ToggleAllStatesCommand { get; }
     public ICommand ClearFiltersCommand { get; }
+    public ICommand DismissToastCommand { get; }
 
     #endregion
 
@@ -349,6 +382,7 @@ public class MainViewModel : ViewModelBase
             }
 
             CloseModal();
+            ShowToast("Backup task saved!");
         }
         catch (ArgumentException)
         {
@@ -404,6 +438,7 @@ public class MainViewModel : ViewModelBase
     {
         IsDeleteConfirmOpen = false;
         DeleteSelected();
+        ShowToast("Backup task(s) deleted.");
     }
 
     private void ShowExecuteOrder()
@@ -636,6 +671,7 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasSelectedJobs));
         OnPropertyChanged(nameof(SelectedJobsCount));
         OnPropertyChanged(nameof(AreAllSelected));
+        NotifyStats();
         ApplyFilter();
     }
 
@@ -772,6 +808,7 @@ public class MainViewModel : ViewModelBase
     {
         _progressViewModel.Reset();
         _progressViewModel.JobName = jobName;
+        _progressViewModel.StartTracking();
         IsProgressPopupOpen = true;
     }
 
@@ -783,7 +820,32 @@ public class MainViewModel : ViewModelBase
 
     private void CloseProgress()
     {
+        ShowToast("Backup completed!");
         HideProgressPopup();
+        NotifyStats();
+    }
+
+    private void NotifyStats()
+    {
+        OnPropertyChanged(nameof(TotalJobsCount));
+        OnPropertyChanged(nameof(ActiveJobsCount));
+        OnPropertyChanged(nameof(CompletedJobsCount));
+        OnPropertyChanged(nameof(ErrorJobsCount));
+        OnPropertyChanged(nameof(HasActiveOrErrorJobs));
+    }
+
+    public void ShowToast(string message)
+    {
+        ToastMessage = message;
+        IsToastVisible = true;
+        _toastTimer?.Stop();
+        _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        _toastTimer.Tick += (s, e) =>
+        {
+            IsToastVisible = false;
+            _toastTimer?.Stop();
+        };
+        _toastTimer.Start();
     }
 
     private void OnFileTransferred(object? sender, FileProgressEventArgs e)

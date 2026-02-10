@@ -3,19 +3,19 @@
     "Id": "0a955bec-95ea-4b6e-8845-5b140320bbd3",
     "Name": "--dark",
     "SourcePath": [
-      "C:\\Users\\allan\\OneDrive\\Bureau\\SW\\Projet-EasySave\\.github\\workflows"
+      "C:\\Users\\allan\\OneDrive\\Bureau"
     ],
     "TargetPath": "C:\\Users\\allan\\Music",
     "BackupType": 0,
-    "BackupState": 4,
-    "LastExecution": "0001-01-01T00:00:00",
-    "TotalFiles": 0,
-    "TotalSize": 0,
+    "BackupState": 2,
+    "LastExecution": "2026-02-11T00:07:26.5622307+01:00",
+    "TotalFiles": 1,
+    "TotalSize": 2333,
     "RemainingFiles": 0,
     "RemainingSize": 0,
-    "CurrentSourceFile": null,
-    "CurrentTargetFile": null,
-    "Progress": 0
+    "CurrentSourceFile": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\Projet-EasySave\\.github\\workflows\\dotnet.yml",
+    "CurrentTargetFile": "\\\\localhost\\C$\\Users\\allan\\Music\\workflows\\dotnet.yml",
+    "Progress": 100
   },
   {
     "Id": "68157a36-c248-40b2-a502-937bedcd60c2",
@@ -165,7 +165,9 @@
     "Id": "2a4c0eb6-5ac3-4b30-9c99-6c11b80affa1",
     "Name": "aqsdfez",
     "SourcePath": [
-      "--dark"
+      "--dark",
+      "znbrtbn hzrtagtzrnrygt(\u0022z(\u0027\u0022t(grrtg",
+      "rsynrqstbhaetb"
     ],
     "TargetPath": "--dark",
     "BackupType": 0,
