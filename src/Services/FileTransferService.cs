@@ -10,6 +10,7 @@ using Models;
 using EasyLog.Abstractions;
 using Utilities;
 using Services.Writers;
+using Services.Managers;
 
 namespace EasySave.Services
 {
@@ -26,6 +27,11 @@ namespace EasySave.Services
         /// State writer instance for persisting backup job state during file transfer operations.
         /// </summary>
         private readonly StateWriter _stateWriter;
+
+        /// <summary>
+        /// Event raised when a file transfer completes
+        /// </summary>
+        public event EventHandler<FileProgressEventArgs>? FileTransferred;
 
         /// <summary>
         /// Initializes FileTransferService with required dependencies for logging and state persistence.
@@ -113,6 +119,19 @@ namespace EasySave.Services
                 job.RemainingSize -= fileSize;
                 job.UpdateProgress();
                 _stateWriter.UpdateJobState(job);
+
+                // Raise file transferred event
+                FileTransferred?.Invoke(this, new FileProgressEventArgs
+                {
+                    JobId = job.Id,
+                    JobName = job.Name,
+                    CurrentFile = Path.GetFileName(sourceFile),
+                    TotalFiles = (int)job.TotalFiles,
+                    RemainingFiles = (int)job.RemainingFiles,
+                    TotalSize = job.TotalSize,
+                    RemainingSize = job.RemainingSize,
+                    ProgressPercentage = (int)job.Progress
+                });
             }
             catch (Exception ex)
             {

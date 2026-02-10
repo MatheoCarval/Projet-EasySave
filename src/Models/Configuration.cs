@@ -21,7 +21,7 @@ namespace EasySave.Models
         {
             Language = "fr-FR";
             LogFormat = LogFormat.JSON;
-            MaxBackupJobs = 5;
+            MaxBackupJobs = int.MaxValue;
             LogFilePath = string.Empty;
             StateFilePath = string.Empty;
         }

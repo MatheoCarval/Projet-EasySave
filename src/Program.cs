@@ -38,15 +38,28 @@ public class Program
             // Initialize services
             InitializeServices();
 
-            // If no arguments, launch UI
-            if (args.Length == 0)
+            // Check for theme argument
+            bool darkMode = false; // default to light
+            var remainingArgs = new System.Collections.Generic.List<string>();
+            foreach (var arg in args)
             {
-                LaunchUI();
+                if (arg.Equals("--light", StringComparison.OrdinalIgnoreCase))
+                    darkMode = false;
+                else if (arg.Equals("--dark", StringComparison.OrdinalIgnoreCase))
+                    darkMode = true;
+                else
+                    remainingArgs.Add(arg);
+            }
+
+            // If no remaining arguments, launch UI
+            if (remainingArgs.Count == 0)
+            {
+                LaunchUI(darkMode);
                 return;
             }
 
             // Parse and execute jobs by index
-            var indices = ParseJobIndices(args[0]);
+            var indices = ParseJobIndices(remainingArgs[0]);
             ExecuteJobsByIndices(indices);
         }
         catch (Exception ex)
@@ -253,13 +266,14 @@ public class Program
     }
 
     /// <summary>
-    /// Launches the interactive console UI for managing backups.
+    /// Launches the interactive GUI for managing backups.
     /// </summary>
-    private static void LaunchUI()
+    /// <param name="darkMode">True for dark theme, false for light theme</param>
+    private static void LaunchUI(bool darkMode = true)
     {
         //var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
         //consoleUI.Start();
-        EasySave.View.GUI.GUILauncher.Launch();
+        EasySave.View.GUI.GUILauncher.Launch(_localizationService!, _backupManager!, darkMode);
     }
 
     /// <summary>

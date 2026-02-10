@@ -155,20 +155,6 @@ namespace EasySave.Tests.Services.Managers
             Assert.Contains("already exists", exception.Message);
         }
 
-        /// <summary>
-        /// Verifies that CreateJob throws InvalidOperationException when attempting to create a job after reaching the maximum job limit.
-        /// </summary>
-        [Fact]
-        public void CreateJob_WhenMaxJobsReached_ThrowsInvalidOperationException()
-        {
-            var manager = new BackupManager(_fileTransferService, _stateWriter, maxJobs: 2);
-            manager.CreateJob("Job1", new List<string> { @"C:\Source1" }, @"C:\Target1", BackupType.COMPLETE);
-            manager.CreateJob("Job2", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.COMPLETE);
-
-            var exception = Assert.Throws<InvalidOperationException>(() =>
-                manager.CreateJob("Job3", new List<string> { @"C:\Source3" }, @"C:\Target3", BackupType.COMPLETE));
-            Assert.Contains("Maximum number of jobs", exception.Message);
-        }
 
         /// <summary>
         /// Verifies that DeleteJob successfully removes an existing job and returns true.

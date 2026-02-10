@@ -9,6 +9,22 @@ using System.Runtime.ConstrainedExecution;
 namespace Services.Managers;
 
 /// <summary>
+/// Event arguments for file transfer progress
+/// </summary>
+public class FileProgressEventArgs : EventArgs
+{
+    public string JobId { get; set; } = string.Empty;
+    public string JobName { get; set; } = string.Empty;
+    public string CurrentFile { get; set; } = string.Empty;
+    public int TotalFiles { get; set; }
+    public int RemainingFiles { get; set; }
+    public int FilesProcessed => TotalFiles - RemainingFiles;
+    public long TotalSize { get; set; }
+    public long RemainingSize { get; set; }
+    public int ProgressPercentage { get; set; }
+}
+
+/// <summary>
 /// Manages backup job creation, execution, modification, and persistence with support for concurrent job handling and state tracking.
 /// </summary>
 public class BackupManager
@@ -33,6 +49,11 @@ public class BackupManager
     const string JobsFilePath = "./Datas/jobs.json";
 
     /// <summary>
+    /// Event raised when a file transfer completes during backup execution
+    /// </summary>
+    public event EventHandler<FileProgressEventArgs>? FileTransferred;
+
+    /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
     public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
@@ -46,7 +67,18 @@ public class BackupManager
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
 
+        // Subscribe to file transfer progress
+        _fileTransferService.FileTransferred += OnFileTransferredFromService;
+
         LoadJobs();
+    }
+
+    /// <summary>
+    /// Handles file transfer events from FileTransferService and raises FileTransferred event
+    /// </summary>
+    private void OnFileTransferredFromService(object? sender, FileProgressEventArgs e)
+    {
+        FileTransferred?.Invoke(this, e);
     }
 
     /// <summary>
@@ -54,11 +86,6 @@ public class BackupManager
     /// </summary>
     public BackupJob CreateJob(string name, List<string> sourcesPaths, string targetPath, BackupType backupType)
     {
-        if (_jobs.Count >= _maxJobs)
-        {
-            throw new InvalidOperationException($"Maximum number of jobs ({_maxJobs}) has been reached.");
-        }
-
         if (_jobs.Any(j => j.Name == name))
         {
             throw new ArgumentException($"A job with name '{name}' already exists.", nameof(name));
@@ -286,6 +313,12 @@ public class BackupManager
         if (job == null)
         {
             throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
+        }
+
+        // Check for duplicate name (exclude current job)
+        if (!string.IsNullOrWhiteSpace(newName) && newName != job.Name && _jobs.Any(j => j.Id != jobId && j.Name == newName))
+        {
+            throw new ArgumentException($"A job with name '{newName}' already exists.", nameof(newName));
         }
 
         try
