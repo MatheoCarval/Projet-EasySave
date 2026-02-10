@@ -43,6 +43,7 @@
                     <!-- Home Button -->
                     <Button Grid.Row="0"
                             Classes="SidebarButton"
+                            Command="{Binding GoHomeCommand}"
                             ToolTip.Tip="Home"
                             Margin="12,16,12,8">
                         <Viewbox Width="32" Height="32">
@@ -89,7 +90,7 @@
 
             <!-- Main Content Area -->
             <Grid Grid.Column="1">
-                <ScrollViewer Padding="32">
+                <ScrollViewer Padding="32" IsVisible="{Binding !IsSettingsOpen}">
                     <StackPanel Spacing="24" MaxWidth="1000">
 
                         <!-- Header with Action Buttons -->
@@ -261,7 +262,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeAllSelected}"/>
-                                            <Button Content="✓ All"
+                                            <Button Content="All"
                                                     Command="{Binding ToggleAllTypesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="White"
@@ -281,7 +282,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeCompleteSelected}"/>
-                                            <Button Content="✓ Complete"
+                                            <Button Content="Complete"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="COMPLETE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -302,7 +303,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeDifferentialSelected}"/>
-                                            <Button Content="✓ Differential"
+                                            <Button Content="Differential"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="DIFFERENTIAL"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -337,7 +338,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateAllSelected}"/>
-                                            <Button Content="✓ All"
+                                            <Button Content="All"
                                                     Command="{Binding ToggleAllStatesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="White"
@@ -357,7 +358,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStatePendingSelected}"/>
-                                            <Button Content="✓ Pending"
+                                            <Button Content="Pending"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PENDING"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -378,7 +379,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateActiveSelected}"/>
-                                            <Button Content="✓ Active"
+                                            <Button Content="Active"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ACTIVE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -399,7 +400,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateCompletedSelected}"/>
-                                            <Button Content="✓ Completed"
+                                            <Button Content="Completed"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="COMPLETED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -420,7 +421,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStatePausedSelected}"/>
-                                            <Button Content="✓ Paused"
+                                            <Button Content="Paused"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PAUSED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -441,7 +442,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateErrorSelected}"/>
-                                            <Button Content="✓ Error"
+                                            <Button Content="Error"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ERROR"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -591,9 +592,11 @@
                 </ScrollViewer>
             </Grid>
 
+            <!-- Floating Buttons (hidden when settings open) -->
+            <Panel Grid.Column="1" IsVisible="{Binding !IsSettingsOpen}">
+
             <!-- Floating Action Button -->
-            <Border Grid.Column="1"
-                    Width="64"
+            <Border Width="64"
                     Height="64"
                     CornerRadius="32"
                     Background="#4CAF50"
@@ -625,8 +628,7 @@
             </Border>
 
             <!-- Floating Selection Action Bar -->
-            <Border Grid.Column="1"
-                    HorizontalAlignment="Center"
+            <Border HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     Margin="0,0,0,30"
                     CornerRadius="16"
@@ -693,9 +695,420 @@
                 </StackPanel>
             </Border>
 
-        </Grid>
+            </Panel> <!-- End floating buttons panel -->
 
-        <!-- Modal Overlay -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- Settings Panel -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <DockPanel Grid.Column="1"
+                       IsVisible="{Binding IsSettingsOpen}">
+
+            <!-- ───── Sticky Save Bar (docked bottom) ───── -->
+            <Border DockPanel.Dock="Bottom"
+                    Background="{DynamicResource CardBackground}"
+                    BorderBrush="{DynamicResource ClickableCardBorder}"
+                    BorderThickness="0,1,0,0"
+                    Padding="40,14"
+                    DataContext="{Binding SettingsVM}">
+                <Grid MaxWidth="720" ColumnDefinitions="Auto,*,Auto,Auto">
+                    <!-- Save message -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding SaveMessage}"
+                               FontSize="13"
+                               VerticalAlignment="Center"
+                               Foreground="#4CAF50"/>
+
+                    <!-- Unsaved indicator -->
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding TxtUnsaved, StringFormat='● {0}'}"
+                               FontSize="12"
+                               IsVisible="{Binding HasUnsavedChanges}"
+                               Foreground="#FF9800"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="0,0,16,0"/>
+
+                    <!-- Reset Button -->
+                    <Button Grid.Column="2"
+                            Command="{Binding ResetCommand}"
+                            Content="{Binding TxtReset}"
+                            Background="Transparent"
+                            Foreground="{DynamicResource TextSecondary}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ClickableCardBorder}"
+                            CornerRadius="8"
+                            Padding="20,8"
+                            Margin="0,0,8,0"
+                            Cursor="Hand"/>
+
+                    <!-- Save Button -->
+                    <Button Grid.Column="3"
+                            Command="{Binding SaveCommand}"
+                            Content="{Binding TxtSave}"
+                            Background="#2196F3"
+                            Foreground="White"
+                            CornerRadius="8"
+                            Padding="24,8"
+                            FontWeight="SemiBold"
+                            Cursor="Hand"/>
+                </Grid>
+            </Border>
+
+            <!-- ScrollViewer fills remaining space -->
+            <ScrollViewer Padding="40,32,40,40"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          DataContext="{Binding SettingsVM}">
+                <StackPanel Spacing="28" MaxWidth="720">
+
+                    <!-- Page Title with icon -->
+                    <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,0,0,4">
+                        <Viewbox Width="32" Height="32" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="{DynamicResource TextPrimary}" Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.611 3.611 0 0112 15.6z"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{Binding TxtSettings}"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- ───── General Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#222196F3">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#2196F3" Data="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtGeneral}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtGeneralDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Theme Toggle -->
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.6">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{DynamicResource TextSecondary}" Data="M12 3a9 9 0 100 18 9 9 0 000-18zm0 16V5a7 7 0 010 14z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtDarkMode}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtDarkModeDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="2"
+                                              IsChecked="{Binding IsDarkTheme}"
+                                              OnContent="{Binding TxtOn}"
+                                              OffContent="{Binding TxtOff}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Separator -->
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,2"/>
+
+                            <!-- Language -->
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.6">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{DynamicResource TextSecondary}" Data="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtLanguage}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtLanguageDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="2"
+                                          SelectedIndex="{Binding LanguageIndex}"
+                                          Width="180"
+                                          Classes="ModernComboBox"
+                                          VerticalAlignment="Center">
+                                    <ComboBoxItem Content="English"/>
+                                    <ComboBoxItem Content="Français"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ───── Logging Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#22FF9800">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#FF9800" Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtLogging}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtLoggingDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Log Format -->
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.6">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{DynamicResource TextSecondary}" Data="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtLogFormat}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtLogFormatDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="2"
+                                          SelectedIndex="{Binding LogFormatIndex}"
+                                          Width="180"
+                                          Classes="ModernComboBox"
+                                          VerticalAlignment="Center">
+                                    <ComboBoxItem Content="JSON"/>
+                                    <ComboBoxItem Content="XML"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <!-- Separator -->
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,2"/>
+
+                            <!-- Log File Path -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtLogPath}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtLogPathDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding LogFilePath}"
+                                             Watermark="/path/to/logs"
+                                             CornerRadius="8 0 0 8"
+                                             Padding="12,10"/>
+                                    <Button Grid.Column="1"
+                                            Name="BrowseLogPathButton"
+                                            Click="BrowseLogPath_Click"
+                                            Content="{Binding TxtBrowse}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="0 8 8 0"
+                                            Padding="16,10"
+                                            VerticalAlignment="Stretch"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ───── State Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#229C27B0">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#9C27B0" Data="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtState}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtStateDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- State File Path -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtStatePath}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtStatePathDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding StateFilePath}"
+                                             Watermark="/path/to/state.json"
+                                             CornerRadius="8 0 0 8"
+                                             Padding="12,10"/>
+                                    <Button Grid.Column="1"
+                                            Name="BrowseStatePathButton"
+                                            Click="BrowseStatePath_Click"
+                                            Content="{Binding TxtBrowse}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="0 8 8 0"
+                                            Padding="16,10"
+                                            VerticalAlignment="Stretch"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ───── About Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="16">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#22607D8B">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#607D8B" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtAbout}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtAboutDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="*,Auto,*" Margin="0,8,0,0">
+                                <!-- Left column: Product info -->
+                                <StackPanel Grid.Column="0" Spacing="16" Margin="8,0,20,0">
+                                    <!-- Software Name -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="Software" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="EasySave" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Company -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="Company" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="ProSoft" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Version -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding TxtVersion}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding AppVersion}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- License -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="License" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="Proprietary" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Vertical separator -->
+                                <Border Grid.Column="1" Width="1" Background="{DynamicResource ClickableCardBorder}" VerticalAlignment="Stretch" HorizontalAlignment="Center" Margin="0,2"/>
+
+                                <!-- Right column: Technical info -->
+                                <StackPanel Grid.Column="2" Spacing="16" Margin="20,0,8,0">
+                                    <!-- Runtime -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding TxtRuntime}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding DotNetVersion}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- UI Framework -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding TxtUiFramework}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding AvaloniaVersion}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- OS -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding TxtOs}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding OSInfo}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Architecture -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center" Opacity="0.5">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextSecondary}" Data="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="Architecture" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding Architecture}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Bottom spacer so the About card is fully visible when scrolled down -->
+                    <Border Height="80" Background="Transparent"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            </DockPanel> <!-- End Settings DockPanel -->
+
+        </Grid>
         <Panel IsVisible="{Binding IsAddEditModalOpen}" Background="#DD000000">
             <Border Classes="Card"
                     Width="1200"
@@ -1015,6 +1428,7 @@
                                                 BorderThickness="1.5"
                                                 Padding="12,10"
                                                 Margin="0,0,0,6"
+                                                Cursor="Hand"
                                                 Tag="OrderItem"
                                                 PointerPressed="OrderItem_PointerPressed"
                                                 PointerMoved="OrderItem_PointerMoved"
@@ -1026,7 +1440,7 @@
                                             </Border.Transitions>
                                             <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                                                 <!-- Drag handle -->
-                                                <Viewbox Grid.Column="0" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.35" Cursor="Hand">
+                                                <Viewbox Grid.Column="0" Width="24" Height="24" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.45" Cursor="Hand">
                                                     <Canvas Width="24" Height="24">
                                                         <Path Fill="{DynamicResource TextSecondary}" Data="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                                                     </Canvas>
@@ -1058,13 +1472,13 @@
                                                 </StackPanel>
 
                                                 <!-- Up / Down arrows -->
-                                                <StackPanel Grid.Column="3" Orientation="Vertical" Spacing="0" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                <StackPanel Grid.Column="3" Orientation="Vertical" Spacing="2" VerticalAlignment="Center" Margin="8,0,0,0">
                                                     <Button Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).MoveJobUpCommand}"
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
-                                                            Padding="4,2" Cursor="Hand" MinHeight="0" MinWidth="0"
+                                                            Padding="6,4" Cursor="Hand" MinHeight="0" MinWidth="0"
                                                             ToolTip.Tip="Move up">
-                                                        <Viewbox Width="16" Height="16">
+                                                        <Viewbox Width="22" Height="22">
                                                             <Canvas Width="24" Height="24">
                                                                 <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
                                                             </Canvas>
@@ -1073,9 +1487,9 @@
                                                     <Button Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).MoveJobDownCommand}"
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
-                                                            Padding="4,2" Cursor="Hand" MinHeight="0" MinWidth="0"
+                                                            Padding="6,4" Cursor="Hand" MinHeight="0" MinWidth="0"
                                                             ToolTip.Tip="Move down">
-                                                        <Viewbox Width="16" Height="16">
+                                                        <Viewbox Width="22" Height="22">
                                                             <Canvas Width="24" Height="24">
                                                                 <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
                                                             </Canvas>
@@ -1090,7 +1504,7 @@
                         </ScrollViewer>
 
                         <!-- Buttons -->
-                        <Grid ColumnDefinitions="*,12,*" Margin="0,8,0,0">
+                        <Grid ColumnDefinitions="*,12,*" Margin="0,16,0,8">
                             <Button Grid.Column="0"
                                     Content="Cancel"
                                     HorizontalAlignment="Stretch"
@@ -1102,6 +1516,7 @@
                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                     BorderThickness="1.5"
                                     HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
                                     Cursor="Hand"
                                     Command="{Binding CancelExecuteOrderCommand}"/>
                             <Button Grid.Column="2"
@@ -1114,6 +1529,7 @@
                                     Foreground="White"
                                     Background="#2196F3"
                                     HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
                                     Cursor="Hand"
                                     Command="{Binding ConfirmExecuteOrderCommand}"/>
                         </Grid>

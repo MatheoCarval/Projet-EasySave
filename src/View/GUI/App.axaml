@@ -7,6 +7,7 @@
                 <!-- ===== LIGHT THEME ===== -->
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="AppBackground" Color="#F5F5F5"/>
+                    <SolidColorBrush x:Key="CardBackground" Color="White"/>
                     <SolidColorBrush x:Key="SidebarBackground" Color="#E8EAF0"/>
                     <SolidColorBrush x:Key="SidebarShadow" Color="#20000000"/>
                     <SolidColorBrush x:Key="SidebarHover" Color="#D8DCE6"/>

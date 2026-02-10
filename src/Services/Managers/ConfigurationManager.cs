@@ -70,7 +70,8 @@ namespace EasySave.Services.Managers
                 LogFormat = config.GetLogFormat().ToString(),
                 MaxBackupJobs = config.GetMaxBackupJobs(),
                 LogFilePath = config.GetLogFilePath(),
-                StateFilePath = config.GetStateFilePath()
+                StateFilePath = config.GetStateFilePath(),
+                DarkMode = config.GetDarkMode()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -122,6 +123,7 @@ namespace EasySave.Services.Managers
             config.SetMaxBackupJobs(template.MaxBackupJobs);
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
+            config.SetDarkMode(template.DarkMode);
 
             return config;
         }
@@ -146,6 +148,7 @@ namespace EasySave.Services.Managers
             public int MaxBackupJobs { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public bool DarkMode { get; set; }
         }
     }
 }

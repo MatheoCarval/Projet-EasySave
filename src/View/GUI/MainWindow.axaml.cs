@@ -135,6 +135,54 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Handles the Browse button click for log file path (Settings)
+    /// </summary>
+    private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select Log Directory",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                string dir = result[0].Path.LocalPath;
+                // Determine log file name from current format setting
+                string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
+                mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click for state file path (Settings)
+    /// </summary>
+    private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select State File Directory",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                string dir = result[0].Path.LocalPath;
+                mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
+            }
+        }
+    }
+
     #region Drag Reorder for Execute Order
 
     private void OrderItem_PointerPressed(object? sender, PointerPressedEventArgs e)

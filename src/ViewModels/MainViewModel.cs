@@ -25,8 +25,10 @@ public class MainViewModel : ViewModelBase
     private bool _isExecuteOrderOpen;
     private bool _isDeleteConfirmOpen;
     private string _deleteConfirmMessage = string.Empty;
+    private bool _isSettingsOpen;
 
     public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
+    public SettingsViewModel SettingsVM { get; }
 
     // Modal form fields
     private string _modalName = string.Empty;
@@ -52,6 +54,7 @@ public class MainViewModel : ViewModelBase
         FilteredBackupJobs = new ObservableCollection<BackupJobViewModel>();
         ModalSourcePaths = new ObservableCollection<SourcePathViewModel>();
         _progressViewModel = new ProgressViewModel();
+        SettingsVM = new SettingsViewModel();
 
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
@@ -65,6 +68,7 @@ public class MainViewModel : ViewModelBase
         CancelModalCommand = new RelayCommand(CloseModal);
         ViewLogsCommand = new RelayCommand(ViewLogs);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
+        GoHomeCommand = new RelayCommand(GoHome);
         ExecuteBackupCommand = new RelayCommand(ExecuteBackup, () => SelectedBackupJob != null);
         ExecuteSelectedCommand = new RelayCommand(ExecuteSelected, () => BackupJobs.Any(j => j.IsSelected));
         AddSourcePathCommand = new RelayCommand(AddSourcePath);
@@ -217,6 +221,12 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _isDeleteConfirmOpen, value);
     }
 
+    public bool IsSettingsOpen
+    {
+        get => _isSettingsOpen;
+        set => SetProperty(ref _isSettingsOpen, value);
+    }
+
     public string DeleteConfirmMessage
     {
         get => _deleteConfirmMessage;
@@ -235,6 +245,7 @@ public class MainViewModel : ViewModelBase
     public ICommand CancelModalCommand { get; }
     public ICommand ViewLogsCommand { get; }
     public ICommand OpenSettingsCommand { get; }
+    public ICommand GoHomeCommand { get; }
     public ICommand ExecuteBackupCommand { get; }
     public ICommand ExecuteSelectedCommand { get; }
     public ICommand AddSourcePathCommand { get; }
@@ -401,6 +412,14 @@ public class MainViewModel : ViewModelBase
         foreach (var job in BackupJobs.Where(j => j.IsSelected))
             ExecuteOrderJobs.Add(job);
         if (ExecuteOrderJobs.Count == 0) return;
+
+        // If only 1 task selected, skip the order popup and execute directly
+        if (ExecuteOrderJobs.Count == 1)
+        {
+            ConfirmExecuteOrder();
+            return;
+        }
+
         UpdateOrderIndices();
         IsExecuteOrderOpen = true;
     }
@@ -467,7 +486,13 @@ public class MainViewModel : ViewModelBase
 
     private void OpenSettings()
     {
-        // TODO: Implement settings view
+        SettingsVM.LoadSettings();
+        IsSettingsOpen = true;
+    }
+
+    private void GoHome()
+    {
+        IsSettingsOpen = false;
     }
 
     private async void ExecuteBackup()

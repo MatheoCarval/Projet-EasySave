@@ -3,9 +3,9 @@
     "Id": "0a955bec-95ea-4b6e-8845-5b140320bbd3",
     "Name": "--dark",
     "SourcePath": [
-      "--dark"
+      "C:\\Users\\allan\\OneDrive\\Bureau\\SW\\Projet-EasySave\\.github\\workflows"
     ],
-    "TargetPath": "--dark",
+    "TargetPath": "C:\\Users\\allan\\Music",
     "BackupType": 0,
     "BackupState": 4,
     "LastExecution": "0001-01-01T00:00:00",
