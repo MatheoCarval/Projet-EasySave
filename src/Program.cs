@@ -81,6 +81,16 @@ public class Program
         }
         catch (Exception ex)
         {
+            // Log to file for WinExe scenarios where console isn't visible
+            try
+            {
+                var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                Directory.CreateDirectory(logDir);
+                File.AppendAllText(Path.Combine(logDir, "error.log"),
+                    $"[{DateTime.Now}] {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n\n");
+            }
+            catch { }
+
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{T("error")}: {ex.Message}");
             Console.ResetColor();
