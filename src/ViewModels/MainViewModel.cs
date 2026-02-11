@@ -931,6 +931,7 @@ public class MainViewModel : ViewModelBase
     public string HelpSettingsLogFormat => T("help_settings_log_format");
     public string HelpSettingsLogPath => T("help_settings_log_path");
     public string HelpSettingsStatePath => T("help_settings_state_path");
+    public string HelpSettingsBlockedApps => T("help_settings_blocked_apps");
     public string HelpLogs => T("help_logs");
     public string HelpLogsDesc => T("help_logs_desc");
     public string HelpLogsTip => T("help_logs_tip");

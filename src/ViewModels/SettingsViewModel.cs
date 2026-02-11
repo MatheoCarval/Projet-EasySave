@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Input;
 using EasyLog.Enums;
 using EasySave.Services;
@@ -20,6 +22,7 @@ public class SettingsViewModel : ViewModelBase
     private int _logFormatIndex;   // 0 = JSON, 1 = XML
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
+    private string _blockedApplicationsText = string.Empty;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
 
@@ -100,6 +103,18 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public string BlockedApplicationsText
+    {
+        get => _blockedApplicationsText;
+        set
+        {
+            if (SetProperty(ref _blockedApplicationsText, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
     public bool HasUnsavedChanges
     {
         get => _hasUnsavedChanges;
@@ -134,6 +149,11 @@ public class SettingsViewModel : ViewModelBase
     public string TxtStateDesc => T("gui_state_desc");
     public string TxtStatePath => T("gui_state_path");
     public string TxtStatePathDesc => T("gui_state_path_desc");
+    public string TxtBackup => T("gui_backup");
+    public string TxtBackupDesc => T("gui_backup_desc");
+    public string TxtBlockedApps => T("gui_blocked_apps");
+    public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
+    public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
     public string TxtAbout => T("gui_about");
     public string TxtAboutDesc => T("gui_about_desc");
     public string TxtVersion => T("gui_version");
@@ -193,6 +213,10 @@ public class SettingsViewModel : ViewModelBase
                 "EasySave", "state.json");
         OnPropertyChanged(nameof(StateFilePath));
 
+        var blockedApps = config.GetBlockedApplications();
+        _blockedApplicationsText = string.Join(Environment.NewLine, blockedApps);
+        OnPropertyChanged(nameof(BlockedApplicationsText));
+
         HasUnsavedChanges = false;
         SaveMessage = string.Empty;
     }
@@ -230,6 +254,7 @@ public class SettingsViewModel : ViewModelBase
             config.SetLanguage(langCode);
             config.SetLogFormat(format);
             config.SetDarkMode(_isDarkTheme);
+            config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
             if (!string.IsNullOrWhiteSpace(logPath))
                 config.SetLogFilePath(logPath);
             if (!string.IsNullOrWhiteSpace(statePath))
@@ -292,6 +317,11 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtStateDesc));
         OnPropertyChanged(nameof(TxtStatePath));
         OnPropertyChanged(nameof(TxtStatePathDesc));
+        OnPropertyChanged(nameof(TxtBackup));
+        OnPropertyChanged(nameof(TxtBackupDesc));
+        OnPropertyChanged(nameof(TxtBlockedApps));
+        OnPropertyChanged(nameof(TxtBlockedAppsDesc));
+        OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
         OnPropertyChanged(nameof(TxtAbout));
         OnPropertyChanged(nameof(TxtAboutDesc));
         OnPropertyChanged(nameof(TxtVersion));
@@ -304,6 +334,22 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtBrowse));
         OnPropertyChanged(nameof(TxtOn));
         OnPropertyChanged(nameof(TxtOff));
+    }
+
+    private static List<string> ParseBlockedApplications(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { ',', ';', '\n', '\r' };
+        return text
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(app => app.Trim())
+            .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     #endregion

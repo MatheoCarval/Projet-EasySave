@@ -139,7 +139,7 @@ public class Program
         var stateWriter = new StateWriter(statePath);
         var fileTransferService = new FileTransferService(logger, stateWriter);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter);
+        _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications());
     }
 
     /// <summary>

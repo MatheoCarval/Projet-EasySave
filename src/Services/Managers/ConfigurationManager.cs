@@ -1,6 +1,7 @@
 using EasyLog.Enums;
 using EasySave.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -68,6 +69,7 @@ namespace EasySave.Services.Managers
             {
                 Language = config.GetLanguage(),
                 LogFormat = config.GetLogFormat().ToString(),
+                BlockedApplications = config.GetBlockedApplications(),
                 LogFilePath = config.GetLogFilePath(),
                 StateFilePath = config.GetStateFilePath(),
                 DarkMode = config.GetDarkMode()
@@ -109,6 +111,8 @@ namespace EasySave.Services.Managers
                 config.SetLogFormat(logFormat);
             }
 
+            config.SetBlockedApplications(template.BlockedApplications ?? new List<string>());
+
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
             config.SetDarkMode(template.DarkMode);
@@ -133,6 +137,7 @@ namespace EasySave.Services.Managers
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
+            public List<string>? BlockedApplications { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
             public bool DarkMode { get; set; }

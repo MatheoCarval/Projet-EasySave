@@ -1103,6 +1103,48 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- ───── Backup Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#2226A69A">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#26A69A" Data="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h10v2H4v-2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtBackup}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtBackupDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Blocked Applications -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 2a10 10 0 100 20 10 10 0 000-20zm5 11H7v-2h10v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtBlockedApps}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtBlockedAppsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBox Text="{Binding BlockedApplicationsText}"
+                                         Watermark="{Binding TxtBlockedAppsPlaceholder}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="90"
+                                         CornerRadius="8"
+                                         Padding="12,10"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- ───── About Section ───── -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="16">
@@ -1441,6 +1483,7 @@
                                     <TextBlock Text="{Binding HelpSettingsLogFormat, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsLogPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsStatePath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsBlockedApps, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
