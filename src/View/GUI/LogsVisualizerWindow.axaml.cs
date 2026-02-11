@@ -8,7 +8,7 @@ using EasySave.ViewModels;
 
 namespace EasySave.View.GUI
 {
-    internal class LogsVisualizerWindow : Window
+    internal partial class LogsVisualizerWindow : Window
     {
     }
 }

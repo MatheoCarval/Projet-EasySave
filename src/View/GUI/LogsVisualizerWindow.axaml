@@ -2,17 +2,158 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:EasySave.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="2400" d:DesignHeight="1400"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="EasySave.View.GUI.LogsVisualizerWindow"
-        Icon="/Assets/app-icon.png"
-        Title="EasySave - Backup Manager"
+        Title="EasySave - Logs"
         Width="1200"
         Height="700"
         MinWidth="900"
         MinHeight="600"
-        Background="{DynamicResource AppBackground}">
+        Background="#FFFFFF">
 
-    <!-- TO DO PHILIPPE : ADD CONTENT -->
-    
+    <Grid ColumnDefinitions="100,*">
+        
+        <!-- Left Sidebar -->
+        <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
+            <StackPanel VerticalAlignment="Top" Margin="0,60,0,0">
+                
+                <!-- Logs Button (Active) -->
+                <Button Background="#E3F2FD" BorderThickness="0" Height="60" Width="100" 
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock Text="Logs" FontSize="14" FontWeight="Bold" Foreground="#2196F3"/>
+                </Button>
+                
+                <!-- Paramètres Button -->
+                <Button Background="Transparent" BorderThickness="0" Height="60" Width="100"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock Text="Paramètres" FontSize="14" Foreground="#666666"/>
+                </Button>
+                
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Navigation Bar -->
+            <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                    
+                    <!-- Maison Tab -->
+                    <Border Background="Transparent" Padding="20,0" Height="60">
+                        <TextBlock Text="Maison" FontSize="16" Foreground="#666666" 
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <!-- Journalier Tab (Active) -->
+                    <Border Background="#F0F0F0" Padding="20,0" Height="60" BorderBrush="#2196F3" 
+                            BorderThickness="0,0,0,3">
+                        <TextBlock Text="Journalier" FontSize="16" FontWeight="Bold" Foreground="#333333" 
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <!-- Etat Tab -->
+                    <Border Background="Transparent" Padding="20,0" Height="60">
+                        <TextBlock Text="Etat" FontSize="16" Foreground="#666666" 
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    
+                </StackPanel>
+            </Border>
+
+            <!-- Main Content -->
+            <Grid Grid.Row="1" Background="#FAFAFA" ColumnDefinitions="300,*">
+                
+                <!-- Left Panel - Date List -->
+                <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="5">
+                            
+                            <!-- Date Entry 1 -->
+                            <Expander IsExpanded="True" Background="White" Margin="0,5">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="10/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <Expander.Content>
+                                    <Border Padding="20,10" Background="#F9F9F9">
+                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                    </Border>
+                                </Expander.Content>
+                            </Expander>
+                            
+                            <!-- Date Entry 2 -->
+                            <Expander IsExpanded="False" Background="White" Margin="0,5">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="09/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <Expander.Content>
+                                    <Border Padding="20,10" Background="#F9F9F9">
+                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                    </Border>
+                                </Expander.Content>
+                            </Expander>
+                            
+                            <!-- Date Entry 3 -->
+                            <Expander IsExpanded="False" Background="White" Margin="0,5">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="08/03/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <Expander.Content>
+                                    <Border Padding="20,10" Background="#F9F9F9">
+                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                    </Border>
+                                </Expander.Content>
+                            </Expander>
+                            
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Right Panel - JSON Content -->
+                <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
+                        BorderBrush="#E0E0E0" BorderThickness="1">
+                    <Grid RowDefinitions="Auto,*">
+                        
+                        <!-- Header -->
+                        <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                   Margin="0,0,0,15" Foreground="#333333"/>
+                        
+                        <!-- JSON Content Area -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" 
+                                      HorizontalScrollBarVisibility="Auto">
+                            <Border Background="#F5F5F5" Padding="15" BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock FontFamily="Consolas" FontSize="13" Foreground="#333333" 
+                                           TextWrapping="Wrap" xml:space="preserve">{
+  "timestamp": "2026-02-10T14:30:00",
+  "backupName": "Backup_Documents",
+  "sourcePath": "C:\Users\Documents",
+  "targetPath": "D:\Backups\Documents",
+  "fileSize": "2.5 GB",
+  "transferTime": "00:03:45",
+  "status": "Completed"
+}</TextBlock>
+                            </Border>
+                        </ScrollViewer>
+                        
+                    </Grid>
+                </Border>
+
+            </Grid>
+
+        </Grid>
+        
+    </Grid>
 </Window>

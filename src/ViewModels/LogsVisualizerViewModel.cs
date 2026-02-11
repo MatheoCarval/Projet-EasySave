@@ -17,24 +17,19 @@ namespace EasySave.ViewModels
         /// <returns></returns>
         public string getLogsJsonContent()
         {
-
             return "";
         }
 
-        private string logText;
+        private string logText = "";
 
         public string LogText
         {
-            get { return logText; }
+            get { return logText ?? ""; }
             set
             {
                 logText = value;
                 OnPropertyChanged(nameof(LogText));
             }
-
         }
-
     }
-
-
 }
