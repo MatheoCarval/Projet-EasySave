@@ -1,0 +1,18 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:EasySave.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="2400" d:DesignHeight="1400"
+        x:Class="EasySave.View.GUI.LogsVisualizerWindow"
+        Icon="/Assets/app-icon.png"
+        Title="EasySave - Backup Manager"
+        Width="1200"
+        Height="700"
+        MinWidth="900"
+        MinHeight="600"
+        Background="{DynamicResource AppBackground}">
+
+    <!-- TO DO PHILIPPE : ADD CONTENT -->
+    
+</Window>
