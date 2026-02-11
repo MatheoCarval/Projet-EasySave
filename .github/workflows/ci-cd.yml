@@ -278,6 +278,9 @@ jobs:
           TAG="${{ needs.version.outputs.tag }}"
           VERSION="${{ steps.ver.outputs.prefix }}"
 
+          # Find the executable name
+          EXE_NAME=$(ls publish/*.exe | head -n1 | xargs basename)
+
           cat > installer.wxs << 'WXSEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
@@ -291,20 +294,30 @@ jobs:
 
               <StandardDirectory Id="ProgramFiles6432Folder">
                 <Directory Id="INSTALLFOLDER" Name="EasySave">
-                  <Component Id="MainExecutable" Guid="A1B2C3D4-E5F6-4A7B-8C9D-E0F1A2B3C4D5">
-                    <File Source="publish\EasySave.exe" />
+                  <Component Id="ApplicationFiles" Guid="A1B2C3D4-E5F6-4A7B-8C9D-E0F1A2B3C4D5">
+                    <File Id="MainExe" Source="publish\$(var.ExeName)" KeyPath="yes">
+                      <Shortcut Id="StartMenuShortcut"
+                                Directory="ProgramMenuFolder"
+                                Name="EasySave"
+                                WorkingDirectory="INSTALLFOLDER"
+                                Icon="AppIcon.exe"
+                                IconIndex="0"
+                                Advertise="yes" />
+                    </File>
                   </Component>
                 </Directory>
               </StandardDirectory>
 
+              <Icon Id="AppIcon.exe" SourceFile="publish\$(var.ExeName)" />
+
               <Feature Id="Complete" Level="1">
-                <ComponentRef Id="MainExecutable" />
+                <ComponentRef Id="ApplicationFiles" />
               </Feature>
             </Package>
           </Wix>
           WXSEOF
 
-          wix build installer.wxs -d Version="${VERSION}" -o "EasySave-${TAG}-win-x64.msi"
+          wix build installer.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
 
       # ── macOS Installer (.dmg) ──
       - name: Install create-dmg
@@ -316,6 +329,7 @@ jobs:
         run: |
           TAG="${{ needs.version.outputs.tag }}"
           RID="${{ matrix.rid }}"
+          VERSION="${{ steps.ver.outputs.prefix }}"
 
           # Prepare .app bundle structure
           mkdir -p EasySave.app/Contents/MacOS
@@ -336,28 +350,57 @@ jobs:
             <key>CFBundleName</key>
             <string>EasySave</string>
             <key>CFBundleVersion</key>
-            <string>${{ steps.ver.outputs.prefix }}</string>
+            <string>${VERSION}</string>
             <key>CFBundleShortVersionString</key>
-            <string>${{ steps.ver.outputs.prefix }}</string>
+            <string>${VERSION}</string>
             <key>CFBundlePackageType</key>
             <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
           </dict>
           </plist>
           PLISTEOF
 
+          # Ad-hoc code signing (allows local execution without Gatekeeper warning)
+          codesign --force --deep --sign - EasySave.app
+
+          # Create README with installation instructions
+          cat > INSTALL.txt << READMEOF
+          Installation Instructions for EasySave
+          =======================================
+
+          This application is not signed with an Apple Developer certificate.
+
+          To install:
+          1. Drag EasySave.app to your Applications folder
+          2. Right-click on EasySave.app and select "Open"
+          3. Click "Open" in the security dialog
+
+          Or use Terminal:
+             xattr -d com.apple.quarantine /Applications/EasySave.app
+
+          After first launch, you can open it normally from Launchpad or Finder.
+          READMEOF
+
           create-dmg \
-            --volname "EasySave" \
-            --window-size 600 400 \
+            --volname "EasySave Installer" \
+            --window-size 600 450 \
             --icon-size 100 \
-            --icon "EasySave.app" 150 200 \
-            --app-drop-link 450 200 \
+            --text-size 12 \
+            --icon "EasySave.app" 150 150 \
+            --hide-extension "EasySave.app" \
+            --app-drop-link 450 150 \
+            --add-file "INSTALL.txt" "INSTALL.txt" 300 300 \
             "EasySave-${TAG}-${RID}.dmg" \
-            EasySave.app/ || true
+            EasySave.app/ INSTALL.txt || true
 
           # Fallback to hdiutil if create-dmg fails
           if [ ! -f "EasySave-${TAG}-${RID}.dmg" ]; then
-            hdiutil create -volname "EasySave" \
-              -srcfolder EasySave.app/ \
+            mkdir -p dmg-contents
+            cp -r EasySave.app dmg-contents/
+            cp INSTALL.txt dmg-contents/
+            hdiutil create -volname "EasySave Installer" \
+              -srcfolder dmg-contents \
               -ov -format UDZO \
               "EasySave-${TAG}-${RID}.dmg"
           fi
