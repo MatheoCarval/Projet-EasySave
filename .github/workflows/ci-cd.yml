@@ -146,10 +146,12 @@ jobs:
 
       - name: Build Release
         run: |
+          VERSION="${{ steps.get_latest_tag.outputs.tag }}"
+          VERSION_NUMBER=${VERSION#v}
           dotnet publish src/EasySave.csproj \
             -c Release \
             -o ./publish \
-            /p:Version=${{ steps.get_latest_tag.outputs.tag }}
+            /p:Version=${VERSION_NUMBER}
 
       - name: Create Release Archive
         run: |
@@ -212,10 +214,16 @@ jobs:
 
       - name: Build Pre-release
         run: |
+          VERSION="${{ steps.get_beta_tag.outputs.tag }}"
+          VERSION_NUMBER=${VERSION#v}
+          # Extract base version and suffix for beta builds
+          BASE_VERSION=$(echo "${VERSION_NUMBER}" | cut -d'-' -f1)
+          SUFFIX=$(echo "${VERSION_NUMBER}" | cut -d'-' -f2-)
           dotnet publish src/EasySave.csproj \
             -c Release \
             -o ./publish \
-            /p:Version=${{ steps.get_beta_tag.outputs.tag }}
+            /p:VersionPrefix=${BASE_VERSION} \
+            /p:VersionSuffix=${SUFFIX}
 
       - name: Create Pre-release Archive
         run: |
