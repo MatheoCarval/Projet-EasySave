@@ -99,8 +99,8 @@ jobs:
           set -euo pipefail
 
           # ── Latest stable tag (ignore betas) ──
-          LATEST_STABLE=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname \
-                          | grep -vE "beta|alpha|rc" | head -n1)
+          LATEST_STABLE=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname 2>/dev/null \
+                          | grep -vE "beta|alpha|rc" 2>/dev/null | head -n1 || true)
           [[ -z "$LATEST_STABLE" ]] && LATEST_STABLE="v0.0.0"
 
           VERSION="${LATEST_STABLE#v}"
@@ -114,11 +114,11 @@ jobs:
             if git rev-parse "$LATEST_STABLE" >/dev/null 2>&1; then
               LOGS=$(git log "${LATEST_STABLE}..HEAD" --pretty=format:"%s%n%b" 2>/dev/null || true)
             else
-              LOGS=$(git log --pretty=format:"%s%n%b")
+              LOGS=$(git log --pretty=format:"%s%n%b" 2>/dev/null || true)
             fi
 
-            if echo "$LOGS" | grep -qE "BREAKING CHANGE:" || \
-               echo "$LOGS" | grep -qE "^[a-z]+(\([a-z]+\))?!:"; then
+            if echo "$LOGS" | grep -qE "BREAKING CHANGE:" 2>/dev/null || \
+               echo "$LOGS" | grep -qE "^[a-z]+(\([a-z]+\))?!:" 2>/dev/null; then
               BREAKING=true
             fi
 
@@ -135,11 +135,12 @@ jobs:
             PATCH=$((PATCH + 1))
             BASE="${MAJOR}.${MINOR}.${PATCH}"
 
-            LATEST_BETA=$(git tag -l "v${BASE}-beta.*" --sort=-v:refname | head -n1)
+            LATEST_BETA=$(git tag -l "v${BASE}-beta.*" --sort=-v:refname 2>/dev/null | head -n1 || true)
             if [[ -z "$LATEST_BETA" ]]; then
               BETA_NUM=1
             else
               BETA_NUM=$(echo "$LATEST_BETA" | sed -n 's/.*-beta\.\([0-9]*\)/\1/p')
+              [[ -z "$BETA_NUM" ]] && BETA_NUM=0
               BETA_NUM=$((BETA_NUM + 1))
             fi
 
