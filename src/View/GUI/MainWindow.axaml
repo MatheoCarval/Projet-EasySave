@@ -30,6 +30,18 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
         </Style>
+        
+        <!-- Hover effects for tab borders -->
+        <Style Selector="Border.LogTab:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        
+        <!-- Hover effects for job items -->
+        <Style Selector="Border.JobItem:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
     </Window.Styles>
 
     <Grid>
@@ -70,17 +82,23 @@
                     <Border Grid.Row="1"/>
 
                     <!-- View Logs Button -->
-                    <Button Grid.Row="2"
-                            Classes="SidebarButton"
-                            Command="{Binding ViewLogsCommand}"
-                            ToolTip.Tip="View Logs"
-                            Margin="12,8">
-                        <Viewbox Width="32" Height="32">
-                            <Canvas Width="24" Height="24">
-                                <Path Fill="{DynamicResource SidebarIcon}" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
+                    <Grid Grid.Row="2" Margin="12,8">
+                        <Button Classes="SidebarButton"
+                                Command="{Binding ViewLogsCommand}"
+                                ToolTip.Tip="View Logs">
+                            <Viewbox Width="32" Height="32">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{DynamicResource SidebarIcon}" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Button>
+                        <!-- Active indicator -->
+                        <Border Height="3" Width="28" CornerRadius="1.5"
+                                Background="{DynamicResource AccentBlue}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                IsVisible="{Binding IsLogsOpen}"/>
+                    </Grid>
 
                     <!-- Settings Button -->
                     <Grid Grid.Row="3" Margin="12,8">
@@ -1245,6 +1263,233 @@
             </ScrollViewer>
 
             </DockPanel> <!-- End Settings DockPanel -->
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- Logs Panel -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <Grid Grid.Column="1" IsVisible="{Binding IsLogsOpen}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top Navigation Bar -->
+                <Border Grid.Row="0" Background="{DynamicResource CardBackground}" 
+                        BorderBrush="{DynamicResource ClickableCardBorder}" 
+                        BorderThickness="0,0,0,1"
+                        Name="LogsTabBar">
+                    <Grid ColumnDefinitions="*,*">
+                        
+                        <!-- Journalier Tab -->
+                        <Border Grid.Column="0" Background="{DynamicResource AppBackground}" Height="60" 
+                                BorderBrush="{DynamicResource AccentBlue}" 
+                                BorderThickness="0,0,0,3"
+                                Name="JournalierTabBorder"
+                                Classes="LogTab">
+                            <TextBlock Text="Journalier" FontSize="16" FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextPrimary}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       PointerPressed="JournalierTab_Clicked"/>
+                        </Border>
+                        
+                        <!-- Etat Tab -->
+                        <Border Grid.Column="1" Background="Transparent" Height="60"
+                                Name="EtatTabBorder"
+                                Classes="LogTab">
+                            <TextBlock Text="Etat" FontSize="16" 
+                                       Foreground="{DynamicResource TextSecondary}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       PointerPressed="EtatTab_Clicked"/>
+                        </Border>
+                        
+                    </Grid>
+                </Border>
+
+                <!-- Journalier Content -->
+                <Grid Grid.Row="1" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
+                      Name="JournalierContent">
+                    
+                    <!-- Left Panel - Date List -->
+                    <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
+                            BorderBrush="{DynamicResource ClickableCardBorder}" 
+                            BorderThickness="0,0,1,0" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="5">
+                                
+                                <!-- Date Entry 1 -->
+                                <Expander IsExpanded="False" Background="{DynamicResource CardBackground}" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                            <TextBlock Text="10/02/2026" FontSize="14" FontWeight="SemiBold" 
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="{DynamicResource AppBackground}">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" 
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                                <!-- Date Entry 2 -->
+                                <Expander IsExpanded="False" Background="{DynamicResource CardBackground}" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                            <TextBlock Text="09/02/2026" FontSize="14" FontWeight="SemiBold" 
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="{DynamicResource AppBackground}">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" 
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                                <!-- Date Entry 3 -->
+                                <Expander IsExpanded="False" Background="{DynamicResource CardBackground}" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                            <TextBlock Text="08/03/2026" FontSize="14" FontWeight="SemiBold" 
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="{DynamicResource AppBackground}">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" 
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Right Panel - JSON Content -->
+                    <Border Grid.Column="1" Background="{DynamicResource CardBackground}" Margin="20" Padding="20" 
+                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" 
+                            CornerRadius="12">
+                        <Grid RowDefinitions="Auto,*">
+                            
+                            <!-- Header -->
+                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                       Margin="0,0,0,15" Foreground="{DynamicResource TextPrimary}"/>
+                            
+                            <!-- Placeholder when no date selected -->
+                            <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
+                                    BorderBrush="{DynamicResource ClickableCardBorder}" 
+                                    BorderThickness="1" CornerRadius="8">
+                                <TextBlock Text="Déplier une journalisation" 
+                                           FontSize="14" Foreground="{DynamicResource TextSecondary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+                <!-- Etat Content -->
+                <Grid Grid.Row="1" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
+                      Name="EtatContent" IsVisible="False">
+                    
+                    <!-- Left Panel - Job List -->
+                    <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
+                            BorderBrush="{DynamicResource ClickableCardBorder}" 
+                            BorderThickness="0,0,1,0" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="5">
+                                
+                                <!-- Job Entry 1 -->
+                                <Border Background="{DynamicResource CardBackground}" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="test">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="test" FontSize="14" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 2 -->
+                                <Border Background="{DynamicResource CardBackground}" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="TEST MID">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="TEST MID" FontSize="14" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 3 -->
+                                <Border Background="{DynamicResource CardBackground}" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="tessthhhhhdqqsdqsdqsdqsd">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="tessthhhhhdqqsdqsdqsdqsd" FontSize="14" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 4 -->
+                                <Border Background="{DynamicResource CardBackground}" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="qdhbh">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="qdhbh" FontSize="14" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Right Panel - JSON Content -->
+                    <Border Grid.Column="1" Background="{DynamicResource CardBackground}" Margin="20" Padding="20" 
+                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" 
+                            CornerRadius="12">
+                        <Grid RowDefinitions="Auto,*" Name="EtatJsonGrid">
+                            
+                            <!-- Header -->
+                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                       Margin="0,0,0,15" Foreground="{DynamicResource TextPrimary}"/>
+                            
+                            <!-- Placeholder when no job selected -->
+                            <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
+                                    BorderBrush="{DynamicResource ClickableCardBorder}" 
+                                    BorderThickness="1" CornerRadius="8">
+                                <TextBlock Text="Sélectionnez un job" 
+                                           FontSize="14" Foreground="{DynamicResource TextSecondary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+            </Grid>
 
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!-- Help Panel -->

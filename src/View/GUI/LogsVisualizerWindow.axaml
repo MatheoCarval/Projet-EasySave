@@ -11,6 +11,20 @@
         MinHeight="600"
         Background="#FFFFFF">
 
+    <Window.Styles>
+        <!-- Hover effects for tab borders -->
+        <Style Selector="Border.LogTab:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        
+        <!-- Hover effects for job items -->
+        <Style Selector="Border.JobItem:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Styles>
+
     <Grid ColumnDefinitions="100,*">
         
         <!-- Left Sidebar -->
@@ -33,127 +47,196 @@
         </Border>
 
         <!-- Main Content Area -->
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="60"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <Grid Grid.Column="1" RowDefinitions="60,*">
 
-            <!-- Top Navigation Bar -->
+            <!-- Top Navigation Bar (Always Visible) -->
             <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
-                    
-                    <!-- Maison Tab -->
-                    <Border Background="Transparent" Padding="20,0" Height="60">
-                        <TextBlock Text="Maison" FontSize="16" Foreground="#666666" 
-                                   VerticalAlignment="Center"/>
-                    </Border>
+                <Grid ColumnDefinitions="*,*">
                     
                     <!-- Journalier Tab (Active) -->
-                    <Border Background="#F0F0F0" Padding="20,0" Height="60" BorderBrush="#2196F3" 
-                            BorderThickness="0,0,0,3">
+                    <Border Grid.Column="0" Background="#F0F0F0" Height="60" BorderBrush="#2196F3" 
+                            BorderThickness="0,0,0,3"
+                            Name="JournalierTabBorder"
+                            Classes="LogTab"
+                            PointerPressed="JournalierTab_Clicked">
                         <TextBlock Text="Journalier" FontSize="16" FontWeight="Bold" Foreground="#333333" 
-                                   VerticalAlignment="Center"/>
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
                     <!-- Etat Tab -->
-                    <Border Background="Transparent" Padding="20,0" Height="60">
+                    <Border Grid.Column="1" Background="Transparent" Height="60"
+                            Name="EtatTabBorder"
+                            Classes="LogTab"
+                            PointerPressed="EtatTab_Clicked">
                         <TextBlock Text="Etat" FontSize="16" Foreground="#666666" 
-                                   VerticalAlignment="Center"/>
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <!-- Main Content -->
-            <Grid Grid.Row="1" Background="#FAFAFA" ColumnDefinitions="300,*">
+            <!-- Content Container -->
+            <Grid Grid.Row="1">
                 
-                <!-- Left Panel - Date List -->
-                <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="5">
-                            
-                            <!-- Date Entry 1 -->
-                            <Expander IsExpanded="True" Background="White" Margin="0,5">
-                                <Expander.Header>
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="10/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Expander.Header>
-                                <Expander.Content>
-                                    <Border Padding="20,10" Background="#F9F9F9">
-                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                    </Border>
-                                </Expander.Content>
-                            </Expander>
-                            
-                            <!-- Date Entry 2 -->
-                            <Expander IsExpanded="False" Background="White" Margin="0,5">
-                                <Expander.Header>
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="09/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Expander.Header>
-                                <Expander.Content>
-                                    <Border Padding="20,10" Background="#F9F9F9">
-                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                    </Border>
-                                </Expander.Content>
-                            </Expander>
-                            
-                            <!-- Date Entry 3 -->
-                            <Expander IsExpanded="False" Background="White" Margin="0,5">
-                                <Expander.Header>
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="08/03/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Expander.Header>
-                                <Expander.Content>
-                                    <Border Padding="20,10" Background="#F9F9F9">
-                                        <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                    </Border>
-                                </Expander.Content>
-                            </Expander>
-                            
-                        </StackPanel>
-                    </ScrollViewer>
-                </Border>
-
-                <!-- Right Panel - JSON Content -->
-                <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
-                        BorderBrush="#E0E0E0" BorderThickness="1">
-                    <Grid RowDefinitions="Auto,*">
-                        
-                        <!-- Header -->
-                        <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
-                                   Margin="0,0,0,15" Foreground="#333333"/>
-                        
-                        <!-- JSON Content Area -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" 
-                                      HorizontalScrollBarVisibility="Auto">
-                            <Border Background="#F5F5F5" Padding="15" BorderBrush="#E0E0E0" BorderThickness="1">
-                                <TextBlock FontFamily="Consolas" FontSize="13" Foreground="#333333" 
-                                           TextWrapping="Wrap" xml:space="preserve">{
-  "timestamp": "2026-02-10T14:30:00",
-  "backupName": "Backup_Documents",
-  "sourcePath": "C:\Users\Documents",
-  "targetPath": "D:\Backups\Documents",
-  "fileSize": "2.5 GB",
-  "transferTime": "00:03:45",
-  "status": "Completed"
-}</TextBlock>
-                            </Border>
+                <!-- Journalier Content -->
+                <Grid Background="#FAFAFA" ColumnDefinitions="300,*" Name="JournalierContent">
+                    
+                    <!-- Left Panel - Date List -->
+                    <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="5">
+                                
+                                <!-- Date Entry 1 -->
+                                <Expander IsExpanded="False" Background="White" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="10/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="#F9F9F9">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                                <!-- Date Entry 2 -->
+                                <Expander IsExpanded="False" Background="White" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="09/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="#F9F9F9">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                                <!-- Date Entry 3 -->
+                                <Expander IsExpanded="False" Background="White" Margin="0,5">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal" Height="40">
+                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="08/03/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Expander.Content>
+                                        <Border Padding="20,10" Background="#F9F9F9">
+                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
+                                        </Border>
+                                    </Expander.Content>
+                                </Expander>
+                                
+                            </StackPanel>
                         </ScrollViewer>
-                        
-                    </Grid>
-                </Border>
+                    </Border>
 
+                    <!-- Right Panel - JSON Content -->
+                    <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
+                            BorderBrush="#E0E0E0" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,*">
+                            
+                            <!-- Header -->
+                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                       Margin="0,0,0,15" Foreground="#333333"/>
+                            
+                            <!-- Placeholder when no date selected -->
+                            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Déplier une journalisation" 
+                                           FontSize="14" Foreground="#999999"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+                <!-- Etat Content -->
+                <Grid Background="#FAFAFA" ColumnDefinitions="300,*" Name="EtatContent" IsVisible="False">
+                    
+                    <!-- Left Panel - Job List -->
+                    <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="5">
+                                
+                                <!-- Job Entry 1 -->
+                                <Border Background="White" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="test">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="test" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 2 -->
+                                <Border Background="White" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="TEST MID">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="TEST MID" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 3 -->
+                                <Border Background="White" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="tessthhhhhdqqsdqsdqsdqsd">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="tessthhhhhdqqsdqsdqsdqsd" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Job Entry 4 -->
+                                <Border Background="White" Margin="0,5" 
+                                        Padding="10" CornerRadius="5"
+                                        Classes="JobItem"
+                                        PointerPressed="JobItem_Clicked" Tag="qdhbh">
+                                    <StackPanel Orientation="Horizontal" Height="40">
+                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="qdhbh" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Right Panel - JSON Content -->
+                    <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
+                            BorderBrush="#E0E0E0" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,*" Name="EtatJsonGrid">
+                            
+                            <!-- Header -->
+                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                       Margin="0,0,0,15" Foreground="#333333"/>
+                            
+                            <!-- Placeholder when no job selected -->
+                            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Sélectionnez un job" 
+                                           FontSize="14" Foreground="#999999"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            
+                        </Grid>
+                    </Border>
+
+                </Grid>
+                
             </Grid>
 
         </Grid>
-        
+
     </Grid>
+
 </Window>

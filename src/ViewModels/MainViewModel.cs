@@ -27,6 +27,7 @@ public class MainViewModel : ViewModelBase
     private string _deleteConfirmMessage = string.Empty;
     private bool _isSettingsOpen;
     private bool _isHelpOpen;
+    private bool _isLogsOpen;
     private string _toastMessage = string.Empty;
     private bool _isToastVisible;
     private DispatcherTimer? _toastTimer;
@@ -253,13 +254,25 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    public bool IsLogsOpen
+    {
+        get => _isLogsOpen;
+        set
+        {
+            if (SetProperty(ref _isLogsOpen, value))
+            {
+                OnPropertyChanged(nameof(IsHomeActive));
+            }
+        }
+    }
+
     public string DeleteConfirmMessage
     {
         get => _deleteConfirmMessage;
         set => SetProperty(ref _deleteConfirmMessage, value);
     }
 
-    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen;
+    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen && !IsLogsOpen;
 
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
@@ -533,7 +546,9 @@ public class MainViewModel : ViewModelBase
 
     private void ViewLogs()
     {
-        // TODO: Implement logs view
+        IsSettingsOpen = false;
+        IsHelpOpen = false;
+        IsLogsOpen = true;
     }
 
     private void OpenSettings()
@@ -541,6 +556,7 @@ public class MainViewModel : ViewModelBase
         SettingsVM.LoadSettings();
         _isHelpOpen = false;
         OnPropertyChanged(nameof(IsHelpOpen));
+        IsLogsOpen = false;
         IsSettingsOpen = true;
     }
 
@@ -548,6 +564,7 @@ public class MainViewModel : ViewModelBase
     {
         _isSettingsOpen = false;
         OnPropertyChanged(nameof(IsSettingsOpen));
+        IsLogsOpen = false;
         IsHelpOpen = true;
         RefreshHelpTranslations();
     }
@@ -556,6 +573,7 @@ public class MainViewModel : ViewModelBase
     {
         IsSettingsOpen = false;
         IsHelpOpen = false;
+        IsLogsOpen = false;
     }
 
     private async void ExecuteBackup()
