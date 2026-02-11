@@ -43,7 +43,7 @@ public class Program
                     var ex = e.ExceptionObject as Exception;
                     var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
                     Directory.CreateDirectory(logDir);
-                    File.AppendAllText(Path.Combine(logDir, "crash.log"), 
+                    File.AppendAllText(Path.Combine(logDir, "crash.log"),
                         $"[{DateTime.Now}] {ex?.GetType().Name}: {ex?.Message}\n{ex?.StackTrace}\n\n");
                 }
                 catch { }
