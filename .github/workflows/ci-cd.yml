@@ -185,21 +185,12 @@ jobs:
             /p:Version=${VERSION_NUMBER} \
             /p:PublishSingleFile=true
           
-          # Build for RHEL/Linux x64
+          # Build for Linux x64 (RHEL, Debian, Ubuntu, etc.)
           dotnet publish src/EasySave.csproj \
             -c Release \
-            -r rhel-x64 \
+            -r linux-x64 \
             --self-contained true \
-            -o ./publish/rhel-x64 \
-            /p:Version=${VERSION_NUMBER} \
-            /p:PublishSingleFile=true
-          
-          # Build for Debian/Linux x64
-          dotnet publish src/EasySave.csproj \
-            -c Release \
-            -r debian-x64 \
-            --self-contained true \
-            -o ./publish/debian-x64 \
+            -o ./publish/linux-x64 \
             /p:Version=${VERSION_NUMBER} \
             /p:PublishSingleFile=true
           
@@ -230,14 +221,9 @@ jobs:
           zip -r ../../EasySave-${TAG}-win-x64.zip .
           cd ../..
           
-          # RHEL
-          cd publish/rhel-x64
-          tar -czf ../../EasySave-${TAG}-rhel-x64.tar.gz .
-          cd ../..
-          
-          # Debian
-          cd publish/debian-x64
-          tar -czf ../../EasySave-${TAG}-debian-x64.tar.gz .
+          # Linux
+          cd publish/linux-x64
+          tar -czf ../../EasySave-${TAG}-linux-x64.tar.gz .
           cd ../..
           
           # macOS x64
@@ -274,8 +260,7 @@ jobs:
           prerelease: false
           files: |
             EasySave-${{ steps.get_latest_tag.outputs.tag }}-win-x64.zip
-            EasySave-${{ steps.get_latest_tag.outputs.tag }}-rhel-x64.tar.gz
-            EasySave-${{ steps.get_latest_tag.outputs.tag }}-debian-x64.tar.gz
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-linux-x64.tar.gz
             EasySave-${{ steps.get_latest_tag.outputs.tag }}-osx-x64.tar.gz
             EasySave-${{ steps.get_latest_tag.outputs.tag }}-osx-arm64.tar.gz
         env:
@@ -325,22 +310,12 @@ jobs:
             /p:VersionSuffix=${SUFFIX} \
             /p:PublishSingleFile=true
           
-          # Build for RHEL/Linux x64
+          # Build for Linux x64 (RHEL, Debian, Ubuntu, etc.)
           dotnet publish src/EasySave.csproj \
             -c Release \
-            -r rhel-x64 \
+            -r linux-x64 \
             --self-contained true \
-            -o ./publish/rhel-x64 \
-            /p:VersionPrefix=${BASE_VERSION} \
-            /p:VersionSuffix=${SUFFIX} \
-            /p:PublishSingleFile=true
-          
-          # Build for Debian/Linux x64
-          dotnet publish src/EasySave.csproj \
-            -c Release \
-            -r debian-x64 \
-            --self-contained true \
-            -o ./publish/debian-x64 \
+            -o ./publish/linux-x64 \
             /p:VersionPrefix=${BASE_VERSION} \
             /p:VersionSuffix=${SUFFIX} \
             /p:PublishSingleFile=true
@@ -374,14 +349,9 @@ jobs:
           zip -r ../../EasySave-${TAG}-win-x64.zip .
           cd ../..
           
-          # RHEL
-          cd publish/rhel-x64
-          tar -czf ../../EasySave-${TAG}-rhel-x64.tar.gz .
-          cd ../..
-          
-          # Debian
-          cd publish/debian-x64
-          tar -czf ../../EasySave-${TAG}-debian-x64.tar.gz .
+          # Linux
+          cd publish/linux-x64
+          tar -czf ../../EasySave-${TAG}-linux-x64.tar.gz .
           cd ../..
           
           # macOS x64
@@ -410,8 +380,7 @@ jobs:
           prerelease: true
           files: |
             EasySave-${{ steps.get_beta_tag.outputs.tag }}-win-x64.zip
-            EasySave-${{ steps.get_beta_tag.outputs.tag }}-rhel-x64.tar.gz
-            EasySave-${{ steps.get_beta_tag.outputs.tag }}-debian-x64.tar.gz
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-linux-x64.tar.gz
             EasySave-${{ steps.get_beta_tag.outputs.tag }}-osx-x64.tar.gz
             EasySave-${{ steps.get_beta_tag.outputs.tag }}-osx-arm64.tar.gz
         env:
