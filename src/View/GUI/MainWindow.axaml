@@ -1412,47 +1412,45 @@
                 <StackPanel>
                     <!-- Header - In Progress -->
                     <Border CornerRadius="12,12,0,0"
-                            Padding="24,20"
+                            Padding="0"
                             IsVisible="{Binding !ProgressViewModel.IsCompleted}">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#2196F3" Offset="0"/>
-                                <GradientStop Color="#1565C0" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                            <Viewbox Width="22" Height="22" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="White" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock Text="Backup in Progress"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       Foreground="White"/>
+                        <StackPanel>
+                            <!-- Blue accent line -->
+                            <Border Height="4" CornerRadius="12,12,0,0" Background="#2196F3"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <Viewbox Width="22" Height="22" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#2196F3" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Backup in Progress"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#2196F3"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,0,0,0"/>
                         </StackPanel>
                     </Border>
 
                     <!-- Header - Completed -->
                     <Border CornerRadius="12,12,0,0"
-                            Padding="24,20"
+                            Padding="0"
                             IsVisible="{Binding ProgressViewModel.IsCompleted}">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4CAF50" Offset="0"/>
-                                <GradientStop Color="#2E7D32" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                            <Viewbox Width="24" Height="24" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock Text="Backup Complete"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       Foreground="White"/>
+                        <StackPanel>
+                            <!-- Green accent line -->
+                            <Border Height="4" CornerRadius="12,12,0,0" Background="#4CAF50"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Backup Complete"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#4CAF50"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,0,0,0"/>
                         </StackPanel>
                     </Border>
 
@@ -1597,18 +1595,18 @@
                 <StackPanel>
                     <!-- Header -->
                     <Border CornerRadius="16,16,0,0"
-                            Padding="24,18">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#2196F3" Offset="0"/>
-                                <GradientStop Color="#1565C0" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <TextBlock Text="Execution Order"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"/>
+                            Padding="0">
+                        <StackPanel>
+                            <!-- Blue accent line -->
+                            <Border Height="4" CornerRadius="16,16,0,0" Background="#2196F3"/>
+                            <TextBlock Text="Execution Order"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="#2196F3"
+                                       HorizontalAlignment="Center"
+                                       Margin="24,16,24,16"/>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}"/>
+                        </StackPanel>
                     </Border>
 
                     <StackPanel Margin="24,16" Spacing="12">
@@ -1749,24 +1747,23 @@
                 <StackPanel>
                     <!-- Header -->
                     <Border CornerRadius="16,16,0,0"
-                            Padding="24,18">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#F44336" Offset="0"/>
-                                <GradientStop Color="#C62828" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                            <Viewbox Width="22" Height="22" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="White" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock Text="Confirm Deletion"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       Foreground="White"
-                                       VerticalAlignment="Center"/>
+                            Padding="0">
+                        <StackPanel>
+                            <!-- Red accent line -->
+                            <Border Height="4" CornerRadius="16,16,0,0" Background="#F44336"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <Viewbox Width="22" Height="22" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#F44336" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Confirm Deletion"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#F44336"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}"/>
                         </StackPanel>
                     </Border>
 
