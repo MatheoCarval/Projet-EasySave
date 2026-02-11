@@ -20,7 +20,6 @@ public class SettingsViewModel : ViewModelBase
     private int _logFormatIndex;   // 0 = JSON, 1 = XML
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
-    private decimal _maxBackupJobs = 5;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
 
@@ -101,19 +100,6 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    public decimal MaxBackupJobs
-    {
-        get => _maxBackupJobs;
-        set
-        {
-            if (value < 1) value = 1;
-            if (SetProperty(ref _maxBackupJobs, value))
-            {
-                HasUnsavedChanges = true;
-            }
-        }
-    }
-
     public bool HasUnsavedChanges
     {
         get => _hasUnsavedChanges;
@@ -160,11 +146,6 @@ public class SettingsViewModel : ViewModelBase
     public string TxtBrowse => T("gui_browse");
     public string TxtOn => T("gui_on");
     public string TxtOff => T("gui_off");
-    public string TxtBackup => T("gui_backup");
-    public string TxtBackupDesc => T("gui_backup_desc");
-    public string TxtMaxJobs => T("gui_max_jobs");
-    public string TxtMaxJobsDesc => T("gui_max_jobs_desc");
-
     public string AppVersion => "2.0";
     public string DotNetVersion => $".NET {Environment.Version}";
     public string AvaloniaVersion => "11.0.10";
@@ -198,10 +179,6 @@ public class SettingsViewModel : ViewModelBase
         // Log format
         _logFormatIndex = config.GetLogFormat() == LogFormat.XML ? 1 : 0;
         OnPropertyChanged(nameof(LogFormatIndex));
-
-        // Max backup jobs
-        _maxBackupJobs = config.GetMaxBackupJobs();
-        OnPropertyChanged(nameof(MaxBackupJobs));
 
         // Paths
         _logFilePath = config.GetLogFilePath();
@@ -252,7 +229,6 @@ public class SettingsViewModel : ViewModelBase
             var config = _configManager.LoadConfiguration();
             config.SetLanguage(langCode);
             config.SetLogFormat(format);
-            config.SetMaxBackupJobs((int)_maxBackupJobs);
             config.SetDarkMode(_isDarkTheme);
             if (!string.IsNullOrWhiteSpace(logPath))
                 config.SetLogFilePath(logPath);
@@ -328,10 +304,6 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtBrowse));
         OnPropertyChanged(nameof(TxtOn));
         OnPropertyChanged(nameof(TxtOff));
-        OnPropertyChanged(nameof(TxtBackup));
-        OnPropertyChanged(nameof(TxtBackupDesc));
-        OnPropertyChanged(nameof(TxtMaxJobs));
-        OnPropertyChanged(nameof(TxtMaxJobsDesc));
     }
 
     #endregion

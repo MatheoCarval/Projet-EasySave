@@ -13,7 +13,6 @@ namespace EasySave.Models
     {
         private string Language { get; set; }
         private LogFormat LogFormat { get; set; }
-        private int MaxBackupJobs { get; set; }
         private string LogFilePath { get; set; }
         private string StateFilePath { get; set; }
         private bool DarkMode { get; set; }
@@ -22,7 +21,6 @@ namespace EasySave.Models
         {
             Language = "fr-FR";
             LogFormat = LogFormat.JSON;
-            MaxBackupJobs = int.MaxValue;
             LogFilePath = string.Empty;
             StateFilePath = string.Empty;
             DarkMode = false;
@@ -31,7 +29,6 @@ namespace EasySave.Models
         // Getters
         public string GetLanguage() => Language;
         public LogFormat GetLogFormat() => LogFormat;
-        public int GetMaxBackupJobs() => MaxBackupJobs;
         public string GetLogFilePath() => LogFilePath;
         public string GetStateFilePath() => StateFilePath;
         public bool GetDarkMode() => DarkMode;
@@ -47,13 +44,6 @@ namespace EasySave.Models
         public void SetLogFormat(LogFormat logFormat)
         {
             LogFormat = logFormat;
-        }
-
-        public void SetMaxBackupJobs(int maxJobs)
-        {
-            if (maxJobs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxJobs), "MaxBackupJobs must be greater than 0");
-            MaxBackupJobs = maxJobs;
         }
 
         public void SetLogFilePath(string path)
@@ -155,7 +145,6 @@ namespace EasySave.Models
                     if (config is not null &&
                         !string.IsNullOrWhiteSpace(config.Language) &&
                         Enum.TryParse<LogFormat>(config.LogFormat, out _) &&
-                        config.MaxBackupJobs > 0 &&
                         !string.IsNullOrWhiteSpace(config.LogFilePath) &&
                         !string.IsNullOrWhiteSpace(config.StateFilePath))
                     {
@@ -200,7 +189,6 @@ namespace EasySave.Models
             {
                 Language = "fr-FR",
                 LogFormat = LogFormat == LogFormat.JSON ? "JSON" : "XML",
-                MaxBackupJobs = 5,
                 LogFilePath = logPath,
                 StateFilePath = statePath,
                 DarkMode = false
@@ -238,7 +226,6 @@ namespace EasySave.Models
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
-            public int MaxBackupJobs { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
             public bool DarkMode { get; set; }

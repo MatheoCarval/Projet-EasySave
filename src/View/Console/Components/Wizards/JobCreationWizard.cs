@@ -70,16 +70,6 @@ public class JobCreationWizard
         _frame = frame;
         _onComplete = onComplete;
 
-        var jobs = _backupManager.GetAllJobs();
-        if (jobs.Count >= 5)
-        {
-            MessageBox.ErrorQuery(T("error"),
-                string.Format(T("error_max_jobs_reached"), 5),
-                T("ok"));
-            onComplete();
-            return;
-        }
-
         _jobName = "";
         _sources = new List<string>();
         _destination = "";

@@ -107,26 +107,6 @@ namespace EasySave.Tests.Services.Managers
         }
 
         /// <summary>
-        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed zero as the maximum jobs limit.
-        /// </summary>
-        [Fact]
-        public void Constructor_WithZeroMaxJobs_ThrowsArgumentOutOfRangeException()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _stateWriter, 0));
-        }
-
-        /// <summary>
-        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed negative value as the maximum jobs limit.
-        /// </summary>
-        [Fact]
-        public void Constructor_WithNegativeMaxJobs_ThrowsArgumentOutOfRangeException()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _stateWriter, -1));
-        }
-
-        /// <summary>
         /// Verifies that CreateJob with valid parameters successfully creates a new backup job and returns it with correct properties.
         /// </summary>
         [Fact]
@@ -153,21 +133,6 @@ namespace EasySave.Tests.Services.Managers
             var exception = Assert.Throws<ArgumentException>(() =>
                 manager.CreateJob("TestJob", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.COMPLETE));
             Assert.Contains("already exists", exception.Message);
-        }
-
-        /// <summary>
-        /// Verifies that CreateJob throws InvalidOperationException when attempting to create a job after reaching the maximum job limit.
-        /// </summary>
-        [Fact]
-        public void CreateJob_WhenMaxJobsReached_ThrowsInvalidOperationException()
-        {
-            var manager = new BackupManager(_fileTransferService, _stateWriter, maxJobs: 2);
-            manager.CreateJob("Job1", new List<string> { @"C:\Source1" }, @"C:\Target1", BackupType.COMPLETE);
-            manager.CreateJob("Job2", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.COMPLETE);
-
-            var exception = Assert.Throws<InvalidOperationException>(() =>
-                manager.CreateJob("Job3", new List<string> { @"C:\Source3" }, @"C:\Target3", BackupType.COMPLETE));
-            Assert.Contains("Maximum number of jobs", exception.Message);
         }
 
         /// <summary>
