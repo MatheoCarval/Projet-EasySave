@@ -42,7 +42,7 @@ public class BackupManager
     /// Service responsible for persisting and managing backup job state information.
     /// </summary>
     private readonly StateWriter _stateWriter;
-    private readonly List<string> _blockedApplications;
+    private List<string> _blockedApplications;
 
     const string JobsFilePath = "./Datas/jobs.json";
 
@@ -301,6 +301,14 @@ public class BackupManager
             .Where(app => !string.IsNullOrWhiteSpace(app))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    /// <summary>
+    /// Updates the list of blocked applications at runtime (e.g. after settings change).
+    /// </summary>
+    public void UpdateBlockedApplications(IEnumerable<string>? blockedApplications)
+    {
+        _blockedApplications = NormalizeBlockedApplications(blockedApplications);
     }
 
     private static string NormalizeProcessName(string name)

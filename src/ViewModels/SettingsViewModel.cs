@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
@@ -16,6 +18,10 @@ namespace EasySave.ViewModels;
 /// </summary>
 public class SettingsViewModel : ViewModelBase
 {
+    /// <summary>
+    /// Raised after settings are saved so other components can react immediately.
+    /// </summary>
+    public event EventHandler? SettingsSaved;
     private readonly ConfigurationManager _configManager;
     private bool _isDarkTheme;
     private int _languageIndex;    // 0 = English, 1 = Français
@@ -23,16 +29,20 @@ public class SettingsViewModel : ViewModelBase
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
     private string _blockedApplicationsText = string.Empty;
+    private string? _selectedDetectedApplication;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
 
     public SettingsViewModel()
     {
         _configManager = ConfigurationManager.GetInstance();
+        DetectedApplications = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
         ResetCommand = new RelayCommand(LoadSettings);
+        RefreshDetectedAppsCommand = new RelayCommand(RefreshDetectedApplications);
+        AddDetectedAppCommand = new RelayCommand(AddSelectedDetectedApplication, () => !string.IsNullOrWhiteSpace(SelectedDetectedApplication));
     }
 
     #region Properties
@@ -115,6 +125,20 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public ObservableCollection<string> DetectedApplications { get; }
+
+    public string? SelectedDetectedApplication
+    {
+        get => _selectedDetectedApplication;
+        set
+        {
+            if (SetProperty(ref _selectedDetectedApplication, value))
+            {
+                ((RelayCommand)AddDetectedAppCommand).RaiseCanExecuteChanged();
+            }
+        }
+    }
+
     public bool HasUnsavedChanges
     {
         get => _hasUnsavedChanges;
@@ -154,6 +178,11 @@ public class SettingsViewModel : ViewModelBase
     public string TxtBlockedApps => T("gui_blocked_apps");
     public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
     public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
+    public string TxtDetectedApps => T("gui_detected_apps");
+    public string TxtDetectedAppsDesc => T("gui_detected_apps_desc");
+    public string TxtDetectAppsButton => T("gui_detect_apps_button");
+    public string TxtAddBlockedAppButton => T("gui_add_blocked_app_button");
+    public string TxtBrowseExeButton => T("gui_browse_exe_button");
     public string TxtAbout => T("gui_about");
     public string TxtAboutDesc => T("gui_about_desc");
     public string TxtVersion => T("gui_version");
@@ -178,6 +207,8 @@ public class SettingsViewModel : ViewModelBase
 
     public ICommand SaveCommand { get; }
     public ICommand ResetCommand { get; }
+    public ICommand RefreshDetectedAppsCommand { get; }
+    public ICommand AddDetectedAppCommand { get; }
 
     #endregion
 
@@ -273,6 +304,9 @@ public class SettingsViewModel : ViewModelBase
 
             HasUnsavedChanges = false;
             SaveMessage = T("gui_saved_ok");
+
+            // Notify subscribers (e.g. MainViewModel) so changes apply immediately
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
@@ -322,6 +356,11 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtBlockedApps));
         OnPropertyChanged(nameof(TxtBlockedAppsDesc));
         OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
+        OnPropertyChanged(nameof(TxtDetectedApps));
+        OnPropertyChanged(nameof(TxtDetectedAppsDesc));
+        OnPropertyChanged(nameof(TxtDetectAppsButton));
+        OnPropertyChanged(nameof(TxtAddBlockedAppButton));
+        OnPropertyChanged(nameof(TxtBrowseExeButton));
         OnPropertyChanged(nameof(TxtAbout));
         OnPropertyChanged(nameof(TxtAboutDesc));
         OnPropertyChanged(nameof(TxtVersion));
@@ -350,6 +389,106 @@ public class SettingsViewModel : ViewModelBase
             .Where(app => !string.IsNullOrWhiteSpace(app))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    private void RefreshDetectedApplications()
+    {
+        var detected = DetectRunningApplications();
+        DetectedApplications.Clear();
+        foreach (var app in detected.OrderBy(a => a, StringComparer.OrdinalIgnoreCase))
+        {
+            DetectedApplications.Add(app);
+        }
+    }
+
+    private void AddSelectedDetectedApplication()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedDetectedApplication))
+        {
+            return;
+        }
+
+        var items = ParseBlockedApplications(_blockedApplicationsText);
+        if (!items.Contains(SelectedDetectedApplication, StringComparer.OrdinalIgnoreCase))
+        {
+            items.Add(SelectedDetectedApplication);
+            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+        }
+    }
+
+    /// <summary>
+    /// Adds a process name to the blocked applications list (called from file picker).
+    /// </summary>
+    public void AddBlockedApplication(string processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName)) return;
+
+        var items = ParseBlockedApplications(_blockedApplicationsText);
+        if (!items.Contains(processName, StringComparer.OrdinalIgnoreCase))
+        {
+            items.Add(processName);
+            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+        }
+    }
+
+    /// <summary>
+    /// Detects currently running processes on the system.
+    /// Cross-platform: uses System.Diagnostics.Process which works on Windows, macOS and Linux.
+    /// Filters out common system/background processes to show only user-relevant applications.
+    /// </summary>
+    private static List<string> DetectRunningApplications()
+    {
+        // Common system/background processes to hide (cross-platform)
+        var systemProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            // Windows system processes
+            "svchost", "csrss", "wininit", "winlogon", "lsass", "services", "smss",
+            "system", "idle", "registry", "dwm", "fontdrvhost", "sihost",
+            "taskhostw", "ctfmon", "conhost", "dllhost", "wudfhost",
+            "runtimebroker", "searchhost", "startmenuexperiencehost",
+            "shellexperiencehost", "textinputhost", "widgetservice",
+            "securityhealthservice", "securityhealthsystray",
+            "spoolsv", "lsaiso", "memcompression", "ntoskrnl",
+            "audiodg", "dashost", "unsecapp", "wmiprvse",
+            "searchindexer", "searchprotocolhost", "searchfilterhost",
+            "sgrmbroker", "msdtc", "sppsvc", "sedsvc",
+            "systemsettingsbroker", "backgroundtaskhost", "backgroundtransferhost",
+            "applicationframehost", "lockapp", "comppkgsrv",
+            // macOS system processes
+            "launchd", "kernel_task", "loginwindow", "windowserver",
+            "opendirectoryd", "diskarbitrationd", "coreservicesd",
+            "airportd", "bluetoothd", "configd", "mds", "mds_stores",
+            "notifyd", "powerd", "syslogd", "thermald",
+            // Linux system processes
+            "systemd", "kthreadd", "ksoftirqd", "kworker", "rcu_gp",
+            "rcu_sched", "migration", "cpuhp", "init", "dbus-daemon",
+            "polkitd", "udisksd", "networkmanager", "pipewire",
+            "wireplumber", "xdg-desktop-portal"
+        };
+
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var process in Process.GetProcesses())
+        {
+            try
+            {
+                var name = process.ProcessName;
+                if (!string.IsNullOrWhiteSpace(name) && !systemProcesses.Contains(name))
+                {
+                    result.Add(name);
+                }
+            }
+            catch
+            {
+                // Ignore processes that cannot be accessed.
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        return result.ToList();
     }
 
     #endregion

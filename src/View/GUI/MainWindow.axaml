@@ -1142,6 +1142,60 @@
                                          CornerRadius="8"
                                          Padding="12,10"/>
                             </StackPanel>
+
+                            <!-- Detected Applications -->
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtDetectedApps}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtDetectedAppsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,2,0,0">
+                                    <Button Grid.Column="0"
+                                            Command="{Binding RefreshDetectedAppsCommand}"
+                                            Content="{Binding TxtDetectAppsButton}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Margin="0,0,8,0"
+                                            Cursor="Hand"/>
+                                    <Button Grid.Column="1"
+                                            Command="{Binding AddDetectedAppCommand}"
+                                            Content="{Binding TxtAddBlockedAppButton}"
+                                            Background="{DynamicResource CardBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Margin="0,0,8,0"
+                                            Cursor="Hand"/>
+                                    <Button Grid.Column="2"
+                                            Click="BrowseExe_Click"
+                                            Content="{Binding TxtBrowseExeButton}"
+                                            Background="{DynamicResource CardBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Cursor="Hand"/>
+                                </Grid>
+                                <ListBox ItemsSource="{Binding DetectedApplications}"
+                                         SelectedItem="{Binding SelectedDetectedApplication}"
+                                         Height="160"
+                                         BorderThickness="1"
+                                         BorderBrush="{DynamicResource ClickableCardBorder}"
+                                         CornerRadius="8"
+                                         Padding="8"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -2155,6 +2209,72 @@
                                     Cursor="Hand"
                                     Command="{Binding ConfirmDeleteCommand}"/>
                         </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- Blocked Application Popup -->
+        <Panel IsVisible="{Binding IsBlockedPopupOpen}" Background="#DD000000">
+            <Border Background="{DynamicResource PopupBackground}"
+                    Width="460"
+                    CornerRadius="16"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 24 4 #30000000">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border CornerRadius="16,16,0,0" Padding="0">
+                        <StackPanel>
+                            <!-- Orange accent line -->
+                            <Border Height="4" CornerRadius="16,16,0,0" Background="#FF9800"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#FF9800" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding TxtBlockedPopupTitle}"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#FF9800"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Margin="24,20" Spacing="20">
+                        <!-- Blocked icon + message -->
+                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                            <Viewbox Width="48" Height="48" HorizontalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="#FF9800" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" Opacity="0"/>
+                                    <Path Fill="#FF9800" Data="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.12 5.71a1 1 0 00-1.42 1.42L10.59 12l-4.88 4.88a1 1 0 001.42 1.42L12 13.41l4.88 4.88a1 1 0 001.42-1.42L13.41 12l4.88-4.88a1 1 0 000-1.41z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="{Binding BlockedPopupMessage}"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Close Button -->
+                        <Button Content="{Binding TxtBlockedPopupClose}"
+                                HorizontalAlignment="Stretch"
+                                Height="40"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                CornerRadius="10"
+                                Foreground="White"
+                                Background="#FF9800"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                Command="{Binding CloseBlockedPopupCommand}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

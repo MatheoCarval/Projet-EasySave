@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Models;
 using Models.Enums;
 using Services.Managers;
+using EasySave.Services.Managers;
 using Avalonia.Threading;
 
 namespace EasySave.ViewModels;
@@ -25,6 +26,8 @@ public class MainViewModel : ViewModelBase
     private bool _isExecuteOrderOpen;
     private bool _isDeleteConfirmOpen;
     private string _deleteConfirmMessage = string.Empty;
+    private bool _isBlockedPopupOpen;
+    private string _blockedPopupMessage = string.Empty;
     private bool _isSettingsOpen;
     private bool _isHelpOpen;
     private string _toastMessage = string.Empty;
@@ -60,6 +63,9 @@ public class MainViewModel : ViewModelBase
         _progressViewModel = new ProgressViewModel();
         SettingsVM = new SettingsViewModel();
 
+        // When settings are saved, update blocked applications immediately
+        SettingsVM.SettingsSaved += OnSettingsSaved;
+
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
 
@@ -89,6 +95,7 @@ public class MainViewModel : ViewModelBase
         ShowDeleteConfirmCommand = new RelayCommand(ShowDeleteConfirm, () => BackupJobs.Any(j => j.IsSelected));
         CancelDeleteCommand = new RelayCommand(() => IsDeleteConfirmOpen = false);
         ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
+        CloseBlockedPopupCommand = new RelayCommand(CloseBlockedPopup);
         DeselectAllCommand = new RelayCommand(DeselectAll);
         SelectAllCommand = new RelayCommand(ToggleSelectAll);
         ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
@@ -215,6 +222,21 @@ public class MainViewModel : ViewModelBase
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
 
+    public bool IsBlockedPopupOpen
+    {
+        get => _isBlockedPopupOpen;
+        set => SetProperty(ref _isBlockedPopupOpen, value);
+    }
+
+    public string BlockedPopupMessage
+    {
+        get => _blockedPopupMessage;
+        set => SetProperty(ref _blockedPopupMessage, value);
+    }
+
+    public string TxtBlockedPopupTitle => T("gui_blocked_popup_title");
+    public string TxtBlockedPopupClose => T("gui_blocked_popup_close");
+
     public bool IsExecuteOrderOpen
     {
         get => _isExecuteOrderOpen;
@@ -320,6 +342,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ToggleAllStatesCommand { get; }
     public ICommand ClearFiltersCommand { get; }
     public ICommand DismissToastCommand { get; }
+    public ICommand CloseBlockedPopupCommand { get; }
 
     #endregion
 
@@ -525,7 +548,8 @@ public class MainViewModel : ViewModelBase
             catch (Exception ex)
             {
                 HideProgressPopup();
-                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                if (!HandleBlockedAppException(ex))
+                    System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
                 break;
             }
         }
@@ -579,8 +603,8 @@ public class MainViewModel : ViewModelBase
         catch (Exception ex)
         {
             HideProgressPopup();
-            // TODO: Show error message to user
-            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
+            if (!HandleBlockedAppException(ex))
+                System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
         }
     }
 
@@ -614,8 +638,8 @@ public class MainViewModel : ViewModelBase
             catch (Exception ex)
             {
                 HideProgressPopup();
-                // TODO: Show error message to user
-                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                if (!HandleBlockedAppException(ex))
+                    System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
                 break;
             }
         }
@@ -642,8 +666,8 @@ public class MainViewModel : ViewModelBase
         catch (Exception ex)
         {
             HideProgressPopup();
-            // TODO: Show error message to user
-            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
+            if (!HandleBlockedAppException(ex))
+                System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
         }
     }
 
@@ -844,6 +868,64 @@ public class MainViewModel : ViewModelBase
     {
         IsProgressPopupOpen = false;
         _progressViewModel.Reset();
+    }
+
+    /// <summary>
+    /// Called when settings are saved — reload blocked applications into BackupManager immediately.
+    /// </summary>
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        var config = ConfigurationManager.GetInstance().LoadConfiguration();
+        _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+    }
+
+    private void ShowBlockedPopup(string message)
+    {
+        BlockedPopupMessage = message;
+        IsBlockedPopupOpen = true;
+    }
+
+    private void CloseBlockedPopup()
+    {
+        IsBlockedPopupOpen = false;
+    }
+
+    /// <summary>
+    /// Checks if an exception is caused by a blocked application and shows the popup if so.
+    /// Returns true if the exception was a blocked-app error.
+    /// </summary>
+    private bool HandleBlockedAppException(Exception ex)
+    {
+        // The blocked app exception is an InvalidOperationException with "Backup blocked" in the message
+        var blocked = ex as InvalidOperationException;
+        if (blocked != null && blocked.Message.Contains("Backup blocked", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowBlockedPopup(FormatBlockedMessage(blocked.Message));
+            return true;
+        }
+        // Also check inner exception (when wrapped by ExecuteJob's catch)
+        if (ex.InnerException is InvalidOperationException inner &&
+            inner.Message.Contains("Backup blocked", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowBlockedPopup(FormatBlockedMessage(inner.Message));
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Formats the raw blocked message into a user-friendly translated message.
+    /// </summary>
+    private string FormatBlockedMessage(string rawMessage)
+    {
+        // Extract app names from "Backup blocked because these applications are running: chrome, excel"
+        var colonIndex = rawMessage.LastIndexOf(':');
+        if (colonIndex >= 0 && colonIndex < rawMessage.Length - 1)
+        {
+            var apps = rawMessage[(colonIndex + 1)..].Trim();
+            return $"{T("gui_blocked_popup_message")}\n\n{apps}";
+        }
+        return rawMessage;
     }
 
     private void CloseProgress()
