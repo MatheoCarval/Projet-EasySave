@@ -28,9 +28,49 @@ env:
 # ───────────────────────── JOBS ──────────────────────────────
 jobs:
 
-  # ─── 1. Build & Test ───────────────────────────────────────
+  # ─── 1. Code Quality Checks ────────────────────────────────
+  lint:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Check code formatting
+        run: dotnet format ${{ env.SOLUTION_PATH }} --verify-no-changes --verbosity diagnostic
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Check for vulnerable packages
+        run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
+
+  # ─── 2. Build & Test ───────────────────────────────────────
   build-and-test:
     name: Build & Test
+    needs: [lint, security]
     runs-on: ubuntu-latest
 
     steps:
@@ -72,7 +112,7 @@ jobs:
           path: "**/test-results.trx"
           retention-days: 14
 
-  # ─── 2. Version Tag ────────────────────────────────────────
+  # ─── 3. Version Tag ────────────────────────────────────────
   version:
     name: Calculate & Tag Version
     needs: build-and-test
@@ -160,7 +200,7 @@ jobs:
           git tag -a "${{ steps.calc.outputs.tag }}" -m "Release ${{ steps.calc.outputs.tag }}"
           git push origin "${{ steps.calc.outputs.tag }}"
 
-  # ─── 3. Publish + Installers (matrix) ───────────────────────
+  # ─── 4. Publish + Installers (matrix) ───────────────────────
   publish:
     name: Publish (${{ matrix.rid }})
     needs: version
@@ -464,7 +504,7 @@ jobs:
           path: EasySave-${{ needs.version.outputs.tag }}-linux-x64.rpm
           retention-days: 30
 
-  # ─── 4. GitHub Release ─────────────────────────────────────
+  # ─── 5. GitHub Release ─────────────────────────────────────
   release:
     name: Create GitHub Release
     needs: [version, publish]
