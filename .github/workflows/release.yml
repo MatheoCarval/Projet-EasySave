@@ -136,8 +136,6 @@ jobs:
             os: windows-latest
           - rid: linux-x64
             os: ubuntu-latest
-          - rid: osx-x64
-            os: macos-12
           - rid: osx-arm64
             os: macos-latest
 
@@ -449,7 +447,6 @@ jobs:
             echo "| Platform | Installer |"
             echo "|----------|----------|"
             echo "| Windows x64 | \`EasySave-${TAG}-win-x64.msi\` |"
-            echo "| macOS x64 (Intel) | \`EasySave-${TAG}-osx-x64.dmg\` |"
             echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.dmg\` |"
             echo "| Debian / Ubuntu | \`EasySave-${TAG}-linux-x64.deb\` |"
             echo "| RHEL / Fedora | \`EasySave-${TAG}-linux-x64.rpm\` |"
@@ -460,7 +457,6 @@ jobs:
             echo "|----------|--------|"
             echo "| Windows x64 | \`EasySave-${TAG}-win-x64.zip\` |"
             echo "| Linux x64 | \`EasySave-${TAG}-linux-x64.tar.gz\` |"
-            echo "| macOS x64 (Intel) | \`EasySave-${TAG}-osx-x64.tar.gz\` |"
             echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.tar.gz\` |"
           } > release_notes.md
 
