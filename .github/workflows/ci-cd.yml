@@ -83,9 +83,36 @@ jobs:
           
           # Increment based on branch
           if [ "${{ github.ref_name }}" == "main" ]; then
-            # For main branch, increment minor version
-            MINOR=$((MINOR + 1))
-            PATCH=0
+            # Check for breaking changes in commits since last tag
+            BREAKING_CHANGE=false
+            
+            # Get commits since last tag
+            if git rev-parse "${LATEST_TAG}" >/dev/null 2>&1; then
+              COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s%n%b" 2>/dev/null || echo "")
+            else
+              COMMITS=$(git log --pretty=format:"%s%n%b")
+            fi
+            
+            # Check for breaking change indicators:
+            # 1. "BREAKING CHANGE:" in commit body
+            # 2. "!" after type in conventional commit (e.g., "feat!:")
+            if echo "$COMMITS" | grep -q "BREAKING CHANGE:" || \
+               echo "$COMMITS" | grep -Eq "^[a-z]+(\([a-z]+\))?!:"; then
+              BREAKING_CHANGE=true
+            fi
+            
+            if [ "$BREAKING_CHANGE" = true ]; then
+              # Increment major version for breaking changes
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              echo "🔥 Breaking change detected - incrementing major version"
+            else
+              # Increment minor version for regular changes
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            fi
+            
             NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
           else
             # For develop branch, increment patch and add beta number
@@ -144,20 +171,84 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build Release
+      - name: Build Release (Multi-platform)
         run: |
           VERSION="${{ steps.get_latest_tag.outputs.tag }}"
           VERSION_NUMBER=${VERSION#v}
+          
+          # Build for Windows x64
           dotnet publish src/EasySave.csproj \
             -c Release \
-            -o ./publish \
-            /p:Version=${VERSION_NUMBER}
+            -r win-x64 \
+            --self-contained true \
+            -o ./publish/win-x64 \
+            /p:Version=${VERSION_NUMBER} \
+            /p:PublishSingleFile=true
+          
+          # Build for RHEL/Linux x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r rhel-x64 \
+            --self-contained true \
+            -o ./publish/rhel-x64 \
+            /p:Version=${VERSION_NUMBER} \
+            /p:PublishSingleFile=true
+          
+          # Build for Debian/Linux x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r debian-x64 \
+            --self-contained true \
+            -o ./publish/debian-x64 \
+            /p:Version=${VERSION_NUMBER} \
+            /p:PublishSingleFile=true
+          
+          # Build for macOS x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r osx-x64 \
+            --self-contained true \
+            -o ./publish/osx-x64 \
+            /p:Version=${VERSION_NUMBER} \
+            /p:PublishSingleFile=true
+          
+          # Build for macOS ARM64 (Apple Silicon)
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r osx-arm64 \
+            --self-contained true \
+            -o ./publish/osx-arm64 \
+            /p:Version=${VERSION_NUMBER} \
+            /p:PublishSingleFile=true
 
-      - name: Create Release Archive
+      - name: Create Release Archives
         run: |
-          cd publish
-          zip -r ../EasySave-${{ steps.get_latest_tag.outputs.tag }}.zip .
-          cd ..
+          TAG="${{ steps.get_latest_tag.outputs.tag }}"
+          
+          # Windows
+          cd publish/win-x64
+          zip -r ../../EasySave-${TAG}-win-x64.zip .
+          cd ../..
+          
+          # RHEL
+          cd publish/rhel-x64
+          tar -czf ../../EasySave-${TAG}-rhel-x64.tar.gz .
+          cd ../..
+          
+          # Debian
+          cd publish/debian-x64
+          tar -czf ../../EasySave-${TAG}-debian-x64.tar.gz .
+          cd ../..
+          
+          # macOS x64
+          cd publish/osx-x64
+          tar -czf ../../EasySave-${TAG}-osx-x64.tar.gz .
+          cd ../..
+          
+          # macOS ARM64
+          cd publish/osx-arm64
+          tar -czf ../../EasySave-${TAG}-osx-arm64.tar.gz .
+          cd ../..
 
       - name: Generate Release Notes
         id: release_notes
@@ -182,7 +273,11 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            EasySave-${{ steps.get_latest_tag.outputs.tag }}.zip
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-win-x64.zip
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-rhel-x64.tar.gz
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-debian-x64.tar.gz
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-osx-x64.tar.gz
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}-osx-arm64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -212,24 +307,92 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build Pre-release
+      - name: Build Pre-release (Multi-platform)
         run: |
           VERSION="${{ steps.get_beta_tag.outputs.tag }}"
           VERSION_NUMBER=${VERSION#v}
           # Extract base version and suffix for beta builds
           BASE_VERSION=$(echo "${VERSION_NUMBER}" | cut -d'-' -f1)
           SUFFIX=$(echo "${VERSION_NUMBER}" | cut -d'-' -f2-)
+          
+          # Build for Windows x64
           dotnet publish src/EasySave.csproj \
             -c Release \
-            -o ./publish \
+            -r win-x64 \
+            --self-contained true \
+            -o ./publish/win-x64 \
             /p:VersionPrefix=${BASE_VERSION} \
-            /p:VersionSuffix=${SUFFIX}
+            /p:VersionSuffix=${SUFFIX} \
+            /p:PublishSingleFile=true
+          
+          # Build for RHEL/Linux x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r rhel-x64 \
+            --self-contained true \
+            -o ./publish/rhel-x64 \
+            /p:VersionPrefix=${BASE_VERSION} \
+            /p:VersionSuffix=${SUFFIX} \
+            /p:PublishSingleFile=true
+          
+          # Build for Debian/Linux x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r debian-x64 \
+            --self-contained true \
+            -o ./publish/debian-x64 \
+            /p:VersionPrefix=${BASE_VERSION} \
+            /p:VersionSuffix=${SUFFIX} \
+            /p:PublishSingleFile=true
+          
+          # Build for macOS x64
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r osx-x64 \
+            --self-contained true \
+            -o ./publish/osx-x64 \
+            /p:VersionPrefix=${BASE_VERSION} \
+            /p:VersionSuffix=${SUFFIX} \
+            /p:PublishSingleFile=true
+          
+          # Build for macOS ARM64 (Apple Silicon)
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -r osx-arm64 \
+            --self-contained true \
+            -o ./publish/osx-arm64 \
+            /p:VersionPrefix=${BASE_VERSION} \
+            /p:VersionSuffix=${SUFFIX} \
+            /p:PublishSingleFile=true
 
-      - name: Create Pre-release Archive
+      - name: Create Pre-release Archives
         run: |
-          cd publish
-          zip -r ../EasySave-${{ steps.get_beta_tag.outputs.tag }}.zip .
-          cd ..
+          TAG="${{ steps.get_beta_tag.outputs.tag }}"
+          
+          # Windows
+          cd publish/win-x64
+          zip -r ../../EasySave-${TAG}-win-x64.zip .
+          cd ../..
+          
+          # RHEL
+          cd publish/rhel-x64
+          tar -czf ../../EasySave-${TAG}-rhel-x64.tar.gz .
+          cd ../..
+          
+          # Debian
+          cd publish/debian-x64
+          tar -czf ../../EasySave-${TAG}-debian-x64.tar.gz .
+          cd ../..
+          
+          # macOS x64
+          cd publish/osx-x64
+          tar -czf ../../EasySave-${TAG}-osx-x64.tar.gz .
+          cd ../..
+          
+          # macOS ARM64
+          cd publish/osx-arm64
+          tar -czf ../../EasySave-${TAG}-osx-arm64.tar.gz .
+          cd ../..
 
       - name: Create GitHub Pre-release
         uses: softprops/action-gh-release@v1
@@ -246,6 +409,10 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            EasySave-${{ steps.get_beta_tag.outputs.tag }}.zip
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-win-x64.zip
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-rhel-x64.tar.gz
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-debian-x64.tar.gz
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-osx-x64.tar.gz
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}-osx-arm64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
