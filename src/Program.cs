@@ -35,6 +35,20 @@ public class Program
     {
         try
         {
+            // Set up global exception handler to log crashes
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                try
+                {
+                    var ex = e.ExceptionObject as Exception;
+                    var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                    Directory.CreateDirectory(logDir);
+                    File.AppendAllText(Path.Combine(logDir, "crash.log"), 
+                        $"[{DateTime.Now}] {ex?.GetType().Name}: {ex?.Message}\n{ex?.StackTrace}\n\n");
+                }
+                catch { }
+            };
+
             // Initialize services
             InitializeServices();
 

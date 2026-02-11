@@ -162,7 +162,6 @@ jobs:
           -r ${{ matrix.rid }}
           --self-contained true
           -o ./publish
-          /p:PublishSingleFile=true
           /p:Version=${{ needs.validate.outputs.version }}
 
       # ── Portable archive ──
@@ -201,6 +200,18 @@ jobs:
               <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
               <MediaTemplate EmbedCab="yes" />
 
+              <!-- Visual C++ Runtime Prerequisites -->
+              <Property Id="VS2022REDIST_X64">
+                <RegistrySearch Id="SearchVCRedist2022_x64"
+                                Root="HKLM"
+                                Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+                                Name="Installed"
+                                Type="raw" />
+              </Property>
+
+              <Launch Condition="Installed OR VS2022REDIST_X64"
+                      Message="This application requires Visual C++ Runtime. The installer will download it automatically. Please ensure you have an internet connection." />
+
               <StandardDirectory Id="ProgramFiles6432Folder">
                 <Directory Id="INSTALLFOLDER" Name="EasySave">
                   <Component Id="ApplicationFiles" Guid="A1B2C3D4-E5F6-4A7B-8C9D-E0F1A2B3C4D5">
@@ -226,7 +237,45 @@ jobs:
           </Wix>
           WXSEOF
 
-          wix build installer.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
+          # Use heat to harvest all files from publish directory
+          wix extension add WixToolset.Util.wixext
+          
+          # Create component group for all files
+          cd publish
+          find . -type f ! -name "*.exe" -exec echo "{}" \; > ../files.txt
+          cd ..
+          
+          cat > files.wxs << 'FILESWXS'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Fragment>
+              <ComponentGroup Id="PublishFiles">
+          FILESWXS
+          
+          counter=1
+          while IFS= read -r file; do
+            file_clean=$(echo "$file" | sed 's/^\.\/\///')
+            if [ ! -z "$file_clean" ] && [ "$file_clean" != "." ]; then
+              file_id="File_${counter}"
+              comp_id="Comp_${counter}"
+              guid=$(uuidgen)
+              echo "                <Component Id=\"${comp_id}\" Directory=\"INSTALLFOLDER\" Guid=\"${guid}\">" >> files.wxs
+              echo "                  <File Id=\"${file_id}\" Source=\"publish\\${file_clean}\" />" >> files.wxs
+              echo "                </Component>" >> files.wxs
+              counter=$((counter + 1))
+            fi
+          done < files.txt
+          
+          cat >> files.wxs << 'FILESWXS2'
+              </ComponentGroup>
+            </Fragment>
+          </Wix>
+          FILESWXS2
+          
+          # Update main installer.wxs to reference the file group
+          sed -i 's/<Feature Id="Complete" Level="1">/<Feature Id="Complete" Level="1">\n                <ComponentGroupRef Id="PublishFiles" \/>/' installer.wxs
+
+          wix build installer.wxs files.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
 
       # ── macOS Installer (.dmg) ──
       - name: Install create-dmg
@@ -335,10 +384,13 @@ jobs:
           Section: utils
           Priority: optional
           Architecture: amd64
+          Depends: libc6, libgcc-s1, libstdc++6, zlib1g, libicu70 | libicu72 | libicu74
           Maintainer: EasySave Team <easysave@example.com>
           Description: EasySave - Backup Management Tool
            A simple and efficient backup management application
            supporting multiple save types and configurations.
+           .
+           This package includes all required .NET runtime dependencies.
           DEBEOF
 
           cat > deb-pkg/usr/share/applications/easysave.desktop << DESKTOPEOF
@@ -380,10 +432,12 @@ jobs:
           Summary:        EasySave - Backup Management Tool
           License:        Proprietary
           Source0:        easysave-${VERSION}.tar.gz
+          Requires:       glibc libgcc libstdc++ zlib libicu
 
           %description
           A simple and efficient backup management application
           supporting multiple save types and configurations.
+          This package includes all required .NET runtime dependencies.
 
           %prep
           %setup -q
