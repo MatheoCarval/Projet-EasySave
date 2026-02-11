@@ -1,0 +1,243 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for versioning
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore src/EasySave.csproj
+
+      - name: Build
+        run: dotnet build src/EasySave.csproj --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test src/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/test-results.trx'
+
+  create-version-tag:
+    name: Create Version Tag
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          # Get the latest tag, or use 0.0.0 if none exists
+          LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Calculate new version
+        id: calc_version
+        run: |
+          LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          # Remove 'v' prefix and any pre-release suffix
+          VERSION=${LATEST_TAG#v}
+          VERSION=${VERSION%%-*}
+          
+          # Split version into components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          # Increment based on branch
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            # For main branch, increment minor version
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          else
+            # For develop branch, increment patch and add beta number
+            PATCH=$((PATCH + 1))
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            
+            # Find the latest beta number for this base version
+            LATEST_BETA=$(git tag -l "v${BASE_VERSION}-beta.*" --sort=-v:refname | head -n 1)
+            
+            if [ -z "$LATEST_BETA" ]; then
+              # No beta exists for this version, start at beta.1
+              BETA_NUM=1
+            else
+              # Extract beta number and increment
+              BETA_NUM=$(echo "$LATEST_BETA" | sed -n 's/.*-beta\.\([0-9]*\).*/\1/p')
+              BETA_NUM=$((BETA_NUM + 1))
+            fi
+            
+            NEW_VERSION="v${BASE_VERSION}-beta.${BETA_NUM}"
+          fi
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Create and push tag
+        run: |
+          NEW_VERSION="${{ steps.calc_version.outputs.new_version }}"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
+          git push origin "$NEW_VERSION"
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-and-test, create-version-tag]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | grep -v "beta" | head -n 1)
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build Release
+        run: |
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -o ./publish \
+            /p:Version=${{ steps.get_latest_tag.outputs.tag }}
+
+      - name: Create Release Archive
+        run: |
+          cd publish
+          zip -r ../EasySave-${{ steps.get_latest_tag.outputs.tag }}.zip .
+          cd ..
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          PREVIOUS_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | grep -v "beta" | sed -n '2p')
+          if [ -z "$PREVIOUS_TAG" ]; then
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "## Changes in this Release" > release_notes.md
+          echo "" >> release_notes.md
+          git log ${PREVIOUS_TAG}..${{ steps.get_latest_tag.outputs.tag }} \
+            --pretty=format:"- %s (%h)" \
+            --no-merges >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_latest_tag.outputs.tag }}
+          name: Release ${{ steps.get_latest_tag.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            EasySave-${{ steps.get_latest_tag.outputs.tag }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-prerelease:
+    name: Create Pre-release
+    needs: [build-and-test, create-version-tag]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest beta tag
+        id: get_beta_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag -l "v*.*.*-beta*" --sort=-v:refname | head -n 1)
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build Pre-release
+        run: |
+          dotnet publish src/EasySave.csproj \
+            -c Release \
+            -o ./publish \
+            /p:Version=${{ steps.get_beta_tag.outputs.tag }}
+
+      - name: Create Pre-release Archive
+        run: |
+          cd publish
+          zip -r ../EasySave-${{ steps.get_beta_tag.outputs.tag }}.zip .
+          cd ..
+
+      - name: Create GitHub Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_beta_tag.outputs.tag }}
+          name: Pre-release ${{ steps.get_beta_tag.outputs.tag }}
+          body: |
+            ## Development Build
+            
+            This is a pre-release build from the develop branch.
+            Not intended for production use.
+            
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: true
+          files: |
+            EasySave-${{ steps.get_beta_tag.outputs.tag }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
