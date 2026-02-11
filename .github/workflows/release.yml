@@ -169,8 +169,8 @@ jobs:
       # ── Portable archive ──
       - name: Archive (zip – Windows)
         if: matrix.rid == 'win-x64'
-        shell: bash
-        run: cd publish && zip -r ../EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip .
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip
 
       - name: Archive (tar.gz – Unix)
         if: matrix.rid != 'win-x64'
