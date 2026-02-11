@@ -34,10 +34,6 @@ public class BackupManager
     /// </summary>
     private readonly List<BackupJob> _jobs;
     /// <summary>
-    /// Maximum number of backup jobs allowed in the system.
-    /// </summary>
-    private readonly int _maxJobs;
-    /// <summary>
     /// Service responsible for transferring files and directories between source and target locations.
     /// </summary>
     private readonly FileTransferService _fileTransferService;
@@ -56,14 +52,12 @@ public class BackupManager
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxJobs);
 
         _jobs = new List<BackupJob>();
-        _maxJobs = maxJobs;
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
 

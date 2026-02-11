@@ -7,6 +7,7 @@
                 <!-- ===== LIGHT THEME ===== -->
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="AppBackground" Color="#F5F5F5"/>
+                    <SolidColorBrush x:Key="CardBackground" Color="White"/>
                     <SolidColorBrush x:Key="SidebarBackground" Color="#E8EAF0"/>
                     <SolidColorBrush x:Key="SidebarShadow" Color="#20000000"/>
                     <SolidColorBrush x:Key="SidebarHover" Color="#D8DCE6"/>
@@ -33,9 +34,9 @@
                     <SolidColorBrush x:Key="EmptyStateText" Color="#BDBDBD"/>
                     <SolidColorBrush x:Key="ProgressBarBg" Color="#E0E0E0"/>
                     <SolidColorBrush x:Key="PopupBackground" Color="White"/>
-                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#757575"/>
-                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#616161"/>
-                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#424242"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#3F51B5"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#303F9F"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#F0F0F0"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#E3F2FD"/>
                 </ResourceDictionary>
@@ -70,9 +71,9 @@
                     <SolidColorBrush x:Key="EmptyStateText" Color="#616161"/>
                     <SolidColorBrush x:Key="ProgressBarBg" Color="#333333"/>
                     <SolidColorBrush x:Key="PopupBackground" Color="#1E1E1E"/>
-                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#424242"/>
-                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#525252"/>
-                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#616161"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#7986CB"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#3F51B5"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#333333"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#404040"/>
                 </ResourceDictionary>
@@ -82,6 +83,24 @@
 
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Thin scrollbars -->
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="MinWidth" Value="12"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical /template/ Thumb">
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Width" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="MinHeight" Value="12"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal /template/ Thumb">
+            <Setter Property="MinHeight" Value="10"/>
+            <Setter Property="Height" Value="10"/>
+        </Style>
 
         <!-- Custom Styles -->
         <Style Selector="Button.SidebarButton">
@@ -93,6 +112,13 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Button.SidebarButton:pointerover">
@@ -105,6 +131,13 @@
 
         <Style Selector="Button.SidebarButton Path">
             <Setter Property="Fill" Value="{DynamicResource SidebarIcon}"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <BrushTransition Property="Fill" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Button.SidebarButton:pointerover Path">
@@ -219,12 +252,20 @@
             <Setter Property="BoxShadow" Value="0 2 8 0 #20000000"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="Border.ClickableCard:pointerover">
-            <Setter Property="BoxShadow" Value="0 4 16 0 #30000000"/>
+            <Setter Property="BoxShadow" Value="0 6 20 0 #35000000"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardHoverBorder}"/>
             <Setter Property="Background" Value="{DynamicResource ClickableCardHoverBg}"/>
+            <Setter Property="RenderTransform" Value="translateY(-2px)"/>
         </Style>
 
         <Style Selector="Border.Sidebar">
@@ -236,12 +277,12 @@
             <Setter Property="Background" Value="{DynamicResource BrowseBtnBg}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,10"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style Selector="Button.BrowseButton:pointerover">

@@ -15,6 +15,7 @@ public class ProgressViewModel : ViewModelBase
     private long _totalSize;
     private long _processedSize;
     private bool _isCompleted;
+    private DateTime _startTime;
 
     /// <summary>
     /// Name of the backup job being executed
@@ -99,6 +100,9 @@ public class ProgressViewModel : ViewModelBase
             if (SetProperty(ref _processedSize, value))
             {
                 OnPropertyChanged(nameof(SizeDisplay));
+                OnPropertyChanged(nameof(ElapsedTimeDisplay));
+                OnPropertyChanged(nameof(TransferSpeedDisplay));
+                OnPropertyChanged(nameof(EstimatedTimeDisplay));
             }
         }
     }
@@ -112,6 +116,64 @@ public class ProgressViewModel : ViewModelBase
     /// Display string for size: "2.5 MB / 10 MB"
     /// </summary>
     public string SizeDisplay => $"{FormatBytes(ProcessedSize)} / {FormatBytes(TotalSize)}";
+
+    /// <summary>
+    /// Elapsed time since backup started
+    /// </summary>
+    public string ElapsedTimeDisplay
+    {
+        get
+        {
+            if (_startTime == default) return "--:--";
+            var elapsed = DateTime.Now - _startTime;
+            return elapsed.TotalHours >= 1
+                ? elapsed.ToString(@"hh\:mm\:ss")
+                : elapsed.ToString(@"mm\:ss");
+        }
+    }
+
+    /// <summary>
+    /// Current transfer speed
+    /// </summary>
+    public string TransferSpeedDisplay
+    {
+        get
+        {
+            if (_startTime == default || ProcessedSize == 0) return "-- /s";
+            var elapsed = (DateTime.Now - _startTime).TotalSeconds;
+            if (elapsed < 0.5) return "-- /s";
+            var bytesPerSec = ProcessedSize / elapsed;
+            return $"{FormatBytes((long)bytesPerSec)}/s";
+        }
+    }
+
+    /// <summary>
+    /// Estimated time remaining
+    /// </summary>
+    public string EstimatedTimeDisplay
+    {
+        get
+        {
+            if (_startTime == default || ProcessedSize == 0 || TotalSize == 0) return "Calculating...";
+            var elapsed = (DateTime.Now - _startTime).TotalSeconds;
+            if (elapsed < 0.5) return "Calculating...";
+            var bytesPerSec = ProcessedSize / elapsed;
+            if (bytesPerSec < 1) return "Calculating...";
+            var remainingBytes = TotalSize - ProcessedSize;
+            var seconds = remainingBytes / bytesPerSec;
+            if (seconds < 60) return $"~{(int)seconds}s remaining";
+            if (seconds < 3600) return $"~{(int)(seconds / 60)}min remaining";
+            return $"~{seconds / 3600:F1}h remaining";
+        }
+    }
+
+    /// <summary>
+    /// Starts tracking elapsed time
+    /// </summary>
+    public void StartTracking()
+    {
+        _startTime = DateTime.Now;
+    }
 
     /// <summary>
     /// Indicates whether the backup has completed
@@ -149,5 +211,6 @@ public class ProgressViewModel : ViewModelBase
         TotalSize = 0;
         ProcessedSize = 0;
         IsCompleted = false;
+        _startTime = default;
     }
 }

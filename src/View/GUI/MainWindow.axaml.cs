@@ -42,6 +42,15 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Handles the Tapped event on the FAB to add a backup
+    /// </summary>
+    private void FAB_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel && viewModel.AddBackupCommand.CanExecute(null))
+            viewModel.AddBackupCommand.Execute(null);
+    }
+
+    /// <summary>
     /// Handles the Tapped event on backup cards to open the edit modal
     /// </summary>
     private void BackupCard_Tapped(object? sender, TappedEventArgs e)
@@ -131,6 +140,54 @@ public partial class MainWindow : Window
             if (result.Count > 0)
             {
                 viewModel.ModalTargetPath = result[0].Path.LocalPath;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click for log file path (Settings)
+    /// </summary>
+    private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select Log Directory",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                string dir = result[0].Path.LocalPath;
+                // Determine log file name from current format setting
+                string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
+                mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click for state file path (Settings)
+    /// </summary>
+    private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select State File Directory",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                string dir = result[0].Path.LocalPath;
+                mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
             }
         }
     }

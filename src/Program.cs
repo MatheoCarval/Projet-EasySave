@@ -38,18 +38,21 @@ public class Program
             // Initialize services
             InitializeServices();
 
-            // Check for theme argument
-            bool darkMode = false; // default to light
+            // Check for theme argument (CLI overrides config)
+            bool? darkModeOverride = null;
             var remainingArgs = new System.Collections.Generic.List<string>();
             foreach (var arg in args)
             {
                 if (arg.Equals("--light", StringComparison.OrdinalIgnoreCase))
-                    darkMode = false;
+                    darkModeOverride = false;
                 else if (arg.Equals("--dark", StringComparison.OrdinalIgnoreCase))
-                    darkMode = true;
+                    darkModeOverride = true;
                 else
                     remainingArgs.Add(arg);
             }
+
+            // Use CLI override if provided, otherwise load from saved config
+            bool darkMode = darkModeOverride ?? _configurationManager!.LoadConfiguration().GetDarkMode();
 
             // If no remaining arguments, launch UI
             if (remainingArgs.Count == 0)
@@ -112,7 +115,7 @@ public class Program
         var stateWriter = new StateWriter(statePath);
         var fileTransferService = new FileTransferService(logger, stateWriter);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: config.GetMaxBackupJobs());
+        _backupManager = new BackupManager(fileTransferService, stateWriter);
     }
 
     /// <summary>

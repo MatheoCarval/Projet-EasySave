@@ -107,26 +107,6 @@ namespace EasySave.Tests.Services.Managers
         }
 
         /// <summary>
-        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed zero as the maximum jobs limit.
-        /// </summary>
-        [Fact]
-        public void Constructor_WithZeroMaxJobs_ThrowsArgumentOutOfRangeException()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _stateWriter, 0));
-        }
-
-        /// <summary>
-        /// Verifies that BackupManager constructor throws ArgumentOutOfRangeException when passed negative value as the maximum jobs limit.
-        /// </summary>
-        [Fact]
-        public void Constructor_WithNegativeMaxJobs_ThrowsArgumentOutOfRangeException()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new BackupManager(_fileTransferService, _stateWriter, -1));
-        }
-
-        /// <summary>
         /// Verifies that CreateJob with valid parameters successfully creates a new backup job and returns it with correct properties.
         /// </summary>
         [Fact]
@@ -154,7 +134,6 @@ namespace EasySave.Tests.Services.Managers
                 manager.CreateJob("TestJob", new List<string> { @"C:\Source2" }, @"C:\Target2", BackupType.COMPLETE));
             Assert.Contains("already exists", exception.Message);
         }
-
 
         /// <summary>
         /// Verifies that DeleteJob successfully removes an existing job and returns true.

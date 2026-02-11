@@ -1,0 +1,1618 @@
+[
+  {
+    "timestamp": "2026-02-10T21:01:21.213603+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\CV Mathéo CARVAL_Anglais.pdf",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\CV Mathéo CARVAL_Anglais.pdf",
+    "fileSize": 293711,
+    "transferTime": 4
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.2305979+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\script.bat",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\script.bat",
+    "fileSize": 77,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.2546228+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\soutenance SAE.pptx",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\soutenance SAE.pptx",
+    "fileSize": 181609,
+    "transferTime": 3
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.272871+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\veille.pptx",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\veille.pptx",
+    "fileSize": 2149730,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.287698+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\dotnet.exe",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\dotnet.exe",
+    "fileSize": 164664,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.3064202+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\LICENSE.txt",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\LICENSE.txt",
+    "fileSize": 9519,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.3254452+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\ThirdPartyNotices.txt",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\ThirdPartyNotices.txt",
+    "fileSize": 78887,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.3489992+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\host\\fxr\\10.0.0-preview.4.25208.102\\hostfxr.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\host\\fxr\\10.0.0-preview.4.25208.102\\hostfxr.dll",
+    "fileSize": 345888,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.3699349+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\metadata\\workloads\\10.0.100\\installertype\\msi",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\metadata\\workloads\\10.0.100\\installertype\\msi",
+    "fileSize": 0,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.3921513+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.Analyzers.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.Analyzers.dll",
+    "fileSize": 261912,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.4132234+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.CodeFixes.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.CodeFixes.dll",
+    "fileSize": 59672,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.4367039+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.SourceGenerators.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.App.SourceGenerators.dll",
+    "fileSize": 20768,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.4591928+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Components.Analyzers.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Components.Analyzers.dll",
+    "fileSize": 50968,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.4846814+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Http.RequestDelegateGenerator.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Http.RequestDelegateGenerator.dll",
+    "fileSize": 219928,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.5052564+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Http.ValidationsGenerator.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.AspNetCore.Http.ValidationsGenerator.dll",
+    "fileSize": 93976,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.5261169+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.dll",
+    "fileSize": 176928,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.550909+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Logging.Generators.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Logging.Generators.dll",
+    "fileSize": 78136,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.5711626+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Options.SourceGeneration.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\Microsoft.Extensions.Options.SourceGeneration.dll",
+    "fileSize": 133400,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.5912154+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18200,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.6128295+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21792,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.6340338+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\cs\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.6531855+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18720,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.6739527+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 22296,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.6955551+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\de\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21808,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.7170486+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18720,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.7389013+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21816,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.7666043+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\es\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.7860324+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18736,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.8053968+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 22304,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.8303856+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\fr\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.8542837+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18712,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.8753805+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21792,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.8958165+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\it\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.9183879+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 19232,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.9442118+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 22296,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.9681283+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ja\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 22296,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:21.9883904+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18712,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.0098288+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21784,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.0361188+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ko\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21784,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.0563291+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18720,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.0834812+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21784,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.1016755+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pl\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21792,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.1228168+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18712,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.1431425+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21792,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.1655225+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\pt-BR\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.1830957+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 19248,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.2018887+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 23840,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.2252674+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\ru\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 23328,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.2473985+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18208,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.2702312+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21792,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.304168+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\tr\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 21280,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.320171+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18232,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.3415962+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 21272,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.3680249+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hans\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 20760,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.3871832+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Configuration.Binder.SourceGeneration.resources.dll",
+    "fileSize": 18208,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.4084201+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Logging.Generators.resources.dll",
+    "fileSize": 20768,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.4339462+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\analyzers\\dotnet\\cs\\zh-Hant\\Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+    "fileSize": 20760,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.4550648+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\FrameworkList.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\FrameworkList.xml",
+    "fileSize": 34408,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.475864+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\PackageOverrides.txt",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\PackageOverrides.txt",
+    "fileSize": 7192,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.5000802+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\PlatformManifest.txt",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\data\\PlatformManifest.txt",
+    "fileSize": 13411,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.5187173+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Antiforgery.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Antiforgery.dll",
+    "fileSize": 34072,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.540109+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Antiforgery.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Antiforgery.xml",
+    "fileSize": 30644,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.5649179+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Abstractions.dll",
+    "fileSize": 28976,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.5859995+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Abstractions.xml",
+    "fileSize": 65904,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.607303+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.BearerToken.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.BearerToken.dll",
+    "fileSize": 24344,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.6337951+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.BearerToken.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.BearerToken.xml",
+    "fileSize": 14838,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.6561078+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Cookies.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Cookies.dll",
+    "fileSize": 29472,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.681971+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Cookies.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Cookies.xml",
+    "fileSize": 48667,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.7053217+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Core.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Core.dll",
+    "fileSize": 30512,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.7333341+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Core.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.Core.xml",
+    "fileSize": 19091,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.7582326+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.dll",
+    "fileSize": 40248,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.7889247+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.OAuth.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.OAuth.dll",
+    "fileSize": 28960,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.8363163+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.OAuth.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.OAuth.xml",
+    "fileSize": 47983,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.8608131+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authentication.xml",
+    "fileSize": 90079,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.8830422+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.dll",
+    "fileSize": 34592,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.9021801+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.Policy.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.Policy.dll",
+    "fileSize": 24352,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.9368389+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.Policy.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.Policy.xml",
+    "fileSize": 24897,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.9575701+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Authorization.xml",
+    "fileSize": 79313,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:22.9828588+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Authorization.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Authorization.dll",
+    "fileSize": 23328,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.0015913+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Authorization.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Authorization.xml",
+    "fileSize": 15063,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.025471+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.dll",
+    "fileSize": 145696,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.0559165+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Endpoints.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Endpoints.dll",
+    "fileSize": 117528,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.0889944+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Endpoints.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Endpoints.xml",
+    "fileSize": 72979,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.1150668+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Forms.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Forms.dll",
+    "fileSize": 28440,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.145065+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Forms.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Forms.xml",
+    "fileSize": 25212,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.1748973+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Server.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Server.dll",
+    "fileSize": 116512,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.1973437+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Server.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Server.xml",
+    "fileSize": 157226,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.2215156+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Web.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Web.dll",
+    "fileSize": 86816,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.2447968+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Web.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.Web.xml",
+    "fileSize": 165051,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.2695723+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Components.xml",
+    "fileSize": 421956,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.2885518+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Connections.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Connections.Abstractions.dll",
+    "fileSize": 35104,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.3144797+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Connections.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Connections.Abstractions.xml",
+    "fileSize": 62808,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.3356562+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.CookiePolicy.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.CookiePolicy.dll",
+    "fileSize": 22808,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.356259+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.CookiePolicy.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.CookiePolicy.xml",
+    "fileSize": 15476,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.3896956+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cors.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cors.dll",
+    "fileSize": 29472,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.4054889+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cors.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cors.xml",
+    "fileSize": 40291,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.4277071+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.Internal.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.Internal.dll",
+    "fileSize": 41248,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.4496548+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.Internal.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.Internal.xml",
+    "fileSize": 8743,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.4671543+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll",
+    "fileSize": 19744,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.4912113+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.KeyDerivation.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Cryptography.KeyDerivation.xml",
+    "fileSize": 9194,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.5115343+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Abstractions.dll",
+    "fileSize": 22816,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.5343286+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Abstractions.xml",
+    "fileSize": 27125,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.5549575+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.dll",
+    "fileSize": 87320,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.5785474+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Extensions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Extensions.dll",
+    "fileSize": 21280,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.5991948+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Extensions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.Extensions.xml",
+    "fileSize": 16676,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.6200681+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.DataProtection.xml",
+    "fileSize": 174773,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.6407941+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.Abstractions.dll",
+    "fileSize": 19736,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.668+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.Abstractions.xml",
+    "fileSize": 13932,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.6899069+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.dll",
+    "fileSize": 56112,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.7129233+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll",
+    "fileSize": 20248,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.7338632+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.HealthChecks.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.HealthChecks.xml",
+    "fileSize": 16783,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.7662536+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Diagnostics.xml",
+    "fileSize": 67541,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.7907133+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.dll",
+    "fileSize": 32032,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.8217898+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HostFiltering.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HostFiltering.dll",
+    "fileSize": 22304,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.8433571+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HostFiltering.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HostFiltering.xml",
+    "fileSize": 5009,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.8716227+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Abstractions.dll",
+    "fileSize": 23840,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.9056975+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Abstractions.xml",
+    "fileSize": 34298,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.9208711+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.dll",
+    "fileSize": 83744,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.9413227+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll",
+    "fileSize": 18744,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.9656102+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml",
+    "fileSize": 6194,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:23.9887842+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Hosting.xml",
+    "fileSize": 52140,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.0174292+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Html.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Html.Abstractions.dll",
+    "fileSize": 20768,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.039194+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Html.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Html.Abstractions.xml",
+    "fileSize": 18960,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.0589059+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Abstractions.dll",
+    "fileSize": 91928,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.085577+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Abstractions.xml",
+    "fileSize": 241453,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.1073893+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.Common.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.Common.dll",
+    "fileSize": 20792,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.1291272+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.Common.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.Common.xml",
+    "fileSize": 6690,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.1511076+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.dll",
+    "fileSize": 63264,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.173648+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Connections.xml",
+    "fileSize": 35870,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.2012537+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.dll",
+    "fileSize": 66864,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.2224612+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Extensions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Extensions.dll",
+    "fileSize": 123704,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.2491052+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Extensions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Extensions.xml",
+    "fileSize": 99130,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.2726345+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Features.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Features.dll",
+    "fileSize": 37664,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.3005965+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Features.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Features.xml",
+    "fileSize": 91127,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.3238287+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Results.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Results.dll",
+    "fileSize": 69400,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.3533893+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Results.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.Results.xml",
+    "fileSize": 252555,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.3855733+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Http.xml",
+    "fileSize": 106245,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.4136505+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpLogging.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpLogging.dll",
+    "fileSize": 43824,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.4393862+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpLogging.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpLogging.xml",
+    "fileSize": 59700,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.4721798+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpOverrides.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpOverrides.dll",
+    "fileSize": 24344,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.495685+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpOverrides.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpOverrides.xml",
+    "fileSize": 27745,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.519866+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpsPolicy.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpsPolicy.dll",
+    "fileSize": 20760,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.5545854+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpsPolicy.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.HttpsPolicy.xml",
+    "fileSize": 9490,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.5918715+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Identity.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Identity.dll",
+    "fileSize": 92448,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.6221546+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Identity.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Identity.xml",
+    "fileSize": 93787,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.6549278+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.dll",
+    "fileSize": 25368,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.6837963+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.Routing.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.Routing.dll",
+    "fileSize": 17696,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.7033906+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.Routing.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.Routing.xml",
+    "fileSize": 1376,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.726027+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Localization.xml",
+    "fileSize": 33849,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.7558389+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Metadata.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Metadata.dll",
+    "fileSize": 17176,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.7774127+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Metadata.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Metadata.xml",
+    "fileSize": 1346,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.8003878+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Abstractions.dll",
+    "fileSize": 86296,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.8239751+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Abstractions.xml",
+    "fileSize": 346320,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.8496626+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ApiExplorer.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ApiExplorer.dll",
+    "fileSize": 32024,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.8719011+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ApiExplorer.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ApiExplorer.xml",
+    "fileSize": 13178,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.8962345+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Core.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Core.dll",
+    "fileSize": 352056,
+    "transferTime": 3
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.9187882+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Core.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Core.xml",
+    "fileSize": 1190889,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.9379502+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Cors.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Cors.dll",
+    "fileSize": 22328,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.9659151+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Cors.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Cors.xml",
+    "fileSize": 7334,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:24.9840486+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.DataAnnotations.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.DataAnnotations.dll",
+    "fileSize": 30512,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.003633+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.DataAnnotations.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.DataAnnotations.xml",
+    "fileSize": 30610,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.0248039+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.dll",
+    "fileSize": 21304,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.0482029+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Json.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Json.dll",
+    "fileSize": 16672,
+    "transferTime": 4
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.0703916+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Json.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Json.xml",
+    "fileSize": 165,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.087161+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Xml.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Xml.dll",
+    "fileSize": 31024,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.1071078+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Xml.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Formatters.Xml.xml",
+    "fileSize": 59582,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.1350779+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Localization.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Localization.dll",
+    "fileSize": 23864,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.1583311+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Localization.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Localization.xml",
+    "fileSize": 50621,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.1812369+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Razor.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Razor.dll",
+    "fileSize": 62776,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.2022564+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Razor.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.Razor.xml",
+    "fileSize": 129200,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.2219391+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.RazorPages.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.RazorPages.dll",
+    "fileSize": 97592,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.2457469+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.RazorPages.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.RazorPages.xml",
+    "fileSize": 353936,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.2706551+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.TagHelpers.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.TagHelpers.dll",
+    "fileSize": 62256,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.2886448+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.TagHelpers.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.TagHelpers.xml",
+    "fileSize": 116843,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.3070437+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ViewFeatures.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ViewFeatures.dll",
+    "fileSize": 128312,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.3316706+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ViewFeatures.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.ViewFeatures.xml",
+    "fileSize": 776766,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.3513712+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Mvc.xml",
+    "fileSize": 18385,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.3814677+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.OutputCaching.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.OutputCaching.dll",
+    "fileSize": 51488,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.4031674+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.OutputCaching.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.OutputCaching.xml",
+    "fileSize": 65889,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.4236989+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RateLimiting.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RateLimiting.dll",
+    "fileSize": 33592,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.4457569+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RateLimiting.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RateLimiting.xml",
+    "fileSize": 20358,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.4657791+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.dll",
+    "fileSize": 27416,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.4861768+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.Runtime.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.Runtime.dll",
+    "fileSize": 27448,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.5055939+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.Runtime.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.Runtime.xml",
+    "fileSize": 28763,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.52719+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Razor.xml",
+    "fileSize": 71711,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.5493229+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RequestDecompression.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RequestDecompression.dll",
+    "fileSize": 22296,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.570174+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RequestDecompression.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.RequestDecompression.xml",
+    "fileSize": 7743,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.6367232+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll",
+    "fileSize": 17176,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.6535447+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.Abstractions.xml",
+    "fileSize": 709,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.6869393+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.dll",
+    "fileSize": 38176,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.7182137+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCaching.xml",
+    "fileSize": 17161,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.7696815+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCompression.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCompression.dll",
+    "fileSize": 28472,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.8059522+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCompression.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.ResponseCompression.xml",
+    "fileSize": 20467,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.849094+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Rewrite.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Rewrite.dll",
+    "fileSize": 46368,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.8557594+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Rewrite.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Rewrite.xml",
+    "fileSize": 36120,
+    "transferTime": 0
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.8738377+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.Abstractions.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.Abstractions.dll",
+    "fileSize": 26416,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.9204824+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.Abstractions.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.Abstractions.xml",
+    "fileSize": 38827,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.9302576+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.dll",
+    "fileSize": 139552,
+    "transferTime": 1
+  },
+  {
+    "timestamp": "2026-02-10T21:01:25.9636651+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Routing.xml",
+    "fileSize": 421675,
+    "transferTime": 4
+  },
+  {
+    "timestamp": "2026-02-10T21:01:26.0016108+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.HttpSys.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.HttpSys.dll",
+    "fileSize": 126776,
+    "transferTime": 2
+  },
+  {
+    "timestamp": "2026-02-10T21:01:26.0425184+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.HttpSys.xml",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.HttpSys.xml",
+    "fileSize": 276082,
+    "transferTime": 3
+  },
+  {
+    "timestamp": "2026-02-10T21:01:26.0839315+01:00",
+    "backupName": "--dark",
+    "sourcePath": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.IIS.dll",
+    "targetPath": "\\\\localhost\\C$\\Users\\allan\\Music\\dotnet\\packs\\Microsoft.AspNetCore.App.Ref\\10.0.0-preview.4.25208.102\\ref\\net10.0\\Microsoft.AspNetCore.Server.IIS.dll",
+    "fileSize": 123704,
+    "transferTime": 1
+  }
+]

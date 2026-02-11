@@ -68,9 +68,9 @@ namespace EasySave.Services.Managers
             {
                 Language = config.GetLanguage(),
                 LogFormat = config.GetLogFormat().ToString(),
-                MaxBackupJobs = config.GetMaxBackupJobs(),
                 LogFilePath = config.GetLogFilePath(),
-                StateFilePath = config.GetStateFilePath()
+                StateFilePath = config.GetStateFilePath(),
+                DarkMode = config.GetDarkMode()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -99,16 +99,6 @@ namespace EasySave.Services.Managers
             SaveConfiguration(config);
         }
 
-        public void UpdateMaxBackupJobs(int maxJobs)
-        {
-            if (maxJobs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxJobs), "MaxBackupJobs must be greater than 0");
-
-            var config = LoadConfiguration();
-            config.SetMaxBackupJobs(maxJobs);
-            SaveConfiguration(config);
-        }
-
         private Configuration CreateConfigurationFromTemplate(ConfigurationTemplate template)
         {
             var config = new Configuration();
@@ -119,9 +109,9 @@ namespace EasySave.Services.Managers
                 config.SetLogFormat(logFormat);
             }
 
-            config.SetMaxBackupJobs(template.MaxBackupJobs);
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
+            config.SetDarkMode(template.DarkMode);
 
             return config;
         }
@@ -143,9 +133,9 @@ namespace EasySave.Services.Managers
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
-            public int MaxBackupJobs { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public bool DarkMode { get; set; }
         }
     }
 }
