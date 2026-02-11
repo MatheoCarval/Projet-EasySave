@@ -126,6 +126,7 @@ jobs:
     name: Publish (${{ matrix.rid }})
     needs: [validate, tag]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
