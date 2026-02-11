@@ -26,6 +26,7 @@ public class MainViewModel : ViewModelBase
     private bool _isDeleteConfirmOpen;
     private string _deleteConfirmMessage = string.Empty;
     private bool _isSettingsOpen;
+    private bool _isHelpOpen;
     private string _toastMessage = string.Empty;
     private bool _isToastVisible;
     private DispatcherTimer? _toastTimer;
@@ -71,6 +72,7 @@ public class MainViewModel : ViewModelBase
         CancelModalCommand = new RelayCommand(CloseModal);
         ViewLogsCommand = new RelayCommand(ViewLogs);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
+        OpenHelpCommand = new RelayCommand(OpenHelp);
         GoHomeCommand = new RelayCommand(GoHome);
         ExecuteBackupCommand = new RelayCommand(ExecuteBackup, () => SelectedBackupJob != null);
         ExecuteSelectedCommand = new RelayCommand(ExecuteSelected, () => BackupJobs.Any(j => j.IsSelected));
@@ -233,6 +235,20 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isSettingsOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
+                OnPropertyChanged(nameof(IsHelpOpen));
+            }
+        }
+    }
+
+    public bool IsHelpOpen
+    {
+        get => _isHelpOpen;
+        set
+        {
+            if (SetProperty(ref _isHelpOpen, value))
+            {
+                OnPropertyChanged(nameof(IsHomeActive));
+                OnPropertyChanged(nameof(IsSettingsOpen));
             }
         }
     }
@@ -243,7 +259,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _deleteConfirmMessage, value);
     }
 
-    public bool IsHomeActive => !IsSettingsOpen;
+    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen;
 
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
@@ -277,6 +293,7 @@ public class MainViewModel : ViewModelBase
     public ICommand CancelModalCommand { get; }
     public ICommand ViewLogsCommand { get; }
     public ICommand OpenSettingsCommand { get; }
+    public ICommand OpenHelpCommand { get; }
     public ICommand GoHomeCommand { get; }
     public ICommand ExecuteBackupCommand { get; }
     public ICommand ExecuteSelectedCommand { get; }
@@ -522,12 +539,23 @@ public class MainViewModel : ViewModelBase
     private void OpenSettings()
     {
         SettingsVM.LoadSettings();
+        _isHelpOpen = false;
+        OnPropertyChanged(nameof(IsHelpOpen));
         IsSettingsOpen = true;
+    }
+
+    private void OpenHelp()
+    {
+        _isSettingsOpen = false;
+        OnPropertyChanged(nameof(IsSettingsOpen));
+        IsHelpOpen = true;
+        RefreshHelpTranslations();
     }
 
     private void GoHome()
     {
         IsSettingsOpen = false;
+        IsHelpOpen = false;
     }
 
     private async void ExecuteBackup()
@@ -864,6 +892,67 @@ public class MainViewModel : ViewModelBase
     }
 
     #endregion
+
+    // ── Help screen translated labels ──
+    private string T(string key)
+    {
+        try { return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? key; }
+        catch { return key; }
+    }
+
+    public string HelpTitle => T("help_title");
+    public string HelpSubtitle => T("help_subtitle");
+    public string HelpGettingStarted => T("help_getting_started");
+    public string HelpGettingStartedDesc => T("help_getting_started_desc");
+    public string HelpStep1Title => T("help_step1_title");
+    public string HelpStep1Desc => T("help_step1_desc");
+    public string HelpStep2Title => T("help_step2_title");
+    public string HelpStep2Desc => T("help_step2_desc");
+    public string HelpStep3Title => T("help_step3_title");
+    public string HelpStep3Desc => T("help_step3_desc");
+    public string HelpBackupTypes => T("help_backup_types");
+    public string HelpComplete => T("help_complete");
+    public string HelpCompleteDesc => T("help_complete_desc");
+    public string HelpDifferential => T("help_differential");
+    public string HelpDifferentialDesc => T("help_differential_desc");
+    public string HelpMultiSources => T("help_multi_sources");
+    public string HelpMultiSourcesDesc => T("help_multi_sources_desc");
+    public string HelpMultiSourcesTip => T("help_multi_sources_tip");
+    public string HelpExecOrder => T("help_exec_order");
+    public string HelpExecOrderDesc => T("help_exec_order_desc");
+    public string HelpExecOrderTip => T("help_exec_order_tip");
+    public string HelpSearchFilters => T("help_search_filters");
+    public string HelpSearchFiltersDesc => T("help_search_filters_desc");
+    public string HelpSearchFiltersTip => T("help_search_filters_tip");
+    public string HelpSettings => T("help_settings");
+    public string HelpSettingsDesc => T("help_settings_desc");
+    public string HelpSettingsTheme => T("help_settings_theme");
+    public string HelpSettingsLanguage => T("help_settings_language");
+    public string HelpSettingsLogFormat => T("help_settings_log_format");
+    public string HelpSettingsLogPath => T("help_settings_log_path");
+    public string HelpSettingsStatePath => T("help_settings_state_path");
+    public string HelpLogs => T("help_logs");
+    public string HelpLogsDesc => T("help_logs_desc");
+    public string HelpLogsTip => T("help_logs_tip");
+    public string HelpTips => T("help_tips");
+    public string HelpTipsDesc => T("help_tips_desc");
+    public string HelpTip1Title => T("help_tip1_title");
+    public string HelpTip1Desc => T("help_tip1_desc");
+    public string HelpTip2Title => T("help_tip2_title");
+    public string HelpTip2Desc => T("help_tip2_desc");
+    public string HelpTip3Title => T("help_tip3_title");
+    public string HelpTip3Desc => T("help_tip3_desc");
+    public string HelpTip4Title => T("help_tip4_title");
+    public string HelpTip4Desc => T("help_tip4_desc");
+
+    public void RefreshHelpTranslations()
+    {
+        foreach (var prop in GetType().GetProperties()
+            .Where(p => p.Name.StartsWith("Help")))
+        {
+            OnPropertyChanged(prop.Name);
+        }
+    }
 }
 
 /// <summary>

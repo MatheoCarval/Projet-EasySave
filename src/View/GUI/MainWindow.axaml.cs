@@ -42,6 +42,15 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Handles the Tapped event on the FAB to add a backup
+    /// </summary>
+    private void FAB_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel && viewModel.AddBackupCommand.CanExecute(null))
+            viewModel.AddBackupCommand.Execute(null);
+    }
+
+    /// <summary>
     /// Handles the Tapped event on backup cards to open the edit modal
     /// </summary>
     private void BackupCard_Tapped(object? sender, TappedEventArgs e)
