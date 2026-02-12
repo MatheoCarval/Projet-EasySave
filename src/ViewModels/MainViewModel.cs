@@ -258,6 +258,17 @@ public class MainViewModel : ViewModelBase
 
     public string TxtBlockedPopupTitle => T("gui_blocked_popup_title");
     public string TxtBlockedPopupClose => T("gui_blocked_popup_close");
+    public string TxtLastExecution => T("gui_last_execution");
+    public string TxtProgress => T("gui_progress");
+    public string TxtBackupTasks => T("gui_backup_tasks");
+    public string TxtManageSubtitle => T("gui_manage_subtitle");
+    public string TxtTotal => T("gui_total");
+    public string TxtActive => T("gui_active");
+    public string TxtDone => T("gui_done");
+    public string TxtErrors => T("gui_errors");
+    public string TxtSelectAll => T("gui_select_all");
+    public string TxtSearchByName => T("gui_search_by_name");
+    public string TxtNoTasksFound => T("gui_no_tasks_found");
 
     public bool IsExecuteOrderOpen
     {
