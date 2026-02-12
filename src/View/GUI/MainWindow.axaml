@@ -83,6 +83,36 @@
         <Style Selector="Border.JobItem.SelectedDate">
             <Setter Property="Background" Value="{DynamicResource SidebarPressed}"/>
         </Style>
+        <Style Selector="Border.JobItem > StackPanel > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+
+        <!-- JSON ReadOnly TextBox: override all theme states to keep consistent colors -->
+        <Style Selector="TextBox.JsonViewer">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="SelectionBrush" Value="#40B0D0FF"/>
+        </Style>
+        <Style Selector="TextBox.JsonViewer:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
+        </Style>
+        <Style Selector="TextBox.JsonViewer:focus">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="TextBox.JsonViewer:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
+        </Style>
+        <Style Selector="TextBox.JsonViewer:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
     </Window.Styles>
 
     <Grid>

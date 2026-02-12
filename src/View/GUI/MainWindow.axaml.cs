@@ -544,8 +544,7 @@ public partial class MainWindow : Window
                 Text = "\u25cf",
                 FontSize = 12,
                 Margin = new Avalonia.Thickness(0, 0, 10, 0),
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                Foreground = TextPrimaryBrush
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             };
 
             var dateText = new TextBlock
@@ -553,8 +552,7 @@ public partial class MainWindow : Window
                 Text = displayDate,
                 FontSize = 14,
                 FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                Foreground = TextPrimaryBrush
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             };
 
             var stack = new StackPanel
@@ -646,17 +644,13 @@ public partial class MainWindow : Window
                 {
                     FontFamily = new Avalonia.Media.FontFamily("Consolas"),
                     FontSize = 13,
-                    Foreground = TextPrimaryBrush,
-                    Background = AppBackgroundBrush,
-                    BorderBrush = CardBorderBrush,
-                    BorderThickness = new Avalonia.Thickness(1),
-                    CornerRadius = new Avalonia.CornerRadius(8),
                     Padding = new Avalonia.Thickness(15),
                     TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                     IsReadOnly = true,
                     AcceptsReturn = true,
                     Text = jsonContent
                 };
+                jsonText.Classes.Add("JsonViewer");
 
                 scrollViewer.Content = jsonText;
                 Grid.SetRow(scrollViewer, 1);
@@ -808,17 +802,13 @@ public partial class MainWindow : Window
                     {
                         FontFamily = new Avalonia.Media.FontFamily("Consolas"),
                         FontSize = 13,
-                        Foreground = TextPrimaryBrush,
-                        Background = AppBackgroundBrush,
-                        BorderBrush = CardBorderBrush,
-                        BorderThickness = new Avalonia.Thickness(1),
-                        CornerRadius = new Avalonia.CornerRadius(8),
                         Padding = new Avalonia.Thickness(15),
                         TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                         IsReadOnly = true,
                         AcceptsReturn = true,
                         Text = jobJsons[jobName]
                     };
+                    jsonText.Classes.Add("JsonViewer");
 
                     scrollViewer.Content = jsonText;
                     Grid.SetRow(scrollViewer, 1);
