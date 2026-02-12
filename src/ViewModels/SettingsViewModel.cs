@@ -28,6 +28,8 @@ public class SettingsViewModel : ViewModelBase
     private int _logFormatIndex;   // 0 = JSON, 1 = XML
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
+    private string _cryptosoftPath = string.Empty;
+    private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
     private string? _selectedDetectedApplication;
     private bool _hasUnsavedChanges;
@@ -113,6 +115,30 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public string CryptosoftPath
+    {
+        get => _cryptosoftPath;
+        set
+        {
+            if (SetProperty(ref _cryptosoftPath, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
+    public string EncryptedExtensionsText
+    {
+        get => _encryptedExtensionsText;
+        set
+        {
+            if (SetProperty(ref _encryptedExtensionsText, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
     public string BlockedApplicationsText
     {
         get => _blockedApplicationsText;
@@ -175,6 +201,16 @@ public class SettingsViewModel : ViewModelBase
     public string TxtStatePathDesc => T("gui_state_path_desc");
     public string TxtBackup => T("gui_backup");
     public string TxtBackupDesc => T("gui_backup_desc");
+    public string TxtEncryption => T("gui_encryption");
+    public string TxtEncryptionDesc => T("gui_encryption_desc");
+    public string TxtCryptosoftPath => T("gui_cryptosoft_path");
+    public string TxtCryptosoftPathDesc => T("gui_cryptosoft_path_desc");
+    public string TxtEncryptedExtensions => T("gui_encrypted_extensions");
+    public string TxtEncryptedExtensionsDesc => T("gui_encrypted_extensions_desc");
+    public string TxtEncryptedExtensionsPlaceholder => T("gui_encrypted_extensions_placeholder");
+    public string TxtModalEncryptedExtensions => T("gui_modal_encrypted_extensions");
+    public string TxtModalEncryptedExtensionsDesc => T("gui_modal_encrypted_extensions_desc");
+    public string TxtModalEncryptedExtensionsPlaceholder => T("gui_modal_encrypted_extensions_placeholder");
     public string TxtBlockedApps => T("gui_blocked_apps");
     public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
     public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
@@ -244,6 +280,12 @@ public class SettingsViewModel : ViewModelBase
                 "EasySave", "state.json");
         OnPropertyChanged(nameof(StateFilePath));
 
+        _cryptosoftPath = config.GetCryptosoftPath();
+        OnPropertyChanged(nameof(CryptosoftPath));
+
+        _encryptedExtensionsText = string.Join(Environment.NewLine, config.GetEncryptedExtensions());
+        OnPropertyChanged(nameof(EncryptedExtensionsText));
+
         var blockedApps = config.GetBlockedApplications();
         _blockedApplicationsText = string.Join(Environment.NewLine, blockedApps);
         OnPropertyChanged(nameof(BlockedApplicationsText));
@@ -286,6 +328,8 @@ public class SettingsViewModel : ViewModelBase
             config.SetLogFormat(format);
             config.SetDarkMode(_isDarkTheme);
             config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
+            config.SetCryptosoftPath(_cryptosoftPath);
+            config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
             if (!string.IsNullOrWhiteSpace(logPath))
                 config.SetLogFilePath(logPath);
             if (!string.IsNullOrWhiteSpace(statePath))
@@ -353,6 +397,16 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtStatePathDesc));
         OnPropertyChanged(nameof(TxtBackup));
         OnPropertyChanged(nameof(TxtBackupDesc));
+        OnPropertyChanged(nameof(TxtEncryption));
+        OnPropertyChanged(nameof(TxtEncryptionDesc));
+        OnPropertyChanged(nameof(TxtCryptosoftPath));
+        OnPropertyChanged(nameof(TxtCryptosoftPathDesc));
+        OnPropertyChanged(nameof(TxtEncryptedExtensions));
+        OnPropertyChanged(nameof(TxtEncryptedExtensionsDesc));
+        OnPropertyChanged(nameof(TxtEncryptedExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensions));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensionsDesc));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensionsPlaceholder));
         OnPropertyChanged(nameof(TxtBlockedApps));
         OnPropertyChanged(nameof(TxtBlockedAppsDesc));
         OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
@@ -387,6 +441,22 @@ public class SettingsViewModel : ViewModelBase
             .Split(separators, StringSplitOptions.RemoveEmptyEntries)
             .Select(app => app.Trim())
             .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static List<string> ParseEncryptedExtensions(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { ',', ';', '\n', '\r' };
+        return text
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(ext => ext.Trim())
+            .Where(ext => !string.IsNullOrWhiteSpace(ext))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
     }

@@ -1199,6 +1199,80 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- ───── Encryption Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#228A8F52">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#8A8F52" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtEncryption}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtEncryptionDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Cryptosoft Path -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V10l-6-6h-6zm0 2v4h4V6h-4z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtCryptosoftPath}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtCryptosoftPathDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding CryptosoftPath}"
+                                             Watermark="/path/to/cryptosoft"
+                                             CornerRadius="8 0 0 8"
+                                             Padding="12,10"/>
+                                    <Button Grid.Column="1"
+                                            Name="BrowseCryptosoftPathButton"
+                                            Click="BrowseCryptosoftPath_Click"
+                                            Content="{Binding TxtBrowse}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="0 8 8 0"
+                                            Padding="16,10"
+                                            VerticalAlignment="Stretch"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Encrypted Extensions -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtEncryptedExtensions}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtEncryptedExtensionsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBox Text="{Binding EncryptedExtensionsText}"
+                                         Watermark="{Binding TxtEncryptedExtensionsPlaceholder}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="70"
+                                         CornerRadius="8"
+                                         Padding="12,10"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- ───── About Section ───── -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="16">
@@ -1538,6 +1612,8 @@
                                     <TextBlock Text="{Binding HelpSettingsLogPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsStatePath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsBlockedApps, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsCryptosoftPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsEncryptedExtensions, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -1770,6 +1846,49 @@
                                 <ComboBoxItem Content="Differential"/>
                             </ComboBox>
                         </StackPanel>
+
+                        <!-- Encrypt Files Field -->
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.6">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{DynamicResource TextSecondary}" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="Encrypt files after backup" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="Uses Cryptosoft for matching extensions" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="2"
+                                          IsChecked="{Binding ModalEncryptFiles}"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Custom Encrypted Extensions (per-job) -->
+                        <Border BorderThickness="1"
+                                BorderBrush="{DynamicResource SettingsBorder}"
+                                Background="{DynamicResource SettingsRowBackground}"
+                                CornerRadius="8"
+                                Padding="16,12"
+                                IsVisible="{Binding ModalEncryptFiles}">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Viewbox Grid.Column="0" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.5">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 2l-5.5 9h11z M12 17.5l5.5-9h-11z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock Text="{Binding SettingsVM.TxtModalEncryptedExtensions}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding SettingsVM.TxtModalEncryptedExtensionsDesc}" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBox Text="{Binding ModalEncryptedExtensions}"
+                                         Watermark="{Binding SettingsVM.TxtModalEncryptedExtensionsPlaceholder}"
+                                         Height="60"
+                                         TextWrapping="Wrap"
+                                         Classes="ModernTextBox"/>
+                            </StackPanel>
+                        </Border>
 
                         </StackPanel>
 

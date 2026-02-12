@@ -32,6 +32,7 @@ namespace EasySave.Tests.Models
             Assert.Null(job.CurrentSourceFile);
             Assert.Null(job.CurrentTargetFile);
             Assert.Equal(0, job.Progress);
+            Assert.False(job.EncryptFiles);
         }
 
         /// <summary>

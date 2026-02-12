@@ -137,7 +137,11 @@ public class Program
             : new JsonLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
-        var fileTransferService = new FileTransferService(logger, stateWriter);
+        var cryptageManager = new CryptageManager(
+            config.GetCryptosoftPath(),
+            config.GetEncryptedExtensions()
+        );
+        var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);
 
         _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications());
     }
