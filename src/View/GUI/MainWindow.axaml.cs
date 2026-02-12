@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
+using Avalonia.VisualTree;
 using Avalonia.Animation;
 using Avalonia.Threading;
 using EasySave.ViewModels;
@@ -12,6 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Globalization;
 
 namespace EasySave.View.GUI;
 
@@ -40,6 +43,18 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = new MainViewModel(App.BackupManager!);
+        
+        // Reset to Journal tab whenever Logs panel becomes visible
+        if (DataContext is MainViewModel vm)
+        {
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(MainViewModel.IsLogsOpen) && vm.IsLogsOpen)
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => ResetLogsToJournal());
+                }
+            };
+        }
     }
 
     /// <summary>
@@ -390,42 +405,51 @@ public partial class MainWindow : Window
     #region Logs Tab Switching
 
     /// <summary>
-    /// Handles click on Journalier tab
+    /// Resets the Logs view to show the Journal tab by default
     /// </summary>
-    private void JournalierTab_Clicked(object? sender, PointerPressedEventArgs e)
+    public void ResetLogsToJournal()
     {
         var journalierBorder = this.FindControl<Border>("JournalierTabBorder");
         var etatBorder = this.FindControl<Border>("EtatTabBorder");
         var journalierContent = this.FindControl<Grid>("JournalierContent");
         var etatContent = this.FindControl<Grid>("EtatContent");
 
-        if (journalierBorder != null && etatBorder != null && journalierContent != null && etatContent != null)
+        if (journalierContent != null && etatContent != null)
         {
-            // Update tab styles
-            journalierBorder.Background = this.FindResource("AppBackground") as IBrush;
-            journalierBorder.BorderBrush = this.FindResource("AccentBlue") as IBrush;
-            journalierBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
-            
-            etatBorder.Background = Brushes.Transparent;
-            etatBorder.BorderThickness = new Avalonia.Thickness(0);
-
-            // Update text styles
-            if (journalierBorder.Child is TextBlock journalierText)
-            {
-                journalierText.FontWeight = Avalonia.Media.FontWeight.Bold;
-                journalierText.Foreground = this.FindResource("TextPrimary") as IBrush;
-            }
-            
-            if (etatBorder.Child is TextBlock etatText)
-            {
-                etatText.FontWeight = Avalonia.Media.FontWeight.Normal;
-                etatText.Foreground = this.FindResource("TextSecondary") as IBrush;
-            }
-
-            // Show/hide content
             journalierContent.IsVisible = true;
             etatContent.IsVisible = false;
         }
+
+        if (journalierBorder != null && !journalierBorder.Classes.Contains("ActiveTab"))
+            journalierBorder.Classes.Add("ActiveTab");
+        if (etatBorder != null && etatBorder.Classes.Contains("ActiveTab"))
+            etatBorder.Classes.Remove("ActiveTab");
+
+        // Clear any selected date
+        ClearSelectedDates();
+
+        // Load dates from log files
+        LoadLogDates();
+    }
+
+    /// <summary>
+    /// Handles click on Journalier tab
+    /// </summary>
+    private void JournalierTab_Clicked(object? sender, PointerPressedEventArgs e)
+    {
+        e.Handled = true;
+        var journalierBorder = this.FindControl<Border>("JournalierTabBorder");
+        var etatBorder = this.FindControl<Border>("EtatTabBorder");
+        var journalierContent = this.FindControl<Grid>("JournalierContent");
+        var etatContent = this.FindControl<Grid>("EtatContent");
+
+        if (journalierBorder != null && !journalierBorder.Classes.Contains("ActiveTab"))
+            journalierBorder.Classes.Add("ActiveTab");
+        if (etatBorder != null && etatBorder.Classes.Contains("ActiveTab"))
+            etatBorder.Classes.Remove("ActiveTab");
+
+        if (journalierContent != null) journalierContent.IsVisible = true;
+        if (etatContent != null) etatContent.IsVisible = false;
     }
 
     /// <summary>
@@ -433,37 +457,263 @@ public partial class MainWindow : Window
     /// </summary>
     private void EtatTab_Clicked(object? sender, PointerPressedEventArgs e)
     {
+        e.Handled = true;
         var journalierBorder = this.FindControl<Border>("JournalierTabBorder");
         var etatBorder = this.FindControl<Border>("EtatTabBorder");
         var journalierContent = this.FindControl<Grid>("JournalierContent");
         var etatContent = this.FindControl<Grid>("EtatContent");
 
-        if (journalierBorder != null && etatBorder != null && journalierContent != null && etatContent != null)
+        if (etatBorder != null && !etatBorder.Classes.Contains("ActiveTab"))
+            etatBorder.Classes.Add("ActiveTab");
+        if (journalierBorder != null && journalierBorder.Classes.Contains("ActiveTab"))
+            journalierBorder.Classes.Remove("ActiveTab");
+
+        if (journalierContent != null) journalierContent.IsVisible = false;
+        if (etatContent != null) etatContent.IsVisible = true;
+    }
+
+    private static readonly IBrush TextPrimaryBrush = new SolidColorBrush(Color.FromRgb(26, 26, 26));
+    private static readonly IBrush TextSecondaryBrush = new SolidColorBrush(Color.FromRgb(85, 85, 85));
+    private static readonly IBrush AppBackgroundBrush = new SolidColorBrush(Color.FromRgb(245, 245, 245));
+    private static readonly IBrush CardBorderBrush = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+
+    private string? _currentJsonContent;
+    private string? _currentJsonFilePath;
+    private string? _currentEtatJsonContent;
+
+    /// <summary>
+    /// Scans the EasySave logs directory and populates the date list dynamically
+    /// </summary>
+    private void LoadLogDates()
+    {
+        var dateListPanel = this.FindControl<StackPanel>("DateListPanel");
+        if (dateListPanel == null) return;
+
+        dateListPanel.Children.Clear();
+
+        var logsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "logs");
+
+        if (!Directory.Exists(logsDir))
         {
-            // Update tab styles
-            etatBorder.Background = this.FindResource("AppBackground") as IBrush;
-            etatBorder.BorderBrush = this.FindResource("AccentBlue") as IBrush;
-            etatBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
-            
-            journalierBorder.Background = Brushes.Transparent;
-            journalierBorder.BorderThickness = new Avalonia.Thickness(0);
-
-            // Update text styles
-            if (etatBorder.Child is TextBlock etatText)
+            var noLogsText = new TextBlock
             {
-                etatText.FontWeight = Avalonia.Media.FontWeight.Bold;
-                etatText.Foreground = this.FindResource("TextPrimary") as IBrush;
-            }
-            
-            if (journalierBorder.Child is TextBlock journalierText)
+                Text = "Aucun fichier log trouv\u00e9",
+                FontSize = 14,
+                Foreground = TextSecondaryBrush,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 20, 0, 0)
+            };
+            dateListPanel.Children.Add(noLogsText);
+            return;
+        }
+
+        var logFiles = Directory.GetFiles(logsDir, "jobs_*.json")
+            .OrderByDescending(f => f)
+            .ToList();
+
+        if (logFiles.Count == 0)
+        {
+            var noLogsText = new TextBlock
             {
-                journalierText.FontWeight = Avalonia.Media.FontWeight.Normal;
-                journalierText.Foreground = this.FindResource("TextSecondary") as IBrush;
+                Text = "Aucun fichier log trouv\u00e9",
+                FontSize = 14,
+                Foreground = TextSecondaryBrush,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 20, 0, 0)
+            };
+            dateListPanel.Children.Add(noLogsText);
+            return;
+        }
+
+        foreach (var filePath in logFiles)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            // Extract date from filename: jobs_2026-02-10 -> 2026-02-10
+            var dateStr = fileName.Replace("jobs_", "");
+
+            if (!DateTime.TryParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out var date))
+                continue;
+
+            var displayDate = date.ToString("dd/MM/yyyy");
+
+            var bullet = new TextBlock
+            {
+                Text = "\u25cf",
+                FontSize = 12,
+                Margin = new Avalonia.Thickness(0, 0, 10, 0),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Foreground = TextPrimaryBrush
+            };
+
+            var dateText = new TextBlock
+            {
+                Text = displayDate,
+                FontSize = 14,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Foreground = TextPrimaryBrush
+            };
+
+            var stack = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Height = 40
+            };
+            stack.Children.Add(bullet);
+            stack.Children.Add(dateText);
+
+            var border = new Border
+            {
+                Margin = new Avalonia.Thickness(0, 5),
+                Padding = new Avalonia.Thickness(10),
+                CornerRadius = new Avalonia.CornerRadius(5),
+                Tag = filePath,  // Store the full file path
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                Child = stack
+            };
+            border.Classes.Add("JobItem");
+            border.PointerPressed += DateItem_Clicked;
+
+            dateListPanel.Children.Add(border);
+        }
+    }
+
+    /// <summary>
+    /// Clears the SelectedDate class from all date items in the Journal list
+    /// </summary>
+    private void ClearSelectedDates()
+    {
+        var journalierContent = this.FindControl<Grid>("JournalierContent");
+        if (journalierContent == null) return;
+
+        foreach (var border in journalierContent.GetVisualDescendants().OfType<Border>())
+        {
+            if (border.Classes.Contains("SelectedDate"))
+                border.Classes.Remove("SelectedDate");
+        }
+    }
+
+    /// <summary>
+    /// Handles click on a date item in Journal tab to display its JSON in the right panel
+    /// </summary>
+    private void DateItem_Clicked(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border && border.Tag is string filePath)
+        {
+            // Mark selected date
+            ClearSelectedDates();
+            if (!border.Classes.Contains("SelectedDate"))
+                border.Classes.Add("SelectedDate");
+
+            // Read the actual JSON file
+            string jsonContent;
+            try
+            {
+                jsonContent = File.ReadAllText(filePath);
+            }
+            catch (Exception ex)
+            {
+                jsonContent = $"Erreur de lecture : {ex.Message}";
             }
 
-            // Show/hide content
-            journalierContent.IsVisible = false;
-            etatContent.IsVisible = true;
+            _currentJsonContent = jsonContent;
+            _currentJsonFilePath = filePath;
+
+            // Show copy/download buttons
+            var copyBtn = this.FindControl<Button>("CopyJsonButton");
+            var dlBtn = this.FindControl<Button>("DownloadJsonButton");
+            if (copyBtn != null) copyBtn.IsVisible = true;
+            if (dlBtn != null) dlBtn.IsVisible = true;
+
+            var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
+            if (jsonGrid != null)
+            {
+                if (jsonGrid.Children.Count > 1)
+                {
+                    jsonGrid.Children.RemoveAt(1);
+                }
+
+                var scrollViewer = new ScrollViewer
+                {
+                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                };
+
+                var jsonText = new TextBox
+                {
+                    FontFamily = new Avalonia.Media.FontFamily("Consolas"),
+                    FontSize = 13,
+                    Foreground = TextPrimaryBrush,
+                    Background = AppBackgroundBrush,
+                    BorderBrush = CardBorderBrush,
+                    BorderThickness = new Avalonia.Thickness(1),
+                    CornerRadius = new Avalonia.CornerRadius(8),
+                    Padding = new Avalonia.Thickness(15),
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    IsReadOnly = true,
+                    AcceptsReturn = true,
+                    Text = jsonContent
+                };
+
+                scrollViewer.Content = jsonText;
+                Grid.SetRow(scrollViewer, 1);
+                jsonGrid.Children.Add(scrollViewer);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Copies the current JSON content to clipboard
+    /// </summary>
+    private async void CopyJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_currentJsonContent != null && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(_currentJsonContent);
+
+            // Visual feedback: change button text briefly
+            if (sender is Button btn)
+            {
+                var original = btn.Content;
+                btn.Content = "\u2705 Copi\u00e9 !";
+                await System.Threading.Tasks.Task.Delay(1500);
+                btn.Content = original;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Opens a save dialog to download/save the current JSON file
+    /// </summary>
+    private async void DownloadJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_currentJsonContent == null) return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var defaultName = _currentJsonFilePath != null
+            ? Path.GetFileName(_currentJsonFilePath)
+            : "logs.json";
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+        {
+            Title = "Enregistrer le fichier JSON",
+            SuggestedFileName = defaultName,
+            FileTypeChoices = new[]
+            {
+                new Avalonia.Platform.Storage.FilePickerFileType("JSON") { Patterns = new[] { "*.json" } }
+            }
+        });
+
+        if (file != null)
+        {
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+            await writer.WriteAsync(_currentJsonContent);
         }
     }
 
@@ -529,6 +779,14 @@ public partial class MainWindow : Window
 
             if (jobJsons.ContainsKey(jobName))
             {
+                _currentEtatJsonContent = jobJsons[jobName];
+
+                // Show copy/download buttons
+                var etatCopyBtn = this.FindControl<Button>("EtatCopyJsonButton");
+                var etatDownloadBtn = this.FindControl<Button>("EtatDownloadJsonButton");
+                if (etatCopyBtn != null) etatCopyBtn.IsVisible = true;
+                if (etatDownloadBtn != null) etatDownloadBtn.IsVisible = true;
+
                 // Find the JSON display grid in Etat content
                 var jsonGrid = this.FindControl<Grid>("EtatJsonGrid");
                 
@@ -546,30 +804,74 @@ public partial class MainWindow : Window
                         HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
                     };
 
-                    var jsonContentBorder = new Border
-                    {
-                        Background = this.FindResource("AppBackground") as IBrush,
-                        Padding = new Avalonia.Thickness(15),
-                        BorderBrush = this.FindResource("ClickableCardBorder") as IBrush,
-                        BorderThickness = new Avalonia.Thickness(1),
-                        CornerRadius = new Avalonia.CornerRadius(8)
-                    };
-
-                    var jsonText = new TextBlock
+                    var jsonText = new TextBox
                     {
                         FontFamily = new Avalonia.Media.FontFamily("Consolas"),
                         FontSize = 13,
-                        Foreground = this.FindResource("TextPrimary") as IBrush,
+                        Foreground = TextPrimaryBrush,
+                        Background = AppBackgroundBrush,
+                        BorderBrush = CardBorderBrush,
+                        BorderThickness = new Avalonia.Thickness(1),
+                        CornerRadius = new Avalonia.CornerRadius(8),
+                        Padding = new Avalonia.Thickness(15),
                         TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                        IsReadOnly = true,
+                        AcceptsReturn = true,
                         Text = jobJsons[jobName]
                     };
 
-                    jsonContentBorder.Child = jsonText;
-                    scrollViewer.Content = jsonContentBorder;
+                    scrollViewer.Content = jsonText;
                     Grid.SetRow(scrollViewer, 1);
                     jsonGrid.Children.Add(scrollViewer);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Copies the Etat JSON content to clipboard
+    /// </summary>
+    private async void EtatCopyJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_currentEtatJsonContent != null && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(_currentEtatJsonContent);
+
+            if (sender is Button btn)
+            {
+                var original = btn.Content;
+                btn.Content = "\u2705 Copi\u00e9 !";
+                await System.Threading.Tasks.Task.Delay(1500);
+                btn.Content = original;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Opens a save dialog to download/save the Etat JSON content
+    /// </summary>
+    private async void EtatDownloadJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_currentEtatJsonContent == null) return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+        {
+            Title = "Enregistrer le fichier JSON",
+            SuggestedFileName = "state.json",
+            FileTypeChoices = new[]
+            {
+                new Avalonia.Platform.Storage.FilePickerFileType("JSON") { Patterns = new[] { "*.json" } }
+            }
+        });
+
+        if (file != null)
+        {
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+            await writer.WriteAsync(_currentEtatJsonContent);
         }
     }
 

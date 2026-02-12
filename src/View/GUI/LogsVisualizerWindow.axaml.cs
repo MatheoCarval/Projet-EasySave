@@ -24,30 +24,32 @@ namespace EasySave.View.GUI
         {
             var journalierBorder = this.FindControl<Border>("JournalierTabBorder");
             var etatBorder = this.FindControl<Border>("EtatTabBorder");
+            var journalierText = this.FindControl<TextBlock>("JournalierTabText");
+            var etatText = this.FindControl<TextBlock>("EtatTabText");
             var journalierContent = this.FindControl<Grid>("JournalierContent");
             var etatContent = this.FindControl<Grid>("EtatContent");
 
             if (journalierBorder != null && etatBorder != null && journalierContent != null && etatContent != null)
             {
                 // Update tab styles
-                journalierBorder.Background = Brushes.LightGray;
-                journalierBorder.BorderBrush = Brushes.Blue;
+                journalierBorder.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
+                journalierBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(33, 150, 243));
                 journalierBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
                 
                 etatBorder.Background = Brushes.Transparent;
                 etatBorder.BorderThickness = new Avalonia.Thickness(0);
 
                 // Update text styles
-                if (journalierBorder.Child is TextBlock journalierText)
+                if (journalierText != null)
                 {
                     journalierText.FontWeight = Avalonia.Media.FontWeight.Bold;
-                    journalierText.Foreground = Brushes.Black;
+                    journalierText.Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51));
                 }
                 
-                if (etatBorder.Child is TextBlock etatText)
+                if (etatText != null)
                 {
                     etatText.FontWeight = Avalonia.Media.FontWeight.Normal;
-                    etatText.Foreground = Brushes.Gray;
+                    etatText.Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102));
                 }
 
                 // Show/hide content
@@ -63,30 +65,32 @@ namespace EasySave.View.GUI
         {
             var journalierBorder = this.FindControl<Border>("JournalierTabBorder");
             var etatBorder = this.FindControl<Border>("EtatTabBorder");
+            var journalierText = this.FindControl<TextBlock>("JournalierTabText");
+            var etatText = this.FindControl<TextBlock>("EtatTabText");
             var journalierContent = this.FindControl<Grid>("JournalierContent");
             var etatContent = this.FindControl<Grid>("EtatContent");
 
             if (journalierBorder != null && etatBorder != null && journalierContent != null && etatContent != null)
             {
                 // Update tab styles
-                etatBorder.Background = Brushes.LightGray;
-                etatBorder.BorderBrush = Brushes.Blue;
+                etatBorder.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
+                etatBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(33, 150, 243));
                 etatBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
                 
                 journalierBorder.Background = Brushes.Transparent;
                 journalierBorder.BorderThickness = new Avalonia.Thickness(0);
 
                 // Update text styles
-                if (etatBorder.Child is TextBlock etatText)
+                if (etatText != null)
                 {
                     etatText.FontWeight = Avalonia.Media.FontWeight.Bold;
-                    etatText.Foreground = Brushes.Black;
+                    etatText.Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51));
                 }
                 
-                if (journalierBorder.Child is TextBlock journalierText)
+                if (journalierText != null)
                 {
                     journalierText.FontWeight = Avalonia.Media.FontWeight.Normal;
-                    journalierText.Foreground = Brushes.Gray;
+                    journalierText.Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102));
                 }
 
                 // Show/hide content

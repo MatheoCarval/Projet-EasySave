@@ -12,16 +12,34 @@
         Background="#FFFFFF">
 
     <Window.Styles>
-        <!-- Hover effects for tab borders -->
-        <Style Selector="Border.LogTab:pointerover">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        
         <!-- Hover effects for job items -->
         <Style Selector="Border.JobItem:pointerover">
             <Setter Property="Background" Value="#22FFFFFF"/>
             <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        
+        <!-- Style for TabControl -->
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="#FAFAFA"/>
+        </Style>
+        
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="20,15"/>
+            <Setter Property="Height" Value="60"/>
+        </Style>
+        
+        <Style Selector="TabItem:selected">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Background" Value="#F0F0F0"/>
+        </Style>
+        
+        <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Height" Value="3"/>
         </Style>
     </Window.Styles>
 
@@ -46,118 +64,82 @@
             </StackPanel>
         </Border>
 
-        <!-- Main Content Area -->
-        <Grid Grid.Column="1" RowDefinitions="60,*">
+        <!-- Main Content Area with TabControl -->
+        <TabControl Grid.Column="1" Background="White">
+            
+            <!-- Journal Tab -->
+            <TabItem Header="Journal">
+                <Grid Background="#FAFAFA">
+                    <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="20">
+                            
+                            <TextBlock Text="Historique" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Foreground="#333"/>
 
-            <!-- Top Navigation Bar (Always Visible) -->
-            <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
-                <Grid ColumnDefinitions="*,*">
-                    
-                    <!-- Journalier Tab (Active) -->
-                    <Border Grid.Column="0" Background="#F0F0F0" Height="60" BorderBrush="#2196F3" 
-                            BorderThickness="0,0,0,3"
-                            Name="JournalierTabBorder"
-                            Classes="LogTab"
-                            PointerPressed="JournalierTab_Clicked">
-                        <TextBlock Text="Journalier" FontSize="16" FontWeight="Bold" Foreground="#333333" 
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    
-                    <!-- Etat Tab -->
-                    <Border Grid.Column="1" Background="Transparent" Height="60"
-                            Name="EtatTabBorder"
-                            Classes="LogTab"
-                            PointerPressed="EtatTab_Clicked">
-                        <TextBlock Text="Etat" FontSize="16" Foreground="#666666" 
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    
+                            <!-- Log Entries List -->
+                            <ItemsControl ItemsSource="{Binding LogEntries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander HorizontalAlignment="Stretch" Margin="0,0,0,10" Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
+                                        
+                                            <!-- Expander Header -->
+                                            <Expander.Header>
+                                                <StackPanel Orientation="Horizontal" Margin="10,5">
+                                                    <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" Foreground="Black"/>
+                                                    <TextBlock Text="{Binding Timestamp}" FontWeight="Bold" Margin="0,0,15,0" Foreground="Black"/>
+                                                    <TextBlock Text="{Binding BackupName}" Foreground="#666666" FontSize="12"/>
+                                                </StackPanel>
+                                            </Expander.Header>
+
+                                            <!-- Expander Content -->
+                                            <Expander.Content>
+                                                <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,0" Padding="15" Background="#FAFAFA">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Détails (JSON):" FontWeight="Bold" Margin="0,0,0,10" Foreground="#333"/>
+                                                        
+                                                        <ScrollViewer Height="200" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+                                                            <StackPanel Margin="5">
+                                                                <TextBlock Text="{}{" FontFamily="Consolas" FontSize="11" Foreground="#333"/>
+                                                                
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="  &quot;Source&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
+                                                                    <TextBlock Text="{Binding SourcePath}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
+                                                                </StackPanel>
+                                                                
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="  &quot;Target&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
+                                                                    <TextBlock Text="{Binding TargetPath}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
+                                                                </StackPanel>
+
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="  &quot;Size&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
+                                                                    <TextBlock Text="{Binding FileSizeDisplay}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
+                                                                </StackPanel>
+
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="  &quot;Time&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
+                                                                    <TextBlock Text="{Binding TransferTimeDisplay}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
+                                                                </StackPanel>
+                                                                
+                                                                <TextBlock Text="{}}" FontFamily="Consolas" FontSize="11" Foreground="#333"/>
+                                                            </StackPanel>
+                                                        </ScrollViewer>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Expander.Content>
+                                        
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
-            </Border>
-
-            <!-- Content Container -->
-            <Grid Grid.Row="1">
-                
-                <!-- Journalier Content -->
-                <Grid Background="#FAFAFA" ColumnDefinitions="300,*" Name="JournalierContent">
-                    
-                    <!-- Left Panel - Date List -->
-                    <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="5">
-                                
-                                <!-- Date Entry 1 -->
-                                <Expander IsExpanded="False" Background="White" Margin="0,5">
-                                    <Expander.Header>
-                                        <StackPanel Orientation="Horizontal" Height="40">
-                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="10/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Expander.Header>
-                                    <Expander.Content>
-                                        <Border Padding="20,10" Background="#F9F9F9">
-                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                        </Border>
-                                    </Expander.Content>
-                                </Expander>
-                                
-                                <!-- Date Entry 2 -->
-                                <Expander IsExpanded="False" Background="White" Margin="0,5">
-                                    <Expander.Header>
-                                        <StackPanel Orientation="Horizontal" Height="40">
-                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="09/02/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Expander.Header>
-                                    <Expander.Content>
-                                        <Border Padding="20,10" Background="#F9F9F9">
-                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                        </Border>
-                                    </Expander.Content>
-                                </Expander>
-                                
-                                <!-- Date Entry 3 -->
-                                <Expander IsExpanded="False" Background="White" Margin="0,5">
-                                    <Expander.Header>
-                                        <StackPanel Orientation="Horizontal" Height="40">
-                                            <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="08/03/2026" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Expander.Header>
-                                    <Expander.Content>
-                                        <Border Padding="20,10" Background="#F9F9F9">
-                                            <TextBlock Text="Contenu du log pour cette date..." FontSize="12" Foreground="#666"/>
-                                        </Border>
-                                    </Expander.Content>
-                                </Expander>
-                                
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Border>
-
-                    <!-- Right Panel - JSON Content -->
-                    <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
-                            BorderBrush="#E0E0E0" BorderThickness="1">
-                        <Grid RowDefinitions="Auto,*">
-                            
-                            <!-- Header -->
-                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
-                                       Margin="0,0,0,15" Foreground="#333333"/>
-                            
-                            <!-- Placeholder when no date selected -->
-                            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1">
-                                <TextBlock Text="Déplier une journalisation" 
-                                           FontSize="14" Foreground="#999999"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            
-                        </Grid>
-                    </Border>
-
-                </Grid>
-
-                <!-- Etat Content -->
-                <Grid Background="#FAFAFA" ColumnDefinitions="300,*" Name="EtatContent" IsVisible="False">
+            </TabItem>
+            
+            <!-- Etat Tab -->
+            <TabItem Header="Etat">
+                <Grid Background="#FAFAFA" ColumnDefinitions="300,*">
                     
                     <!-- Left Panel - Job List -->
                     <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
@@ -232,10 +214,9 @@
                     </Border>
 
                 </Grid>
-                
-            </Grid>
-
-        </Grid>
+            </TabItem>
+            
+        </TabControl>
 
     </Grid>
 
