@@ -43,7 +43,7 @@ public class Program
         {
             var baseDir = AppContext.BaseDirectory;
             var runtimesDir = Path.Combine(baseDir, "runtimes", "win-x64", "native");
-            
+
             if (Directory.Exists(runtimesDir))
             {
                 // Add native library directory to DLL search path
@@ -63,7 +63,7 @@ public class Program
                     var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
                     Directory.CreateDirectory(logDir);
                     var logPath = Path.Combine(logDir, "crash.log");
-                    
+
                     var details = $"[{DateTime.Now}] {ex?.GetType().Name}: {ex?.Message}\n{ex?.StackTrace}\n";
                     if (ex?.InnerException != null)
                     {
@@ -71,7 +71,7 @@ public class Program
                     }
                     details += $"BaseDirectory: {AppContext.BaseDirectory}\n";
                     details += $"ProcessPath: {Environment.ProcessPath}\n\n";
-                    
+
                     File.AppendAllText(logPath, details);
                 }
                 catch { }
