@@ -718,6 +718,20 @@ public partial class MainWindow : Window
     {
         if (sender is Border border && border.Tag is string jobName)
         {
+            // Clear previous selection in Etat content
+            var etatContent = this.FindControl<Grid>("EtatContent");
+            if (etatContent != null)
+            {
+                foreach (var b in etatContent.GetVisualDescendants().OfType<Border>())
+                {
+                    if (b.Classes.Contains("SelectedDate"))
+                        b.Classes.Remove("SelectedDate");
+                }
+            }
+            // Mark current item as selected
+            if (!border.Classes.Contains("SelectedDate"))
+                border.Classes.Add("SelectedDate");
+
             // Define the JSON for each job
             var jobJsons = new Dictionary<string, string>
             {
