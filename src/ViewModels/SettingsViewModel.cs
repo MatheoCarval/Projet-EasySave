@@ -32,6 +32,7 @@ public class SettingsViewModel : ViewModelBase
     private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
     private string? _selectedDetectedApplication;
+    private string _detectedAppsSearch = string.Empty;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
 
@@ -39,12 +40,14 @@ public class SettingsViewModel : ViewModelBase
     {
         _configManager = ConfigurationManager.GetInstance();
         DetectedApplications = new ObservableCollection<string>();
+        FilteredDetectedApplications = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
         ResetCommand = new RelayCommand(LoadSettings);
         RefreshDetectedAppsCommand = new RelayCommand(RefreshDetectedApplications);
         AddDetectedAppCommand = new RelayCommand(AddSelectedDetectedApplication, () => !string.IsNullOrWhiteSpace(SelectedDetectedApplication));
+        ClearDetectedAppsSearchCommand = new RelayCommand(() => DetectedAppsSearch = string.Empty);
     }
 
     #region Properties
@@ -152,6 +155,19 @@ public class SettingsViewModel : ViewModelBase
     }
 
     public ObservableCollection<string> DetectedApplications { get; }
+    public ObservableCollection<string> FilteredDetectedApplications { get; }
+
+    public string DetectedAppsSearch
+    {
+        get => _detectedAppsSearch;
+        set
+        {
+            if (SetProperty(ref _detectedAppsSearch, value))
+            {
+                ApplyDetectedAppsFilter();
+            }
+        }
+    }
 
     public string? SelectedDetectedApplication
     {
@@ -219,6 +235,7 @@ public class SettingsViewModel : ViewModelBase
     public string TxtDetectAppsButton => T("gui_detect_apps_button");
     public string TxtAddBlockedAppButton => T("gui_add_blocked_app_button");
     public string TxtBrowseExeButton => T("gui_browse_exe_button");
+    public string TxtSearchProcessPlaceholder => T("gui_search_process_placeholder");
     public string TxtAbout => T("gui_about");
     public string TxtAboutDesc => T("gui_about_desc");
     public string TxtVersion => T("gui_version");
@@ -245,6 +262,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand ResetCommand { get; }
     public ICommand RefreshDetectedAppsCommand { get; }
     public ICommand AddDetectedAppCommand { get; }
+    public ICommand ClearDetectedAppsSearchCommand { get; }
 
     #endregion
 
@@ -415,6 +433,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtDetectAppsButton));
         OnPropertyChanged(nameof(TxtAddBlockedAppButton));
         OnPropertyChanged(nameof(TxtBrowseExeButton));
+        OnPropertyChanged(nameof(TxtSearchProcessPlaceholder));
         OnPropertyChanged(nameof(TxtAbout));
         OnPropertyChanged(nameof(TxtAboutDesc));
         OnPropertyChanged(nameof(TxtVersion));
@@ -468,6 +487,20 @@ public class SettingsViewModel : ViewModelBase
         foreach (var app in detected.OrderBy(a => a, StringComparer.OrdinalIgnoreCase))
         {
             DetectedApplications.Add(app);
+        }
+        ApplyDetectedAppsFilter();
+    }
+
+    private void ApplyDetectedAppsFilter()
+    {
+        FilteredDetectedApplications.Clear();
+        var query = _detectedAppsSearch?.Trim() ?? string.Empty;
+        var filtered = string.IsNullOrEmpty(query)
+            ? DetectedApplications
+            : DetectedApplications.Where(a => a.Contains(query, StringComparison.OrdinalIgnoreCase));
+        foreach (var app in filtered)
+        {
+            FilteredDetectedApplications.Add(app);
         }
     }
 
