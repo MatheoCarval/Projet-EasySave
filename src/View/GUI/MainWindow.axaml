@@ -1414,47 +1414,8 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
                             BorderThickness="0,0,1,0" Padding="15">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="5">
-                                <Border Margin="0,5" 
-                                        Padding="10" CornerRadius="5" Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="test">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="test" FontSize="14" FontWeight="SemiBold" 
-                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Margin="0,5" 
-                                        Padding="10" CornerRadius="5" Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="TEST MID">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="TEST MID" FontSize="14" FontWeight="SemiBold" 
-                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Margin="0,5" 
-                                        Padding="10" CornerRadius="5" Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="tessthhhhhdqqsdqsdqsdqsd">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="tessthhhhhdqqsdqsdqsdqsd" FontSize="14" FontWeight="SemiBold" 
-                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Margin="0,5" 
-                                        Padding="10" CornerRadius="5" Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="qdhbh">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="qdhbh" FontSize="14" FontWeight="SemiBold" 
-                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}"/>
-                                    </StackPanel>
-                                </Border>
+                            <StackPanel Spacing="5" Name="EtatJobListPanel">
+                                <!-- Jobs are loaded dynamically from state.json -->
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

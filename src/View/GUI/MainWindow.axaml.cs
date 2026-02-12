@@ -430,6 +430,9 @@ public partial class MainWindow : Window
 
         // Load dates from log files
         LoadLogDates();
+
+        // Load state jobs
+        LoadStateJobs();
     }
 
     /// <summary>
@@ -470,6 +473,8 @@ public partial class MainWindow : Window
 
         if (journalierContent != null) journalierContent.IsVisible = false;
         if (etatContent != null) etatContent.IsVisible = true;
+
+        LoadStateJobs();
     }
 
     private static readonly IBrush TextPrimaryBrush = new SolidColorBrush(Color.FromRgb(26, 26, 26));
@@ -480,6 +485,80 @@ public partial class MainWindow : Window
     private string? _currentJsonContent;
     private string? _currentJsonFilePath;
     private string? _currentEtatJsonContent;
+
+    /// <summary>
+    /// Returns the path to the EasySave state.json file in AppData
+    /// </summary>
+    private static string GetStateFilePath()
+    {
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "state.json");
+    }
+
+    /// <summary>
+    /// Loads job entries from state.json and populates the Etat job list dynamically
+    /// </summary>
+    private void LoadStateJobs()
+    {
+        var panel = this.FindControl<StackPanel>("EtatJobListPanel");
+        if (panel == null) return;
+
+        panel.Children.Clear();
+
+        var stateFilePath = GetStateFilePath();
+        if (!File.Exists(stateFilePath)) return;
+
+        try
+        {
+            var json = File.ReadAllText(stateFilePath);
+            if (string.IsNullOrWhiteSpace(json) || json.Trim() == "{}") return;
+
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            foreach (var prop in doc.RootElement.EnumerateObject())
+            {
+                var jobName = prop.Name;
+
+                var bullet = new TextBlock
+                {
+                    Text = "\u25cf",
+                    FontSize = 12,
+                    Margin = new Avalonia.Thickness(0, 0, 10, 0),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+
+                var nameText = new TextBlock
+                {
+                    Text = jobName,
+                    FontSize = 14,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+
+                var stack = new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    Height = 40
+                };
+                stack.Children.Add(bullet);
+                stack.Children.Add(nameText);
+
+                var border = new Border
+                {
+                    Margin = new Avalonia.Thickness(0, 5),
+                    Padding = new Avalonia.Thickness(10),
+                    CornerRadius = new Avalonia.CornerRadius(5),
+                    Tag = jobName,
+                    Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                    Child = stack
+                };
+                border.Classes.Add("JobItem");
+                border.PointerPressed += JobItem_Clicked;
+
+                panel.Children.Add(border);
+            }
+        }
+        catch { /* state.json might be malformed or locked */ }
+    }
 
     /// <summary>
     /// Scans the EasySave logs directory and populates the date list dynamically
@@ -732,62 +811,27 @@ public partial class MainWindow : Window
             if (!border.Classes.Contains("SelectedDate"))
                 border.Classes.Add("SelectedDate");
 
-            // Define the JSON for each job
-            var jobJsons = new Dictionary<string, string>
+            // Read the job's JSON from state.json
+            string? jobJson = null;
+            try
             {
-                ["test"] = @"{
-  ""jobName"": ""test"",
-  ""timestamp"": ""2026-02-10T14:57:39.9197699Z"",
-  ""state"": 2,
-  ""totalFiles"": 5,
-  ""totalSize"": 402251,
-  ""progress"": 100,
-  ""remainingFiles"": 0,
-  ""remainingSize"": 0,
-  ""currentSourceFile"": ""\\\\localhost\\C$\\Users\\feita\\Documents\\test\\WebSite1\\w-brand.png"",
-  ""currentTargetFile"": ""\\\\localhost\\C$\\Users\\feita\\Documents\\test2\\WebSite1\\w-brand.png""
-}",
-                ["TEST MID"] = @"{
-  ""jobName"": ""TEST MID"",
-  ""timestamp"": ""2026-02-10T13:53:10.5556231Z"",
-  ""state"": 2,
-  ""totalFiles"": 155,
-  ""totalSize"": 13104971,
-  ""progress"": 100,
-  ""remainingFiles"": 0,
-  ""remainingSize"": 0,
-  ""currentSourceFile"": ""\\\\localhost\\C$\\Users\\feita\\Pictures\\Screenshots\\Screenshot 2026-02-10 144656.png"",
-  ""currentTargetFile"": ""\\\\localhost\\C$\\Users\\feita\\Pictures\\Dupli\\Screenshot 2026-02-10 144656.png""
-}",
-                ["tessthhhhhdqqsdqsdqsdqsd"] = @"{
-  ""jobName"": ""tessthhhhhdqqsdqsdqsdqsd"",
-  ""timestamp"": ""2026-02-10T10:48:34.7043449Z"",
-  ""state"": 3,
-  ""totalFiles"": 0,
-  ""totalSize"": 0,
-  ""progress"": 0,
-  ""remainingFiles"": 0,
-  ""remainingSize"": 0,
-  ""currentSourceFile"": """",
-  ""currentTargetFile"": """"
-}",
-                ["qdhbh"] = @"{
-  ""jobName"": ""qdhbh"",
-  ""timestamp"": ""2026-02-10T13:51:47.8372417Z"",
-  ""state"": 3,
-  ""totalFiles"": 0,
-  ""totalSize"": 0,
-  ""progress"": 0,
-  ""remainingFiles"": 0,
-  ""remainingSize"": 0,
-  ""currentSourceFile"": """",
-  ""currentTargetFile"": """"
-}"
-            };
+                var stateFilePath = GetStateFilePath();
+                if (File.Exists(stateFilePath))
+                {
+                    var stateContent = File.ReadAllText(stateFilePath);
+                    using var doc = System.Text.Json.JsonDocument.Parse(stateContent);
+                    if (doc.RootElement.TryGetProperty(jobName, out var jobElement))
+                    {
+                        jobJson = System.Text.Json.JsonSerializer.Serialize(jobElement,
+                            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    }
+                }
+            }
+            catch { /* state.json might be locked or malformed */ }
 
-            if (jobJsons.ContainsKey(jobName))
+            if (jobJson != null)
             {
-                _currentEtatJsonContent = jobJsons[jobName];
+                _currentEtatJsonContent = jobJson;
 
                 // Show copy/download buttons
                 var etatCopyBtn = this.FindControl<Button>("EtatCopyJsonButton");
@@ -820,7 +864,7 @@ public partial class MainWindow : Window
                         TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                         IsReadOnly = true,
                         AcceptsReturn = true,
-                        Text = jobJsons[jobName]
+                        Text = jobJson
                     };
                     jsonText.Classes.Add("JsonViewer");
 
