@@ -55,6 +55,9 @@ public class MainViewModel : ViewModelBase
     private bool _isFilterOpen;
     private readonly HashSet<string> _selectedTypes = new(StringComparer.OrdinalIgnoreCase) { "COMPLETE", "DIFFERENTIAL" };
     private readonly HashSet<string> _selectedStates = new(StringComparer.OrdinalIgnoreCase) { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
+    private int _currentPage = 1;
+    private int _filteredCount;
+    private const int PageSize = 5;
 
     private static readonly string[] AllTypes = { "COMPLETE", "DIFFERENTIAL" };
     private static readonly string[] AllStates = { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
@@ -116,6 +119,8 @@ public class MainViewModel : ViewModelBase
         ToggleAllStatesCommand = new RelayCommand(ToggleAllStates);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
         DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
+        PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
+        NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -134,7 +139,7 @@ public class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _searchText, value))
             {
-                ApplyFilter();
+                ApplyFilter(resetPage: true);
             }
         }
     }
@@ -215,6 +220,40 @@ public class MainViewModel : ViewModelBase
 
     public bool HasNoFilteredJobs => FilteredBackupJobs.Count == 0 && !HasNoJobs;
 
+    public int CurrentPage
+    {
+        get => _currentPage;
+        set
+        {
+            if (SetProperty(ref _currentPage, value))
+            {
+                ApplyFilter(resetPage: false);
+                OnPropertyChanged(nameof(CanGoToPreviousPage));
+                OnPropertyChanged(nameof(CanGoToNextPage));
+                ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_filteredCount / PageSize));
+
+    public bool CanGoToPreviousPage => CurrentPage > 1;
+
+    public bool CanGoToNextPage => CurrentPage < TotalPages;
+
+    public int PageItemCount
+    {
+        get
+        {
+            if (_filteredCount == 0)
+                return 0;
+            int start = (CurrentPage - 1) * PageSize + 1;
+            int end = Math.Min(CurrentPage * PageSize, _filteredCount);
+            return end - start + 1;
+        }
+    }
+
     public bool IsFilterOpen
     {
         get => _isFilterOpen;
@@ -269,6 +308,10 @@ public class MainViewModel : ViewModelBase
     public string TxtSelectAll => T("gui_select_all");
     public string TxtSearchByName => T("gui_search_by_name");
     public string TxtNoTasksFound => T("gui_no_tasks_found");
+    public string TxtPaginationPage => T("gui_pagination_page");
+    public string TxtPaginationPageOf => T("gui_pagination_page_of");
+    public string TxtPaginationPrevious => T("gui_pagination_previous");
+    public string TxtPaginationNext => T("gui_pagination_next");
 
     public bool IsExecuteOrderOpen
     {
@@ -389,6 +432,8 @@ public class MainViewModel : ViewModelBase
     public ICommand ClearFiltersCommand { get; }
     public ICommand DismissToastCommand { get; }
     public ICommand CloseBlockedPopupCommand { get; }
+    public ICommand PreviousPageCommand { get; }
+    public ICommand NextPageCommand { get; }
 
     #endregion
 
@@ -788,7 +833,7 @@ public class MainViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(HasNoJobs));
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ReloadBackupJobs()
@@ -815,14 +860,42 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedJobsCount));
         OnPropertyChanged(nameof(AreAllSelected));
         NotifyStats();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
-    private void ApplyFilter()
+    private void ApplyFilter(bool resetPage)
     {
         FilteredBackupJobs.Clear();
         var query = _searchText?.Trim() ?? string.Empty;
 
+        var filteredList = GetFilteredJobs(query).ToList();
+        _filteredCount = filteredList.Count;
+
+        if (resetPage)
+        {
+            _currentPage = 1;
+            OnPropertyChanged(nameof(CurrentPage));
+        }
+
+        // Apply pagination
+        var paginatedFiltered = filteredList
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize);
+
+        foreach (var job in paginatedFiltered)
+            FilteredBackupJobs.Add(job);
+
+        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        OnPropertyChanged(nameof(PageItemCount));
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(CanGoToNextPage));
+        OnPropertyChanged(nameof(CanGoToPreviousPage));
+        ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+    }
+
+    private IEnumerable<BackupJobViewModel> GetFilteredJobs(string query)
+    {
         IEnumerable<BackupJobViewModel> filtered = BackupJobs;
 
         // Text search: name only
@@ -837,10 +910,7 @@ public class MainViewModel : ViewModelBase
         if (_selectedStates.Count < AllStates.Length)
             filtered = filtered.Where(j => _selectedStates.Contains(j.BackupStateDisplay));
 
-        foreach (var job in filtered)
-            FilteredBackupJobs.Add(job);
-
-        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        return filtered;
     }
 
     private void ToggleFilterType(string? type)
@@ -854,7 +924,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedTypes.Add(type);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleFilterState(string? state)
@@ -868,7 +938,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedStates.Add(state);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllTypes()
@@ -878,7 +948,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var t in AllTypes) _selectedTypes.Add(t);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllStates()
@@ -888,7 +958,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ClearFilters()
@@ -897,7 +967,7 @@ public class MainViewModel : ViewModelBase
         foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterTypeChanged();
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
         IsFilterOpen = false;
     }
 
@@ -979,6 +1049,22 @@ public class MainViewModel : ViewModelBase
     private void CloseBlockedPopup()
     {
         IsBlockedPopupOpen = false;
+    }
+
+    private void PreviousPage()
+    {
+        if (CanGoToPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CanGoToNextPage)
+        {
+            CurrentPage++;
+        }
     }
 
     /// <summary>

@@ -710,8 +710,86 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <!-- Bottom Spacer for scrolling -->
-                        <Border Height="150"/>
+                        <!-- Pagination Controls -->
+                        <Border Padding="0,8,0,0" IsVisible="{Binding !HasNoJobs}">
+                            <StackPanel Spacing="12">
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+                                <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="0,4">
+                                    <!-- Previous Button -->
+                                    <Button Grid.Column="0"
+                                            Command="{Binding PreviousPageCommand}"
+                                            BorderThickness="1.5"
+                                            CornerRadius="8"
+                                            Padding="14,8"
+                                            Cursor="Hand"
+                                            IsEnabled="{Binding CanGoToPreviousPage}">
+                                        <Button.Styles>
+                                            <Style Selector="Button:enabled">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                            <Style Selector="Button:enabled TextBlock">
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="‹" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TxtPaginationPrevious}" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Page Counter (centered) -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding TxtPaginationPage}" FontSize="13" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding CurrentPage}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtPaginationPageOf}" FontSize="13" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TotalPages}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+
+                                    <!-- Next Button -->
+                                    <Button Grid.Column="2"
+                                            Command="{Binding NextPageCommand}"
+                                            BorderThickness="1.5"
+                                            CornerRadius="8"
+                                            Padding="14,8"
+                                            Cursor="Hand"
+                                            IsEnabled="{Binding CanGoToNextPage}">
+                                        <Button.Styles>
+                                            <Style Selector="Button:enabled">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                            <Style Selector="Button:enabled TextBlock">
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding TxtPaginationNext}" FontSize="13" VerticalAlignment="Center"/>
+                                            <TextBlock Text="›" FontSize="16" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Bottom Spacer for scrolling past floating buttons -->
+                        <Border Height="120"/>
 
                     </StackPanel>
                 </ScrollViewer>
