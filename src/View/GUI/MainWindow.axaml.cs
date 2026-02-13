@@ -1137,6 +1137,13 @@ public partial class MainWindow : Window
                 }
             }
         }
+        else
+        {
+            // No log for this date — show empty filtered list with message
+            _journalFilteredDateItems = new List<Border>();
+            _journalCurrentPage = 1;
+            ApplyJournalPagination();
+        }
     }
 
     /// <summary>
@@ -1928,6 +1935,22 @@ public partial class MainWindow : Window
         panel.Children.Clear();
 
         var sourceItems = _journalFilteredDateItems ?? _journalAllDateItems;
+
+        if (sourceItems.Count == 0)
+        {
+            var noLogsText = new TextBlock
+            {
+                Text = T("logs_no_logs_found") ?? "No logs found for this period",
+                FontSize = 14,
+                Foreground = TextSecondaryBrush,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 20, 0, 0)
+            };
+            panel.Children.Add(noLogsText);
+            if (paginationBorder != null) paginationBorder.IsVisible = false;
+            return;
+        }
+
         var totalPages = Math.Max(1, (int)Math.Ceiling(sourceItems.Count / (double)ItemsPerPage));
         if (_journalCurrentPage > totalPages) _journalCurrentPage = totalPages;
         if (_journalCurrentPage < 1) _journalCurrentPage = 1;

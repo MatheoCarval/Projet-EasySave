@@ -221,7 +221,8 @@
     "logs_calendar_days": "M,T,W,T,F,S,S",
     "logs_calendar_today": "Today",
     "logs_calendar_clear": "\u2715 Clear",
-    "logs_calendar_tooltip": "Calendar"
+    "logs_calendar_tooltip": "Calendar",
+    "logs_no_logs_found": "No logs found for this period"
   },
   "fr": {
     "app_title": "EasySave",
@@ -445,6 +446,7 @@
     "logs_calendar_days": "L,M,M,J,V,S,D",
     "logs_calendar_today": "Aujourd'hui",
     "logs_calendar_clear": "\u2715 Effacer",
-    "logs_calendar_tooltip": "Calendrier"
+    "logs_calendar_tooltip": "Calendrier",
+    "logs_no_logs_found": "Aucune log trouv\u00e9e pour cette p\u00e9riode"
   }
 }
