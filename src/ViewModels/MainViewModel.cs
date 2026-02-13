@@ -478,7 +478,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _deleteConfirmMessage, value);
     }
 
-    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen;
+    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen && !IsLogsOpen;
 
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
@@ -791,8 +791,8 @@ public class MainViewModel : ViewModelBase
             }
 
             ILogger logger = config.GetLogFormat() == LogFormat.XML
-                ? new XmlLogger(logPath)
-                : new JsonLogger(logPath);
+                ? new DailyXmlLogger(logPath)
+                : new DailyJsonLogger(logPath);
 
             var entries = logger.ReadLog<BackupLogEntry>()
                 .OrderByDescending(entry => entry.Timestamp)
@@ -821,6 +821,7 @@ public class MainViewModel : ViewModelBase
         SettingsVM.LoadSettings();
         _isHelpOpen = false;
         OnPropertyChanged(nameof(IsHelpOpen));
+        IsLogsOpen = false;
         IsSettingsOpen = true;
     }
 
@@ -828,6 +829,7 @@ public class MainViewModel : ViewModelBase
     {
         _isSettingsOpen = false;
         OnPropertyChanged(nameof(IsSettingsOpen));
+        IsLogsOpen = false;
         IsHelpOpen = true;
         RefreshHelpTranslations();
     }
@@ -836,6 +838,7 @@ public class MainViewModel : ViewModelBase
     {
         IsSettingsOpen = false;
         IsHelpOpen = false;
+        IsLogsOpen = false;
     }
 
     private async void ExecuteBackup()
@@ -1199,7 +1202,7 @@ public class MainViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Called when settings are saved — reload blocked applications into BackupManager immediately.
+    /// Called when settings are saved — reload blocked applications and logger format into BackupManager immediately.
     /// </summary>
     private void OnSettingsSaved(object? sender, EventArgs e)
     {

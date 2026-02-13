@@ -313,6 +313,15 @@ public class BackupManager
         _blockedApplications = NormalizeBlockedApplications(blockedApplications);
     }
 
+    /// <summary>
+    /// Updates the logger instance used for recording backup operations.
+    /// This allows changing the log format (JSON/XML) without restarting the application.
+    /// </summary>
+    public void UpdateLogger(EasyLog.Abstractions.ILogger logger)
+    {
+        _fileTransferService.UpdateLogger(logger);
+    }
+
     private static string NormalizeProcessName(string name)
     {
         var trimmed = name.Trim();
