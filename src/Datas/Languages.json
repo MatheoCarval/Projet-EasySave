@@ -199,7 +199,18 @@
     "help_tip3_title": "Dashboard stats",
     "help_tip3_desc": "The top cards show real-time counts of total, active, completed, and errored tasks at a glance.",
     "help_tip4_title": "Single task = no popup",
-    "help_tip4_desc": "If you select just one task and execute, it skips the execution order popup and runs right away."
+    "help_tip4_desc": "If you select just one task and execute, it skips the execution order popup and runs right away.",
+    "logs_tab_journal": "Logs",
+    "logs_tab_state": "State",
+    "logs_json_content": "JSON Content",
+    "logs_select_date": "Select a date",
+    "logs_select_job": "Select a job",
+    "logs_copy": "\ud83d\udccb Copy",
+    "logs_download": "\u2b07 Download",
+    "logs_copied": "\u2705 Copied!",
+    "logs_save_json": "Save JSON file",
+    "logs_history": "History",
+    "logs_details_json": "Details (JSON):"
   },
   "fr": {
     "app_title": "EasySave",
@@ -401,6 +412,17 @@
     "help_tip3_title": "Statistiques du tableau de bord",
     "help_tip3_desc": "Les cartes en haut affichent en temps réel le nombre total, actif, terminé et en erreur des tâches.",
     "help_tip4_title": "Une seule tâche = pas de popup",
-    "help_tip4_desc": "Si vous sélectionnez une seule tâche et l'exécutez, la fenêtre d'ordre est ignorée et elle démarre directement."
+    "help_tip4_desc": "Si vous sélectionnez une seule tâche et l'exécutez, la fenêtre d'ordre est ignorée et elle démarre directement.",
+    "logs_tab_journal": "Journal",
+    "logs_tab_state": "\u00c9tat",
+    "logs_json_content": "Contenu du JSON",
+    "logs_select_date": "S\u00e9lectionnez une date",
+    "logs_select_job": "S\u00e9lectionnez un job",
+    "logs_copy": "\ud83d\udccb Copier",
+    "logs_download": "\u2b07 T\u00e9l\u00e9charger",
+    "logs_copied": "\u2705 Copi\u00e9 !",
+    "logs_save_json": "Enregistrer le fichier JSON",
+    "logs_history": "Historique",
+    "logs_details_json": "D\u00e9tails (JSON) :"
   }
 }

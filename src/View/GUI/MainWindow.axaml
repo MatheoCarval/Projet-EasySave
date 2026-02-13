@@ -1381,7 +1381,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,*" Name="JournalJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,15">
-                                <TextBlock Grid.Column="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="CopyJsonButton" Content="&#x1F4CB; Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"
@@ -1399,7 +1399,7 @@
                             <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
                                     BorderBrush="{DynamicResource ClickableCardBorder}" 
                                     BorderThickness="1" CornerRadius="8">
-                                <TextBlock Text="Sélectionnez une date" 
+                                <TextBlock Name="JournalPlaceholderText" Text="Sélectionnez une date" 
                                            FontSize="14" Foreground="{DynamicResource TextSecondary}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -1423,7 +1423,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,*" Name="EtatJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,15">
-                                <TextBlock Grid.Column="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="EtatCopyJsonButton" Content="📋 Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"
@@ -1441,7 +1441,7 @@
                             <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
                                     BorderBrush="{DynamicResource ClickableCardBorder}" 
                                     BorderThickness="1" CornerRadius="8">
-                                <TextBlock Text="Sélectionnez un job" 
+                                <TextBlock Name="EtatPlaceholderText" Text="Sélectionnez un job" 
                                            FontSize="14" Foreground="{DynamicResource TextSecondary}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>

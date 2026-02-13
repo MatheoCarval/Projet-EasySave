@@ -405,6 +405,43 @@ public partial class MainWindow : Window
     #region Logs Tab Switching
 
     /// <summary>
+    /// Shortcut to get a translated string from the localization service
+    /// </summary>
+    private static string T(string key)
+    {
+        try { return App.LocalizationService?.GetTextTranslated(key) ?? key; }
+        catch { return key; }
+    }
+
+    /// <summary>
+    /// Applies localized text to all Logs panel UI elements
+    /// </summary>
+    private void ApplyLogsLocalization()
+    {
+        var journalTab = this.FindControl<TextBlock>("JournalierTabText");
+        var etatTab = this.FindControl<TextBlock>("EtatTabText");
+        var journalJsonTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+        var etatJsonTitle = this.FindControl<TextBlock>("EtatJsonTitle");
+        var journalPlaceholder = this.FindControl<TextBlock>("JournalPlaceholderText");
+        var etatPlaceholder = this.FindControl<TextBlock>("EtatPlaceholderText");
+        var copyBtn = this.FindControl<Button>("CopyJsonButton");
+        var downloadBtn = this.FindControl<Button>("DownloadJsonButton");
+        var etatCopyBtn = this.FindControl<Button>("EtatCopyJsonButton");
+        var etatDownloadBtn = this.FindControl<Button>("EtatDownloadJsonButton");
+
+        if (journalTab != null) journalTab.Text = T("logs_tab_journal");
+        if (etatTab != null) etatTab.Text = T("logs_tab_state");
+        if (journalJsonTitle != null) journalJsonTitle.Text = T("logs_json_content");
+        if (etatJsonTitle != null) etatJsonTitle.Text = T("logs_json_content");
+        if (journalPlaceholder != null) journalPlaceholder.Text = T("logs_select_date");
+        if (etatPlaceholder != null) etatPlaceholder.Text = T("logs_select_job");
+        if (copyBtn != null) copyBtn.Content = T("logs_copy");
+        if (downloadBtn != null) downloadBtn.Content = T("logs_download");
+        if (etatCopyBtn != null) etatCopyBtn.Content = T("logs_copy");
+        if (etatDownloadBtn != null) etatDownloadBtn.Content = T("logs_download");
+    }
+
+    /// <summary>
     /// Resets the Logs view to show the Journal tab by default
     /// </summary>
     public void ResetLogsToJournal()
@@ -433,6 +470,9 @@ public partial class MainWindow : Window
 
         // Load state jobs
         LoadStateJobs();
+
+        // Apply localized strings
+        ApplyLogsLocalization();
     }
 
     /// <summary>
@@ -751,7 +791,7 @@ public partial class MainWindow : Window
             if (sender is Button btn)
             {
                 var original = btn.Content;
-                btn.Content = "\u2705 Copi\u00e9 !";
+                btn.Content = T("logs_copied");
                 await System.Threading.Tasks.Task.Delay(1500);
                 btn.Content = original;
             }
@@ -774,7 +814,7 @@ public partial class MainWindow : Window
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
         {
-            Title = "Enregistrer le fichier JSON",
+            Title = T("logs_save_json"),
             SuggestedFileName = defaultName,
             FileTypeChoices = new[]
             {
@@ -888,7 +928,7 @@ public partial class MainWindow : Window
             if (sender is Button btn)
             {
                 var original = btn.Content;
-                btn.Content = "\u2705 Copi\u00e9 !";
+                btn.Content = T("logs_copied");
                 await System.Threading.Tasks.Task.Delay(1500);
                 btn.Content = original;
             }
@@ -907,7 +947,7 @@ public partial class MainWindow : Window
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
         {
-            Title = "Enregistrer le fichier JSON",
+            Title = T("logs_save_json"),
             SuggestedFileName = "state.json",
             FileTypeChoices = new[]
             {
