@@ -39,6 +39,9 @@
                     <SolidColorBrush x:Key="BrowseBtnPressed" Color="#303F9F"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#F0F0F0"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#E3F2FD"/>
+                    <SolidColorBrush x:Key="SearchHighlight" Color="#FFFDE7"/>
+                    <SolidColorBrush x:Key="SearchHighlightText" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="SearchErrorText" Color="#D32F2F"/>
                 </ResourceDictionary>
 
                 <!-- ===== DARK THEME ===== -->
@@ -76,6 +79,9 @@
                     <SolidColorBrush x:Key="BrowseBtnPressed" Color="#3F51B5"/>
                     <SolidColorBrush x:Key="ListItemHover" Color="#333333"/>
                     <SolidColorBrush x:Key="ListItemSelected" Color="#404040"/>
+                    <SolidColorBrush x:Key="SearchHighlight" Color="#F9A825"/>
+                    <SolidColorBrush x:Key="SearchHighlightText" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="SearchErrorText" Color="#EF5350"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

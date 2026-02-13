@@ -369,7 +369,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _deleteConfirmMessage, value);
     }
 
-    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen;
+    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen && !IsLogsOpen;
 
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
@@ -701,6 +701,7 @@ public class MainViewModel : ViewModelBase
         SettingsVM.LoadSettings();
         _isHelpOpen = false;
         OnPropertyChanged(nameof(IsHelpOpen));
+        IsLogsOpen = false;
         IsSettingsOpen = true;
     }
 
@@ -708,6 +709,7 @@ public class MainViewModel : ViewModelBase
     {
         _isSettingsOpen = false;
         OnPropertyChanged(nameof(IsSettingsOpen));
+        IsLogsOpen = false;
         IsHelpOpen = true;
         RefreshHelpTranslations();
     }
@@ -716,6 +718,7 @@ public class MainViewModel : ViewModelBase
     {
         IsSettingsOpen = false;
         IsHelpOpen = false;
+        IsLogsOpen = false;
     }
 
     private async void ExecuteBackup()
