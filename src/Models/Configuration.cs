@@ -121,45 +121,22 @@ namespace EasySave.Models
 
 
         /// <summary>
-        ///  Selon LogFormat récupérer le chemin du fichier log avec .json ou .xml
-        ///  Si inexistant, il le crée
+        /// Retourne le chemin du dossier de logs par défaut.
+        /// Le dossier est créé s'il n'existe pas.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Chemin du dossier logs (ex: AppData/EasySave/logs)</returns>
         public string GetDefaultLogPath()
         {
-            // Détermine le nom du fichier selon le format de log
-            string logFileName = LogFormat switch
+            // Crée le chemin vers le sous-dossier logs
+            string logsDirectory = Path.Combine(GetAppDataPath(), "logs");
+
+            // Si le dossier logs n'existe pas, le créer
+            if (!Directory.Exists(logsDirectory))
             {
-                LogFormat.JSON => "jobs.json",
-                LogFormat.XML => "jobs.xml",
-                _ => "jobs.log"
-            };
-
-            // Concatène le chemin du dossier AppData/Roaming/EasySave avec le nom du fichier log
-            string logFilePath = Path.Combine(GetAppDataPath(), logFileName);
-
-            // Si le fichier n'existe pas, le créer (fichier vide)
-            if (!File.Exists(logFilePath))
-            {
-                // Construit le contenu par défaut du fichier log selon le format de log
-                string logFileDefaultContent = LogFormat switch
-                {
-                    LogFormat.JSON => "{}",
-                    LogFormat.XML => "<logs></logs>",
-                    _ => ""
-                };
-
-                // Si le dossier AppData/Roaming/EasySave n'existe pas, le créer
-                if (!Directory.Exists(GetAppDataPath()))
-                {
-                    Directory.CreateDirectory(GetAppDataPath());
-                }
-
-                // Écrit le contenu par défault dans le fichier log
-                File.WriteAllText(logFilePath, logFileDefaultContent);
+                Directory.CreateDirectory(logsDirectory);
             }
 
-            return logFilePath;
+            return logsDirectory;
         }
 
         /// <summary>

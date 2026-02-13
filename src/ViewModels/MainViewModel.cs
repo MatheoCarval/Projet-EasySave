@@ -671,8 +671,8 @@ public class MainViewModel : ViewModelBase
             }
 
             ILogger logger = config.GetLogFormat() == LogFormat.XML
-                ? new XmlLogger(logPath)
-                : new JsonLogger(logPath);
+                ? new DailyXmlLogger(logPath)
+                : new DailyJsonLogger(logPath);
 
             var entries = logger.ReadLog<BackupLogEntry>()
                 .OrderByDescending(entry => entry.Timestamp)
@@ -1035,12 +1035,25 @@ public class MainViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Called when settings are saved — reload blocked applications into BackupManager immediately.
+    /// Called when settings are saved — reload blocked applications and logger format into BackupManager immediately.
     /// </summary>
     private void OnSettingsSaved(object? sender, EventArgs e)
     {
         var config = ConfigurationManager.GetInstance().LoadConfiguration();
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+
+        // Update logger format if changed
+        var logPath = config.GetLogFilePath();
+        if (string.IsNullOrWhiteSpace(logPath))
+        {
+            logPath = config.GetDefaultLogPath();
+        }
+
+        ILogger newLogger = config.GetLogFormat() == LogFormat.XML
+            ? new DailyXmlLogger(logPath)
+            : new DailyJsonLogger(logPath);
+
+        _backupManager.UpdateLogger(newLogger);
     }
 
     private void ShowBlockedPopup(string message)
