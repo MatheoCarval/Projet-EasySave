@@ -35,7 +35,7 @@ namespace EasySave.View.GUI
                 journalierBorder.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
                 journalierBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(33, 150, 243));
                 journalierBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
-                
+
                 etatBorder.Background = Brushes.Transparent;
                 etatBorder.BorderThickness = new Avalonia.Thickness(0);
 
@@ -45,7 +45,7 @@ namespace EasySave.View.GUI
                     journalierText.FontWeight = Avalonia.Media.FontWeight.Bold;
                     journalierText.Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51));
                 }
-                
+
                 if (etatText != null)
                 {
                     etatText.FontWeight = Avalonia.Media.FontWeight.Normal;
@@ -76,7 +76,7 @@ namespace EasySave.View.GUI
                 etatBorder.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
                 etatBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(33, 150, 243));
                 etatBorder.BorderThickness = new Avalonia.Thickness(0, 0, 0, 3);
-                
+
                 journalierBorder.Background = Brushes.Transparent;
                 journalierBorder.BorderThickness = new Avalonia.Thickness(0);
 
@@ -86,7 +86,7 @@ namespace EasySave.View.GUI
                     etatText.FontWeight = Avalonia.Media.FontWeight.Bold;
                     etatText.Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51));
                 }
-                
+
                 if (journalierText != null)
                 {
                     journalierText.FontWeight = Avalonia.Media.FontWeight.Normal;
@@ -163,7 +163,7 @@ namespace EasySave.View.GUI
                 {
                     // Find the JSON display grid in Etat content
                     var jsonGrid = this.FindControl<Grid>("EtatJsonGrid");
-                    
+
                     if (jsonGrid != null)
                     {
                         // Remove the placeholder and add the JSON content

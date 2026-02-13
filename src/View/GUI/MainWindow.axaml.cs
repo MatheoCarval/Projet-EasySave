@@ -43,7 +43,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = new MainViewModel(App.BackupManager!);
-        
+
         // Reset to Journal tab whenever Logs panel becomes visible
         if (DataContext is MainViewModel vm)
         {
@@ -698,8 +698,10 @@ public partial class MainWindow : Window
             daysPanel.Children.Add(new TextBlock
             {
                 Text = dh,
-                Width = 32, Height = 28,
-                FontSize = 11, FontWeight = FontWeight.SemiBold,
+                Width = 32,
+                Height = 28,
+                FontSize = 11,
+                FontWeight = FontWeight.SemiBold,
                 TextAlignment = Avalonia.Media.TextAlignment.Center,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                 Foreground = new SolidColorBrush(Color.Parse("#9E9E9E"))
@@ -734,7 +736,8 @@ public partial class MainWindow : Window
 
             var dayBorder = new Border
             {
-                Width = 32, Height = 32,
+                Width = 32,
+                Height = 32,
                 CornerRadius = new Avalonia.CornerRadius(4),
                 BorderThickness = new Avalonia.Thickness(1),
                 Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
@@ -1562,7 +1565,7 @@ public partial class MainWindow : Window
 
                 // Find the JSON display grid in Etat content
                 var jsonGrid = this.FindControl<Grid>("EtatJsonGrid");
-                
+
                 if (jsonGrid != null)
                 {
                     // Remove previous content (placeholder or scrollviewer) at index 2
