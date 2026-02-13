@@ -141,74 +141,53 @@
             <TabItem Header="Etat">
                 <Grid Background="#FAFAFA" ColumnDefinitions="300,*">
                     
-                    <!-- Left Panel - Job List -->
+                    <!-- Left Panel - Job List (bound to ViewModel) -->
                     <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="5">
-                                
-                                <!-- Job Entry 1 -->
-                                <Border Background="White" Margin="0,5" 
-                                        Padding="10" CornerRadius="5"
-                                        Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="test">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="test" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                
-                                <!-- Job Entry 2 -->
-                                <Border Background="White" Margin="0,5" 
-                                        Padding="10" CornerRadius="5"
-                                        Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="TEST MID">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="TEST MID" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                
-                                <!-- Job Entry 3 -->
-                                <Border Background="White" Margin="0,5" 
-                                        Padding="10" CornerRadius="5"
-                                        Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="tessthhhhhdqqsdqsdqsdqsd">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="tessthhhhhdqqsdqsdqsdqsd" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                
-                                <!-- Job Entry 4 -->
-                                <Border Background="White" Margin="0,5" 
-                                        Padding="10" CornerRadius="5"
-                                        Classes="JobItem"
-                                        PointerPressed="JobItem_Clicked" Tag="qdhbh">
-                                    <StackPanel Orientation="Horizontal" Height="40">
-                                        <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="qdhbh" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                
-                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding StateJobs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="White" Margin="0,5" 
+                                                Padding="10" CornerRadius="5"
+                                                Classes="JobItem"
+                                                PointerPressed="JobItem_Clicked">
+                                            <StackPanel Orientation="Horizontal" Height="40">
+                                                <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding JobName}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </ScrollViewer>
                     </Border>
 
-                    <!-- Right Panel - JSON Content -->
+                    <!-- Right Panel - JSON Content (bound to ViewModel) -->
                     <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
                             BorderBrush="#E0E0E0" BorderThickness="1">
-                        <Grid RowDefinitions="Auto,*" Name="EtatJsonGrid">
+                        <Grid RowDefinitions="Auto,*">
                             
                             <!-- Header -->
                             <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
                                        Margin="0,0,0,15" Foreground="#333333"/>
                             
                             <!-- Placeholder when no job selected -->
-                            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1">
+                            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1"
+                                    IsVisible="{Binding !HasSelectedJob}">
                                 <TextBlock Text="Sélectionnez un job" 
                                            FontSize="14" Foreground="#999999"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
+                            
+                            <!-- JSON content when a job is selected -->
+                            <ScrollViewer Grid.Row="1" IsVisible="{Binding HasSelectedJob}"
+                                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                                <Border Background="WhiteSmoke" Padding="15" 
+                                        BorderBrush="LightGray" BorderThickness="1" CornerRadius="8">
+                                    <TextBlock FontFamily="Consolas" FontSize="13" Foreground="Black"
+                                               TextWrapping="Wrap" Text="{Binding SelectedJobJson}"/>
+                                </Border>
+                            </ScrollViewer>
                             
                         </Grid>
                     </Border>

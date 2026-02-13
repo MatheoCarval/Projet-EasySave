@@ -236,7 +236,6 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isSettingsOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
-                OnPropertyChanged(nameof(IsHelpOpen));
             }
         }
     }
@@ -249,7 +248,6 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isHelpOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
-                OnPropertyChanged(nameof(IsSettingsOpen));
             }
         }
     }
@@ -546,34 +544,48 @@ public class MainViewModel : ViewModelBase
 
     private void ViewLogs()
     {
-        IsSettingsOpen = false;
-        IsHelpOpen = false;
-        IsLogsOpen = true;
+        _isSettingsOpen = false;
+        _isHelpOpen = false;
+        _isLogsOpen = true;
+        NotifyNavigationChanged();
     }
 
     private void OpenSettings()
     {
         SettingsVM.LoadSettings();
+        _isSettingsOpen = true;
         _isHelpOpen = false;
-        OnPropertyChanged(nameof(IsHelpOpen));
-        IsLogsOpen = false;
-        IsSettingsOpen = true;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
     }
 
     private void OpenHelp()
     {
         _isSettingsOpen = false;
-        OnPropertyChanged(nameof(IsSettingsOpen));
-        IsLogsOpen = false;
-        IsHelpOpen = true;
+        _isHelpOpen = true;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
         RefreshHelpTranslations();
     }
 
     private void GoHome()
     {
-        IsSettingsOpen = false;
-        IsHelpOpen = false;
-        IsLogsOpen = false;
+        _isSettingsOpen = false;
+        _isHelpOpen = false;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
+    }
+
+    /// <summary>
+    /// Notifies all navigation-related properties at once to avoid
+    /// inconsistent intermediate states during page transitions.
+    /// </summary>
+    private void NotifyNavigationChanged()
+    {
+        OnPropertyChanged(nameof(IsSettingsOpen));
+        OnPropertyChanged(nameof(IsHelpOpen));
+        OnPropertyChanged(nameof(IsLogsOpen));
+        OnPropertyChanged(nameof(IsHomeActive));
     }
 
     private async void ExecuteBackup()
