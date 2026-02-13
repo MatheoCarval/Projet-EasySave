@@ -1505,7 +1505,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,Auto,*" Name="JournalJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
-                                <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="CopyJsonButton" Content="&#x1F4CB; Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"
@@ -1622,7 +1622,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,Auto,*" Name="EtatJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
-                                <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="EtatCopyJsonButton" Content="📋 Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"

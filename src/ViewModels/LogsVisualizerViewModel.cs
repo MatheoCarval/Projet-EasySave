@@ -22,6 +22,9 @@ namespace EasySave.ViewModels
 
         private string logText = "";
 
+        /// <summary>
+        /// Gets or sets the log text content displayed in the logs viewer
+        /// </summary>
         public string LogText
         {
             get { return logText ?? ""; }

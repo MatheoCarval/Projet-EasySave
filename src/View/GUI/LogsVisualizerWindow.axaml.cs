@@ -10,8 +10,14 @@ using EasySave.ViewModels;
 
 namespace EasySave.View.GUI
 {
+    /// <summary>
+    /// Window that displays backup logs and state information in a tabbed interface
+    /// </summary>
     internal partial class LogsVisualizerWindow : Window
     {
+        /// <summary>
+        /// Initializes a new instance of the LogsVisualizerWindow class
+        /// </summary>
         public LogsVisualizerWindow()
         {
             InitializeComponent();

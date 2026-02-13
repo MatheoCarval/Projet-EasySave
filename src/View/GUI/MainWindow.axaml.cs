@@ -431,8 +431,12 @@ public partial class MainWindow : Window
 
         if (journalTab != null) journalTab.Text = T("logs_tab_journal");
         if (etatTab != null) etatTab.Text = T("logs_tab_state");
-        if (journalJsonTitle != null) journalJsonTitle.Text = T("logs_json_content");
-        if (etatJsonTitle != null) etatJsonTitle.Text = T("logs_json_content");
+        if (journalJsonTitle != null && _currentJsonFilePath != null)
+        {
+            var jExt = Path.GetExtension(_currentJsonFilePath).TrimStart('.').ToUpperInvariant();
+            journalJsonTitle.Text = jExt == "XML" ? T("logs_xml_content") : T("logs_json_content");
+        }
+        if (etatJsonTitle != null && _currentEtatJsonContent != null) etatJsonTitle.Text = T("logs_json_content");
         if (journalPlaceholder != null) journalPlaceholder.Text = T("logs_select_date");
         if (etatPlaceholder != null) etatPlaceholder.Text = T("logs_select_job");
         if (copyBtn != null) copyBtn.Content = T("logs_copy");
@@ -720,8 +724,9 @@ public partial class MainWindow : Window
         for (int d = 1; d <= daysInMonth; d++)
         {
             var dateStr = $"{_calendarYear}-{_calendarMonth:D2}-{d:D2}";
-            var logPath = Path.Combine(logsDir, $"jobs_{dateStr}.json");
-            bool hasLog = File.Exists(logPath);
+            var logPathJson = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            var logPathXml = Path.Combine(logsDir, $"jobs_{dateStr}.xml");
+            bool hasLog = File.Exists(logPathJson) || File.Exists(logPathXml);
             bool isToday = (d == today.Day && _calendarMonth == today.Month && _calendarYear == today.Year);
             bool isSelected = _calendarSelectedDays.Contains(d);
 
@@ -881,8 +886,9 @@ public partial class MainWindow : Window
 
             bool isSelected = _calendarSelectedDays.Contains(day);
             var dateStr = $"{_calendarYear}-{_calendarMonth:D2}-{day:D2}";
-            var logPath = Path.Combine(logsDir, $"jobs_{dateStr}.json");
-            bool hasLog = File.Exists(logPath);
+            var logPathJson = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            var logPathXml = Path.Combine(logsDir, $"jobs_{dateStr}.xml");
+            bool hasLog = File.Exists(logPathJson) || File.Exists(logPathXml);
             bool isToday = (day == today.Day && _calendarMonth == today.Month && _calendarYear == today.Year);
 
             ApplyDayCellStyle(border, tb, isSelected, isToday, hasLog);
@@ -935,9 +941,11 @@ public partial class MainWindow : Window
         foreach (var date in selectedDates)
         {
             var dateStr = date.ToString("yyyy-MM-dd");
-            var expectedFile = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            var expectedFileJson = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            var expectedFileXml = Path.Combine(logsDir, $"jobs_{dateStr}.xml");
             var match = _journalAllDateItems.FirstOrDefault(b =>
-                b.Tag is string path && path.Equals(expectedFile, StringComparison.OrdinalIgnoreCase));
+                b.Tag is string path && (path.Equals(expectedFileJson, StringComparison.OrdinalIgnoreCase)
+                    || path.Equals(expectedFileXml, StringComparison.OrdinalIgnoreCase)));
             if (match != null) matchingItems.Add(match);
         }
 
@@ -962,6 +970,14 @@ public partial class MainWindow : Window
 
                 _currentJsonContent = jsonContent;
                 _currentJsonFilePath = filePath;
+
+                // Update title based on file format
+                var jTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+                if (jTitle != null)
+                {
+                    var fmt = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
+                    jTitle.Text = fmt == "XML" ? T("logs_xml_content") : T("logs_json_content");
+                }
 
                 var copyBtn = this.FindControl<Button>("CopyJsonButton");
                 var dlBtn = this.FindControl<Button>("DownloadJsonButton");
@@ -1064,11 +1080,13 @@ public partial class MainWindow : Window
         var logsDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "EasySave", "logs");
-        var expectedFile = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+        var expectedFileJson = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+        var expectedFileXml = Path.Combine(logsDir, $"jobs_{dateStr}.xml");
 
-        // Find the matching item in the list
+        // Find the matching item in the list (JSON or XML)
         var matchingItem = _journalAllDateItems.FirstOrDefault(b =>
-            b.Tag is string path && path.Equals(expectedFile, StringComparison.OrdinalIgnoreCase));
+            b.Tag is string path && (path.Equals(expectedFileJson, StringComparison.OrdinalIgnoreCase)
+                || path.Equals(expectedFileXml, StringComparison.OrdinalIgnoreCase)));
 
         if (matchingItem != null)
         {
@@ -1089,6 +1107,14 @@ public partial class MainWindow : Window
 
                 _currentJsonContent = jsonContent;
                 _currentJsonFilePath = filePath;
+
+                // Update title based on file format
+                var jTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+                if (jTitle != null)
+                {
+                    var fmt = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
+                    jTitle.Text = fmt == "XML" ? T("logs_xml_content") : T("logs_json_content");
+                }
 
                 var copyBtn = this.FindControl<Button>("CopyJsonButton");
                 var dlBtn = this.FindControl<Button>("DownloadJsonButton");
@@ -1228,6 +1254,22 @@ public partial class MainWindow : Window
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 };
 
+                var etatFormatTag = new Border
+                {
+                    Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(46, 204, 113)),
+                    CornerRadius = new Avalonia.CornerRadius(4),
+                    Padding = new Avalonia.Thickness(6, 2),
+                    Margin = new Avalonia.Thickness(8, 0, 0, 0),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = "JSON",
+                        FontSize = 10,
+                        FontWeight = Avalonia.Media.FontWeight.Bold,
+                        Foreground = Avalonia.Media.Brushes.White
+                    }
+                };
+
                 var stack = new StackPanel
                 {
                     Orientation = Avalonia.Layout.Orientation.Horizontal,
@@ -1235,6 +1277,7 @@ public partial class MainWindow : Window
                 };
                 stack.Children.Add(bullet);
                 stack.Children.Add(nameText);
+                stack.Children.Add(etatFormatTag);
 
                 var border = new Border
                 {
@@ -1286,7 +1329,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var logFiles = Directory.GetFiles(logsDir, "jobs_*.json")
+        var jsonFiles = Directory.GetFiles(logsDir, "jobs_*.json");
+        var xmlFiles = Directory.GetFiles(logsDir, "jobs_*.xml");
+        var logFiles = jsonFiles.Concat(xmlFiles)
             .OrderByDescending(f => f)
             .ToList();
 
@@ -1332,6 +1377,25 @@ public partial class MainWindow : Window
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             };
 
+            var ext = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
+            var formatTag = new Border
+            {
+                Background = ext == "XML"
+                    ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(230, 126, 34))
+                    : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(46, 204, 113)),
+                CornerRadius = new Avalonia.CornerRadius(4),
+                Padding = new Avalonia.Thickness(6, 2),
+                Margin = new Avalonia.Thickness(8, 0, 0, 0),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = ext,
+                    FontSize = 10,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Foreground = Avalonia.Media.Brushes.White
+                }
+            };
+
             var stack = new StackPanel
             {
                 Orientation = Avalonia.Layout.Orientation.Horizontal,
@@ -1339,6 +1403,7 @@ public partial class MainWindow : Window
             };
             stack.Children.Add(bullet);
             stack.Children.Add(dateText);
+            stack.Children.Add(formatTag);
 
             var border = new Border
             {
@@ -1399,6 +1464,14 @@ public partial class MainWindow : Window
 
             _currentJsonContent = jsonContent;
             _currentJsonFilePath = filePath;
+
+            // Update title based on file format
+            var journalTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+            if (journalTitle != null)
+            {
+                var format = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
+                journalTitle.Text = format == "XML" ? T("logs_xml_content") : T("logs_json_content");
+            }
 
             // Show copy/download buttons
             var copyBtn = this.FindControl<Button>("CopyJsonButton");
@@ -1496,14 +1569,17 @@ public partial class MainWindow : Window
             ? Path.GetFileName(_currentJsonFilePath)
             : "logs.json";
 
+        var isXml = _currentJsonFilePath != null
+            && Path.GetExtension(_currentJsonFilePath).Equals(".xml", StringComparison.OrdinalIgnoreCase);
+
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
         {
-            Title = T("logs_save_json"),
+            Title = isXml ? "Save XML file" : T("logs_save_json"),
             SuggestedFileName = defaultName,
-            FileTypeChoices = new[]
-            {
-                new Avalonia.Platform.Storage.FilePickerFileType("JSON") { Patterns = new[] { "*.json" } }
-            }
+            FileTypeChoices = isXml
+                ? new[] { new Avalonia.Platform.Storage.FilePickerFileType("XML") { Patterns = new[] { "*.xml" } } }
+                : new[] { new Avalonia.Platform.Storage.FilePickerFileType("JSON") { Patterns = new[] { "*.json" } } }
+        
         });
 
         if (file != null)
