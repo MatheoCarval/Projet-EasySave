@@ -240,11 +240,11 @@
                         <!-- Header with Action Buttons -->
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="8">
-                                <TextBlock Text="Backup Tasks"
+                                <TextBlock Text="{Binding TxtBackupTasks}"
                                            FontSize="28"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextPrimary}"/>
-                                <TextBlock Text="Manage your backup tasks"
+                                <TextBlock Text="{Binding TxtManageSubtitle}"
                                            FontSize="14"
                                            Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
@@ -272,7 +272,7 @@
                                     </Border>
                                     <StackPanel Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding TotalJobsCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="Total" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TxtTotal}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -287,7 +287,7 @@
                                     </Border>
                                     <StackPanel Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding ActiveJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#4CAF50"/>
-                                        <TextBlock Text="Active" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TxtActive}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -302,7 +302,7 @@
                                     </Border>
                                     <StackPanel Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding CompletedJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#2196F3"/>
-                                        <TextBlock Text="Done" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TxtDone}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -317,7 +317,7 @@
                                     </Border>
                                     <StackPanel Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding ErrorJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#F44336"/>
-                                        <TextBlock Text="Errors" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TxtErrors}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -339,7 +339,7 @@
                                         <Path Fill="{DynamicResource TextSecondary}" Data="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="Select All"
+                                <TextBlock Text="{Binding TxtSelectAll}"
                                            FontSize="13"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"
@@ -367,7 +367,7 @@
                                     <!-- Search Input -->
                                     <TextBox Grid.Column="1"
                                              Text="{Binding SearchText, Mode=TwoWay}"
-                                             Watermark="Search by name..."
+                                             Watermark="{Binding TxtSearchByName}"
                                              Background="Transparent"
                                              BorderThickness="0"
                                              Foreground="{DynamicResource TextPrimary}"
@@ -700,7 +700,7 @@
                                         <Path Fill="{DynamicResource EmptyStateIcon}" Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="No matching tasks found"
+                                <TextBlock Text="{Binding TxtNoTasksFound}"
                                            FontSize="16"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextTertiary}"
@@ -787,7 +787,7 @@
                                                         Orientation="Horizontal"
                                                         Spacing="8"
                                                         Margin="0,12,24,0">
-                                                <TextBlock Text="Last Execution:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Text="{Binding $parent[Window].DataContext.TxtLastExecution}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
                                                 <TextBlock Text="{Binding LastExecutionDisplay}" Foreground="{DynamicResource TextPrimary}"/>
                                             </StackPanel>
 
@@ -796,7 +796,7 @@
                                                         Spacing="8"
                                                         Margin="0,12,24,24">
                                                 <Grid ColumnDefinitions="120,*,Auto">
-                                                    <TextBlock Grid.Column="0" Text="Progress:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="0" Text="{Binding $parent[Window].DataContext.TxtProgress}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
                                                     <ProgressBar Grid.Column="1"
                                                                  Value="{Binding Progress}"
                                                                  Minimum="0"
@@ -819,8 +819,86 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <!-- Bottom Spacer for scrolling -->
-                        <Border Height="150"/>
+                        <!-- Pagination Controls -->
+                        <Border Padding="0,8,0,0" IsVisible="{Binding !HasNoJobs}">
+                            <StackPanel Spacing="12">
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+                                <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="0,4">
+                                    <!-- Previous Button -->
+                                    <Button Grid.Column="0"
+                                            Command="{Binding PreviousPageCommand}"
+                                            BorderThickness="1.5"
+                                            CornerRadius="8"
+                                            Padding="14,8"
+                                            Cursor="Hand"
+                                            IsEnabled="{Binding CanGoToPreviousPage}">
+                                        <Button.Styles>
+                                            <Style Selector="Button:enabled">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                            <Style Selector="Button:enabled TextBlock">
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="‹" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TxtPaginationPrevious}" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Page Counter (centered) -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding TxtPaginationPage}" FontSize="13" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding CurrentPage}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtPaginationPageOf}" FontSize="13" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="{Binding TotalPages}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+
+                                    <!-- Next Button -->
+                                    <Button Grid.Column="2"
+                                            Command="{Binding NextPageCommand}"
+                                            BorderThickness="1.5"
+                                            CornerRadius="8"
+                                            Padding="14,8"
+                                            Cursor="Hand"
+                                            IsEnabled="{Binding CanGoToNextPage}">
+                                        <Button.Styles>
+                                            <Style Selector="Button:enabled">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                            <Style Selector="Button:enabled TextBlock">
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding TxtPaginationNext}" FontSize="13" VerticalAlignment="Center"/>
+                                            <TextBlock Text="›" FontSize="16" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Bottom Spacer for scrolling past floating buttons -->
+                        <Border Height="120"/>
 
                     </StackPanel>
                 </ScrollViewer>
@@ -1208,6 +1286,216 @@
                                             VerticalAlignment="Stretch"
                                             Cursor="Hand"/>
                                 </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ───── Backup Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#2226A69A">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#26A69A" Data="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h10v2H4v-2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtBackup}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtBackupDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Blocked Applications -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 2a10 10 0 100 20 10 10 0 000-20zm5 11H7v-2h10v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtBlockedApps}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtBlockedAppsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBox Text="{Binding BlockedApplicationsText}"
+                                         Watermark="{Binding TxtBlockedAppsPlaceholder}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="90"
+                                         CornerRadius="8"
+                                         Padding="12,10"/>
+                            </StackPanel>
+
+                            <!-- Detected Applications -->
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtDetectedApps}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtDetectedAppsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,2,0,0">
+                                    <Button Grid.Column="0"
+                                            Command="{Binding RefreshDetectedAppsCommand}"
+                                            Content="{Binding TxtDetectAppsButton}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Margin="0,0,8,0"
+                                            Cursor="Hand"/>
+                                    <Button Grid.Column="1"
+                                            Command="{Binding AddDetectedAppCommand}"
+                                            Content="{Binding TxtAddBlockedAppButton}"
+                                            Background="{DynamicResource CardBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Margin="0,0,8,0"
+                                            Cursor="Hand"/>
+                                    <Button Grid.Column="2"
+                                            Click="BrowseExe_Click"
+                                            Content="{Binding TxtBrowseExeButton}"
+                                            Background="{DynamicResource CardBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}"
+                                            CornerRadius="8"
+                                            Padding="14,6"
+                                            Cursor="Hand"/>
+                                </Grid>
+                                <!-- Search bar for processes -->
+                                <Border CornerRadius="8"
+                                        Background="{DynamicResource InputBackground}"
+                                        BorderBrush="{DynamicResource InputBorder}"
+                                        BorderThickness="1.5"
+                                        Margin="0,4,0,0">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Viewbox Grid.Column="0" Width="16" Height="16" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource TextTertiary}" Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding DetectedAppsSearch, Mode=TwoWay}"
+                                                 Watermark="{Binding TxtSearchProcessPlaceholder}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 Foreground="{DynamicResource TextPrimary}"
+                                                 FontSize="13"
+                                                 Padding="8,8,4,8"
+                                                 VerticalContentAlignment="Center"/>
+                                        <Button Grid.Column="2"
+                                                Command="{Binding ClearDetectedAppsSearchCommand}"
+                                                Background="{DynamicResource ClickableCardBorder}"
+                                                BorderThickness="0"
+                                                CornerRadius="6"
+                                                Padding="0"
+                                                Cursor="Hand"
+                                                IsVisible="{Binding DetectedAppsSearch.Length}"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,6,0"
+                                                Width="22" Height="22">
+                                            <Viewbox Width="10" Height="10">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="{DynamicResource TextSecondary}" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                                <ListBox ItemsSource="{Binding FilteredDetectedApplications}"
+                                         SelectedItem="{Binding SelectedDetectedApplication}"
+                                         Height="160"
+                                         BorderThickness="1"
+                                         BorderBrush="{DynamicResource ClickableCardBorder}"
+                                         CornerRadius="8"
+                                         Padding="8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ───── Encryption Section ───── -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header with icon -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#228A8F52">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#8A8F52" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtEncryption}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtEncryptionDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Cryptosoft Path -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V10l-6-6h-6zm0 2v4h4V6h-4z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtCryptosoftPath}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtCryptosoftPathDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding CryptosoftPath}"
+                                             Watermark="/path/to/cryptosoft"
+                                             CornerRadius="8 0 0 8"
+                                             Padding="12,10"/>
+                                    <Button Grid.Column="1"
+                                            Name="BrowseCryptosoftPathButton"
+                                            Click="BrowseCryptosoftPath_Click"
+                                            Content="{Binding TxtBrowse}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="0 8 8 0"
+                                            Padding="16,10"
+                                            VerticalAlignment="Stretch"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Encrypted Extensions -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtEncryptedExtensions}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtEncryptedExtensionsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBox Text="{Binding EncryptedExtensionsText}"
+                                         Watermark="{Binding TxtEncryptedExtensionsPlaceholder}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="70"
+                                         CornerRadius="8"
+                                         Padding="12,10"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -1872,6 +2160,9 @@
                                     <TextBlock Text="{Binding HelpSettingsLogFormat, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsLogPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding HelpSettingsStatePath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsBlockedApps, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsCryptosoftPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding HelpSettingsEncryptedExtensions, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -2104,6 +2395,49 @@
                                 <ComboBoxItem Content="Differential"/>
                             </ComboBox>
                         </StackPanel>
+
+                        <!-- Encrypt Files Field -->
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" Opacity="0.6">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{DynamicResource TextSecondary}" Data="M12 17a2 2 0 002-2v-2h-4v2a2 2 0 002 2zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-3 0H9V9a3 3 0 016 0v2z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="Encrypt files after backup" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="Uses Cryptosoft for matching extensions" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="2"
+                                          IsChecked="{Binding ModalEncryptFiles}"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Custom Encrypted Extensions (per-job) -->
+                        <Border BorderThickness="1"
+                                BorderBrush="{DynamicResource SettingsBorder}"
+                                Background="{DynamicResource SettingsRowBackground}"
+                                CornerRadius="8"
+                                Padding="16,12"
+                                IsVisible="{Binding ModalEncryptFiles}">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Viewbox Grid.Column="0" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.5">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 2l-5.5 9h11z M12 17.5l5.5-9h-11z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock Text="{Binding SettingsVM.TxtModalEncryptedExtensions}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding SettingsVM.TxtModalEncryptedExtensionsDesc}" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBox Text="{Binding ModalEncryptedExtensions}"
+                                         Watermark="{Binding SettingsVM.TxtModalEncryptedExtensionsPlaceholder}"
+                                         Height="60"
+                                         TextWrapping="Wrap"
+                                         Classes="ModernTextBox"/>
+                            </StackPanel>
+                        </Border>
 
                         </StackPanel>
 
@@ -2543,6 +2877,72 @@
                                     Cursor="Hand"
                                     Command="{Binding ConfirmDeleteCommand}"/>
                         </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- Blocked Application Popup -->
+        <Panel IsVisible="{Binding IsBlockedPopupOpen}" Background="#DD000000">
+            <Border Background="{DynamicResource PopupBackground}"
+                    Width="460"
+                    CornerRadius="16"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 24 4 #30000000">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border CornerRadius="16,16,0,0" Padding="0">
+                        <StackPanel>
+                            <!-- Orange accent line -->
+                            <Border Height="4" CornerRadius="16,16,0,0" Background="#FF9800"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#FF9800" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding TxtBlockedPopupTitle}"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#FF9800"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Margin="24,20" Spacing="20">
+                        <!-- Blocked icon + message -->
+                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                            <Viewbox Width="48" Height="48" HorizontalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="#FF9800" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" Opacity="0"/>
+                                    <Path Fill="#FF9800" Data="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.12 5.71a1 1 0 00-1.42 1.42L10.59 12l-4.88 4.88a1 1 0 001.42 1.42L12 13.41l4.88 4.88a1 1 0 001.42-1.42L13.41 12l4.88-4.88a1 1 0 000-1.41z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="{Binding BlockedPopupMessage}"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Close Button -->
+                        <Button Content="{Binding TxtBlockedPopupClose}"
+                                HorizontalAlignment="Stretch"
+                                Height="40"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                CornerRadius="10"
+                                Foreground="White"
+                                Background="#FF9800"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                Command="{Binding CloseBlockedPopupCommand}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

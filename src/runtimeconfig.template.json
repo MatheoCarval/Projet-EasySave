@@ -1,0 +1,13 @@
+{
+  "configProperties": {
+    "System.Runtime.TieredCompilation": true,
+    "System.Runtime.TieredCompilation.QuickJit": true,
+    "System.Globalization.Invariant": false,
+    "System.Runtime.Loader.UseRidGraph": true
+  },
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "runtimes"
+    ]
+  }
+}

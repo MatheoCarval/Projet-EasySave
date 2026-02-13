@@ -208,6 +208,88 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Handles the Browse button click for Cryptosoft executable path (Settings)
+    /// </summary>
+    private async void BrowseCryptosoftPath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+
+            if (OperatingSystem.IsWindows())
+            {
+                fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
+            }
+            else
+            {
+                fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
+            }
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = OperatingSystem.IsWindows()
+                    ? "Select Cryptosoft executable (.exe)"
+                    : "Select Cryptosoft executable",
+                AllowMultiple = false,
+                FileTypeFilter = fileTypes
+            };
+
+            var result = await StorageProvider.OpenFilePickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                mainVm.SettingsVM.CryptosoftPath = result[0].Path.LocalPath;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the Browse button click to add a process name from an executable file.
+    /// Cross-platform: .exe on Windows, .app bundles or any file on macOS, any file on Linux.
+    /// </summary>
+    private async void BrowseExe_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+
+            if (OperatingSystem.IsWindows())
+            {
+                fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                fileTypes.Add(new FilePickerFileType("Applications") { Patterns = new[] { "*.app", "*" } });
+            }
+            else
+            {
+                // Linux: executables have no extension
+                fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
+            }
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = OperatingSystem.IsWindows()
+                    ? "Select an application (.exe)"
+                    : "Select an application",
+                AllowMultiple = false,
+                FileTypeFilter = fileTypes
+            };
+
+            var result = await StorageProvider.OpenFilePickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(result[0].Name);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    mainVm.SettingsVM.AddBlockedApplication(fileName);
+                }
+            }
+        }
+    }
+
     #region Drag Reorder for Execute Order
 
     private void OrderItem_PointerPressed(object? sender, PointerPressedEventArgs e)

@@ -7,6 +7,7 @@ using EasyLog.Loggers;
 using EasyLog.Enums;
 using Services.Writers;
 using Models.Enums;
+using System.Runtime.InteropServices;
 
 namespace EasySave;
 
@@ -15,6 +16,10 @@ namespace EasySave;
 /// </summary>
 public class Program
 {
+    // Native library resolution for Windows
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool SetDllDirectory(string lpPathName);
+
     /// <summary>
     /// Provides localization support for the application.
     /// </summary>
@@ -33,8 +38,45 @@ public class Program
     /// </summary>
     private static void Main(string[] args)
     {
+        // Setup native library path on Windows for SkiaSharp/HarfBuzz
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var runtimesDir = Path.Combine(baseDir, "runtimes", "win-x64", "native");
+
+            if (Directory.Exists(runtimesDir))
+            {
+                // Add native library directory to DLL search path
+                SetDllDirectory(runtimesDir);
+                Environment.SetEnvironmentVariable("PATH", runtimesDir + ";" + Environment.GetEnvironmentVariable("PATH"));
+            }
+        }
+
         try
         {
+            // Set up global exception handler to log crashes
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                try
+                {
+                    var ex = e.ExceptionObject as Exception;
+                    var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                    Directory.CreateDirectory(logDir);
+                    var logPath = Path.Combine(logDir, "crash.log");
+
+                    var details = $"[{DateTime.Now}] {ex?.GetType().Name}: {ex?.Message}\n{ex?.StackTrace}\n";
+                    if (ex?.InnerException != null)
+                    {
+                        details += $"Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}\n";
+                    }
+                    details += $"BaseDirectory: {AppContext.BaseDirectory}\n";
+                    details += $"ProcessPath: {Environment.ProcessPath}\n\n";
+
+                    File.AppendAllText(logPath, details);
+                }
+                catch { }
+            };
+
             // Initialize services
             InitializeServices();
 
@@ -67,6 +109,16 @@ public class Program
         }
         catch (Exception ex)
         {
+            // Log to file for WinExe scenarios where console isn't visible
+            try
+            {
+                var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                Directory.CreateDirectory(logDir);
+                File.AppendAllText(Path.Combine(logDir, "error.log"),
+                    $"[{DateTime.Now}] {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n\n");
+            }
+            catch { }
+
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{T("error")}: {ex.Message}");
             Console.ResetColor();
@@ -113,9 +165,13 @@ public class Program
             : new JsonLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
-        var fileTransferService = new FileTransferService(logger, stateWriter);
+        var cryptageManager = new CryptageManager(
+            config.GetCryptosoftPath(),
+            config.GetEncryptedExtensions()
+        );
+        var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter);
+        _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications());
     }
 
     /// <summary>

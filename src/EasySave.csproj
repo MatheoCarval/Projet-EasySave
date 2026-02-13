@@ -1,16 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UseAppHost>true</UseAppHost>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <Version>0.1.0</Version>
     <AssemblyVersion>0.1.0</AssemblyVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!-- Ensure all native dependencies are copied -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <!-- Windows-specific runtime configuration -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +28,8 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
     <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.0.10" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="7.3.0.2" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="2.88.8" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
     <PackageReference Include="Terminal.Gui" Version="1.19.0" />
@@ -37,5 +49,14 @@
     <AvaloniaResource Include="Assets\app-icon.png" />
     <AvaloniaResource Include="Assets\app-icon-in.png" />
   </ItemGroup>
+
+  <!-- Copy native libraries to output directory for Windows -->
+  <Target Name="CopyNativeLibraries" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
+    <ItemGroup>
+      <NativeLibs Include="$(PublishDir)runtimes\win-x64\native\*.dll" />
+      <NativeLibs Include="$(PublishDir)runtimes\win-arm64\native\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NativeLibs)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
 
 </Project>

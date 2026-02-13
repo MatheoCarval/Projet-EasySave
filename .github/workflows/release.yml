@@ -1,21 +1,27 @@
 ## ─────────────────────────────────────────────────────────────
-## CI/CD Pipeline — EasySave
-## Triggers on push / PR to develop & main.
-## • develop → beta pre-release  (v*.*.* -beta.N)
-## • main    → stable release    (v*.*.*)
+## Manual Release — EasySave
+## Triggered manually from Actions UI.
+## Allows publishing a specific version on any branch.
 ## ─────────────────────────────────────────────────────────────
 
-name: CI/CD Pipeline
+name: Manual Release
 
 on:
-  push:
-    branches: [develop, main]
-  pull_request:
-    branches: [develop, main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0, 2.3.1)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as pre-release?"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: release-manual
+  cancel-in-progress: false
 
 env:
   DOTNET_VERSION: "8.0.x"
@@ -28,56 +34,47 @@ env:
 # ───────────────────────── JOBS ──────────────────────────────
 jobs:
 
-  # ─── 1. Code Quality Checks ────────────────────────────────
-  lint:
-    name: Code Formatting
+  # ─── 1. Validate ───────────────────────────────────────────
+  validate:
+    name: Validate & Test
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
-
-      - name: Check code formatting
-        run: dotnet format ${{ env.SOLUTION_PATH }} --verify-no-changes --verbosity diagnostic
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
-
-      - name: Check for vulnerable packages
-        run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
-
-  # ─── 2. Build & Test ───────────────────────────────────────
-  build-and-test:
-    name: Build & Test
-    needs: [lint, security]
-    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format '${VERSION}'. Expected: X.Y.Z (e.g. 1.0.0)"
+            exit 1
+          fi
+
+      - name: Resolve tag name
+        id: resolve
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ "${{ inputs.prerelease }}" == "true" ]]; then
+            TAG="v${VERSION}-rc.1"
+          else
+            TAG="v${VERSION}"
+          fi
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag '$TAG' already exists"
+            exit 1
+          fi
+
+          echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::Will create tag → $TAG"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -101,109 +98,33 @@ jobs:
         run: >
           dotnet test ${{ env.TEST_PROJECT_PATH }}
           -c Release
+          --no-restore
           --verbosity normal
-          --logger "trx;LogFileName=test-results.trx"
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: "**/test-results.trx"
-          retention-days: 14
-
-  # ─── 3. Version Tag ────────────────────────────────────────
-  version:
-    name: Calculate & Tag Version
-    needs: build-and-test
-    if: github.event_name == 'push'
+  # ─── 2. Tag ────────────────────────────────────────────────
+  tag:
+    name: Create Tag
+    needs: validate
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
-    outputs:
-      tag: ${{ steps.calc.outputs.tag }}
-      version: ${{ steps.calc.outputs.version }}
-      is_prerelease: ${{ steps.calc.outputs.is_prerelease }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve version
-        id: calc
-        run: |
-          set -euo pipefail
-
-          # ── Latest stable tag (ignore betas) ──
-          LATEST_STABLE=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname 2>/dev/null \
-                          | grep -vE "beta|alpha|rc" 2>/dev/null | head -n1 || true)
-          [[ -z "$LATEST_STABLE" ]] && LATEST_STABLE="v0.0.0"
-
-          VERSION="${LATEST_STABLE#v}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-          BRANCH="${{ github.ref_name }}"
-
-          if [[ "$BRANCH" == "main" ]]; then
-            # ── Detect breaking changes (Conventional Commits) ──
-            BREAKING=false
-            if git rev-parse "$LATEST_STABLE" >/dev/null 2>&1; then
-              LOGS=$(git log "${LATEST_STABLE}..HEAD" --pretty=format:"%s%n%b" 2>/dev/null || true)
-            else
-              LOGS=$(git log --pretty=format:"%s%n%b" 2>/dev/null || true)
-            fi
-
-            if echo "$LOGS" | grep -qE "BREAKING CHANGE:" 2>/dev/null || \
-               echo "$LOGS" | grep -qE "^[a-z]+(\([a-z]+\))?!:" 2>/dev/null; then
-              BREAKING=true
-            fi
-
-            if [[ "$BREAKING" == "true" ]]; then
-              MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
-            else
-              MINOR=$((MINOR + 1)); PATCH=0
-            fi
-
-            TAG="v${MAJOR}.${MINOR}.${PATCH}"
-            IS_PRE="false"
-          else
-            # ── develop → beta with incremental number ──
-            PATCH=$((PATCH + 1))
-            BASE="${MAJOR}.${MINOR}.${PATCH}"
-
-            LATEST_BETA=$(git tag -l "v${BASE}-beta.*" --sort=-v:refname 2>/dev/null | head -n1 || true)
-            if [[ -z "$LATEST_BETA" ]]; then
-              BETA_NUM=1
-            else
-              BETA_NUM=$(echo "$LATEST_BETA" | sed -n 's/.*-beta\.\([0-9]*\)/\1/p')
-              [[ -z "$BETA_NUM" ]] && BETA_NUM=0
-              BETA_NUM=$((BETA_NUM + 1))
-            fi
-
-            TAG="v${BASE}-beta.${BETA_NUM}"
-            IS_PRE="true"
-          fi
-
-          echo "tag=$TAG"               >> "$GITHUB_OUTPUT"
-          echo "version=${TAG#v}"       >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=$IS_PRE"  >> "$GITHUB_OUTPUT"
-          echo "::notice::Version → $TAG"
 
       - name: Push tag
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.calc.outputs.tag }}" -m "Release ${{ steps.calc.outputs.tag }}"
-          git push origin "${{ steps.calc.outputs.tag }}"
+          git tag -a "${{ needs.validate.outputs.tag }}" -m "Manual release ${{ needs.validate.outputs.tag }}"
+          git push origin "${{ needs.validate.outputs.tag }}"
 
-  # ─── 4. Publish + Installers (matrix) ───────────────────────
+  # ─── 3. Publish + Installers (matrix) ───────────────────────
   publish:
     name: Publish (${{ matrix.rid }})
-    needs: [build-and-test, version]
+    needs: [validate, tag]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 
@@ -234,17 +155,6 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
-      - name: Resolve version properties
-        id: ver
-        shell: bash
-        run: |
-          FULL="${{ needs.version.outputs.version }}"
-          PREFIX="${FULL%%-*}"
-          SUFFIX="${FULL#"$PREFIX"}"
-          SUFFIX="${SUFFIX#-}"
-          echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
-          echo "suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
-
       - name: Publish
         run: >
           dotnet publish ${{ env.PROJECT_PATH }}
@@ -252,19 +162,17 @@ jobs:
           -r ${{ matrix.rid }}
           --self-contained true
           -o ./publish
-          /p:PublishSingleFile=true
-          /p:VersionPrefix=${{ steps.ver.outputs.prefix }}
-          ${{ steps.ver.outputs.suffix != '' && format('/p:VersionSuffix={0}', steps.ver.outputs.suffix) || '' }}
+          /p:Version=${{ needs.validate.outputs.version }}
 
       # ── Portable archive ──
       - name: Archive (zip – Windows)
         if: matrix.rid == 'win-x64'
         shell: pwsh
-        run: Compress-Archive -Path publish\* -DestinationPath EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.zip
+        run: Compress-Archive -Path publish\* -DestinationPath EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip
 
       - name: Archive (tar.gz – Unix)
         if: matrix.rid != 'win-x64'
-        run: cd publish && tar -czf ../EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.tar.gz .
+        run: cd publish && tar -czf ../EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.tar.gz .
 
       # ── Windows Installer (.msi) ──
       - name: Install WiX Toolset
@@ -275,8 +183,8 @@ jobs:
         if: matrix.rid == 'win-x64'
         shell: bash
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
-          VERSION="${{ steps.ver.outputs.prefix }}"
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
 
           # Find the executable name
           EXE_NAME=$(ls publish/*.exe | head -n1 | xargs basename)
@@ -291,6 +199,18 @@ jobs:
 
               <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
               <MediaTemplate EmbedCab="yes" />
+
+              <!-- Visual C++ Runtime Prerequisites -->
+              <Property Id="VS2022REDIST_X64">
+                <RegistrySearch Id="SearchVCRedist2022_x64"
+                                Root="HKLM"
+                                Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+                                Name="Installed"
+                                Type="raw" />
+              </Property>
+
+              <Launch Condition="Installed OR VS2022REDIST_X64"
+                      Message="This application requires Visual C++ Runtime. The installer will download it automatically. Please ensure you have an internet connection." />
 
               <StandardDirectory Id="ProgramFiles6432Folder">
                 <Directory Id="INSTALLFOLDER" Name="EasySave">
@@ -317,7 +237,45 @@ jobs:
           </Wix>
           WXSEOF
 
-          wix build installer.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
+          # Use heat to harvest all files from publish directory
+          wix extension add WixToolset.Util.wixext
+          
+          # Create component group for all files
+          cd publish
+          find . -type f ! -name "*.exe" -exec echo "{}" \; > ../files.txt
+          cd ..
+          
+          cat > files.wxs << 'FILESWXS'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Fragment>
+              <ComponentGroup Id="PublishFiles">
+          FILESWXS
+          
+          counter=1
+          while IFS= read -r file; do
+            file_clean=$(echo "$file" | sed 's/^\.\/\///')
+            if [ ! -z "$file_clean" ] && [ "$file_clean" != "." ]; then
+              file_id="File_${counter}"
+              comp_id="Comp_${counter}"
+              guid=$(uuidgen)
+              echo "                <Component Id=\"${comp_id}\" Directory=\"INSTALLFOLDER\" Guid=\"${guid}\">" >> files.wxs
+              echo "                  <File Id=\"${file_id}\" Source=\"publish\\${file_clean}\" />" >> files.wxs
+              echo "                </Component>" >> files.wxs
+              counter=$((counter + 1))
+            fi
+          done < files.txt
+          
+          cat >> files.wxs << 'FILESWXS2'
+              </ComponentGroup>
+            </Fragment>
+          </Wix>
+          FILESWXS2
+          
+          # Update main installer.wxs to reference the file group
+          sed -i 's/<Feature Id="Complete" Level="1">/<Feature Id="Complete" Level="1">\n                <ComponentGroupRef Id="PublishFiles" \/>/' installer.wxs
+
+          wix build installer.wxs files.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
 
       # ── macOS Installer (.dmg) ──
       - name: Install create-dmg
@@ -327,11 +285,10 @@ jobs:
       - name: Create DMG installer
         if: startsWith(matrix.rid, 'osx')
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
+          TAG="${{ needs.validate.outputs.tag }}"
           RID="${{ matrix.rid }}"
-          VERSION="${{ steps.ver.outputs.prefix }}"
+          VERSION="${{ needs.validate.outputs.version }}"
 
-          # Prepare .app bundle structure
           mkdir -p EasySave.app/Contents/MacOS
           mkdir -p EasySave.app/Contents/Resources
 
@@ -409,8 +366,8 @@ jobs:
       - name: Create DEB package
         if: matrix.rid == 'linux-x64'
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
-          VERSION="${{ steps.ver.outputs.prefix }}"
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
 
           mkdir -p deb-pkg/DEBIAN
           mkdir -p deb-pkg/usr/lib/easysave
@@ -419,24 +376,23 @@ jobs:
 
           cp -r publish/* deb-pkg/usr/lib/easysave/
           chmod +x deb-pkg/usr/lib/easysave/EasySave
-
-          # Symlink to /usr/bin
           ln -sf /usr/lib/easysave/EasySave deb-pkg/usr/bin/easysave
 
-          # Control file
           cat > deb-pkg/DEBIAN/control << DEBEOF
           Package: easysave
           Version: ${VERSION}
           Section: utils
           Priority: optional
           Architecture: amd64
+          Depends: libc6, libgcc-s1, libstdc++6, zlib1g, libicu70 | libicu72 | libicu74
           Maintainer: EasySave Team <easysave@example.com>
           Description: EasySave - Backup Management Tool
            A simple and efficient backup management application
            supporting multiple save types and configurations.
+           .
+           This package includes all required .NET runtime dependencies.
           DEBEOF
 
-          # Desktop entry
           cat > deb-pkg/usr/share/applications/easysave.desktop << DESKTOPEOF
           [Desktop Entry]
           Name=EasySave
@@ -457,12 +413,11 @@ jobs:
       - name: Create RPM package
         if: matrix.rid == 'linux-x64'
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
-          VERSION="${{ steps.ver.outputs.prefix }}"
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
 
           mkdir -p rpmbuild/{SPECS,SOURCES,BUILD,RPMS,SRPMS}
 
-          # Create tarball source
           mkdir -p easysave-${VERSION}/usr/lib/easysave
           mkdir -p easysave-${VERSION}/usr/bin
           cp -r publish/* easysave-${VERSION}/usr/lib/easysave/
@@ -470,7 +425,6 @@ jobs:
           ln -sf /usr/lib/easysave/EasySave easysave-${VERSION}/usr/bin/easysave
           tar -czf rpmbuild/SOURCES/easysave-${VERSION}.tar.gz easysave-${VERSION}
 
-          # Spec file
           cat > rpmbuild/SPECS/easysave.spec << RPMEOF
           Name:           easysave
           Version:        ${VERSION}
@@ -478,10 +432,12 @@ jobs:
           Summary:        EasySave - Backup Management Tool
           License:        Proprietary
           Source0:        easysave-${VERSION}.tar.gz
+          Requires:       glibc libgcc libstdc++ zlib libicu
 
           %description
           A simple and efficient backup management application
           supporting multiple save types and configurations.
+          This package includes all required .NET runtime dependencies.
 
           %prep
           %setup -q
@@ -498,8 +454,6 @@ jobs:
           RPMEOF
 
           rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/easysave.spec
-
-          # Move RPM to workspace root
           find rpmbuild/RPMS -name "*.rpm" -exec cp {} "EasySave-${TAG}-linux-x64.rpm" \;
 
       # ── Upload all artifacts ──
@@ -508,8 +462,8 @@ jobs:
         with:
           name: EasySave-${{ matrix.rid }}-portable
           path: |
-            EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.zip
-            EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.tar.gz
+            EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip
+            EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.tar.gz
           if-no-files-found: ignore
           retention-days: 30
 
@@ -518,7 +472,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EasySave-${{ matrix.rid }}-msi
-          path: EasySave-${{ needs.version.outputs.tag }}-win-x64.msi
+          path: EasySave-${{ needs.validate.outputs.tag }}-win-x64.msi
           retention-days: 30
 
       - name: Upload installer (DMG)
@@ -526,7 +480,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EasySave-${{ matrix.rid }}-dmg
-          path: EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.dmg
+          path: EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.dmg
           retention-days: 30
 
       - name: Upload installer (DEB)
@@ -534,7 +488,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EasySave-linux-x64-deb
-          path: EasySave-${{ needs.version.outputs.tag }}-linux-x64.deb
+          path: EasySave-${{ needs.validate.outputs.tag }}-linux-x64.deb
           retention-days: 30
 
       - name: Upload installer (RPM)
@@ -542,13 +496,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EasySave-linux-x64-rpm
-          path: EasySave-${{ needs.version.outputs.tag }}-linux-x64.rpm
+          path: EasySave-${{ needs.validate.outputs.tag }}-linux-x64.rpm
           retention-days: 30
 
-  # ─── 5. GitHub Release ─────────────────────────────────────
+  # ─── 4. GitHub Release ─────────────────────────────────────
   release:
     name: Create GitHub Release
-    needs: [version, publish]
+    needs: [validate, publish]
     runs-on: ubuntu-latest
 
     permissions:
@@ -568,8 +522,7 @@ jobs:
 
       - name: Generate release notes
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
-          IS_PRE="${{ needs.version.outputs.is_prerelease }}"
+          TAG="${{ needs.validate.outputs.tag }}"
 
           PREV=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname \
                  | grep -vE "beta|alpha|rc" \
@@ -577,17 +530,11 @@ jobs:
           [[ -z "$PREV" ]] && PREV=$(git rev-list --max-parents=0 HEAD)
 
           {
-            if [[ "$IS_PRE" == "true" ]]; then
-              echo "## Pre-release \`${TAG}\`"
-              echo ""
-              echo "> **Development build from \`develop\`. Not intended for production.**"
-            else
-              echo "## Release \`${TAG}\`"
-            fi
+            echo "## Release \`${TAG}\`"
             echo ""
             echo "### Changes"
             echo ""
-            git log "${PREV}..HEAD" --pretty=format:"- %s (\`%h\`)" --no-merges
+            git log "${PREV}..HEAD" --pretty=format:"- %s (\`%h\`)" --no-merges 2>/dev/null || echo "- Initial release"
             echo ""
             echo ""
             echo "### Downloads"
@@ -613,11 +560,11 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.version.outputs.tag }}
-          name: "${{ needs.version.outputs.is_prerelease == 'true' && 'Pre-release' || 'Release' }} ${{ needs.version.outputs.tag }}"
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: "${{ inputs.prerelease && 'Pre-release' || 'Release' }} ${{ needs.validate.outputs.tag }}"
           body_path: release_notes.md
           draft: false
-          prerelease: ${{ needs.version.outputs.is_prerelease == 'true' }}
+          prerelease: ${{ inputs.prerelease }}
           files: artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

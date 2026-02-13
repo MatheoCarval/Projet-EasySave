@@ -23,7 +23,8 @@ namespace EasySave.Tests.Models
                 SourcePath = @"C:\Source\file.txt",
                 TargetPath = @"C:\Target\file.txt",
                 FileSize = 1024,
-                TransferTime = 150
+                TransferTime = 150,
+                EncryptionTime = 45
             };
 
             Assert.Equal(timestamp, entry.Timestamp);
@@ -32,6 +33,7 @@ namespace EasySave.Tests.Models
             Assert.Equal(@"C:\Target\file.txt", entry.TargetPath);
             Assert.Equal(1024, entry.FileSize);
             Assert.Equal(150, entry.TransferTime);
+            Assert.Equal(45, entry.EncryptionTime);
         }
 
         /// <summary>
@@ -49,6 +51,7 @@ namespace EasySave.Tests.Models
             Assert.Equal(string.Empty, entry.TargetPath);
             Assert.Equal(0, entry.FileSize);
             Assert.Equal(0, entry.TransferTime);
+            Assert.Equal(0, entry.EncryptionTime);
         }
 
         /// <summary>
@@ -78,6 +81,20 @@ namespace EasySave.Tests.Models
             var entry = new BackupLogEntry { TransferTime = time };
 
             Assert.Equal(time, entry.TransferTime);
+        }
+
+        /// <summary>
+        /// Verifies that EncryptionTime property can be set to different values including zero and positive durations.
+        /// </summary>
+        [Theory]
+        [InlineData(0)]
+        [InlineData(10)]
+        [InlineData(2500)]
+        public void EncryptionTime_CanBeSetToDifferentValues(long time)
+        {
+            var entry = new BackupLogEntry { EncryptionTime = time };
+
+            Assert.Equal(time, entry.EncryptionTime);
         }
     }
 }

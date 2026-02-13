@@ -5,6 +5,7 @@ using Services.Writers;
 using Utilities;
 using System.Text.Json;
 using System.Runtime.ConstrainedExecution;
+using System.Diagnostics;
 
 namespace Services.Managers;
 
@@ -41,6 +42,7 @@ public class BackupManager
     /// Service responsible for persisting and managing backup job state information.
     /// </summary>
     private readonly StateWriter _stateWriter;
+    private List<string> _blockedApplications;
 
     const string JobsFilePath = "./Datas/jobs.json";
 
@@ -52,7 +54,7 @@ public class BackupManager
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
@@ -60,6 +62,7 @@ public class BackupManager
         _jobs = new List<BackupJob>();
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
+        _blockedApplications = NormalizeBlockedApplications(blockedApplications);
 
         // Subscribe to file transfer progress
         _fileTransferService.FileTransferred += OnFileTransferredFromService;
@@ -147,6 +150,8 @@ public class BackupManager
 
     public void ExecuteJob(string jobId)
     {
+        EnsureNoBlockedApplicationsRunning();
+
         var job = GetJob(jobId);
         if (job == null)
         {
@@ -215,6 +220,7 @@ public class BackupManager
     /// </summary>
     public void ExecuteAll()
     {
+        EnsureNoBlockedApplicationsRunning();
         var exceptions = new List<Exception>();
 
         foreach (var job in _jobs)
@@ -240,10 +246,80 @@ public class BackupManager
     /// </summary>
     public void ExecuteSequence()
     {
+        EnsureNoBlockedApplicationsRunning();
         foreach (var job in _jobs)
         {
             ExecuteJob(job.Id);
         }
+    }
+
+    private void EnsureNoBlockedApplicationsRunning()
+    {
+        if (_blockedApplications.Count == 0)
+        {
+            return;
+        }
+
+        var runningProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var process in Process.GetProcesses())
+        {
+            try
+            {
+                var name = process.ProcessName;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    runningProcesses.Add(name);
+                }
+            }
+            catch
+            {
+                // Ignore processes that cannot be accessed.
+            }
+        }
+
+        var blockedRunning = _blockedApplications
+            .Where(app => runningProcesses.Contains(app))
+            .ToList();
+
+        if (blockedRunning.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Backup blocked because these applications are running: {string.Join(", ", blockedRunning)}");
+        }
+    }
+
+    private static List<string> NormalizeBlockedApplications(IEnumerable<string>? blockedApplications)
+    {
+        if (blockedApplications == null)
+        {
+            return new List<string>();
+        }
+
+        return blockedApplications
+            .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Select(app => NormalizeProcessName(app))
+            .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Updates the list of blocked applications at runtime (e.g. after settings change).
+    /// </summary>
+    public void UpdateBlockedApplications(IEnumerable<string>? blockedApplications)
+    {
+        _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+    }
+
+    private static string NormalizeProcessName(string name)
+    {
+        var trimmed = name.Trim();
+        if (trimmed.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[..^4];
+        }
+
+        return trimmed;
     }
 
     /// <summary>

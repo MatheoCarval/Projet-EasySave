@@ -13,24 +13,33 @@ namespace EasySave.Models
     {
         private string Language { get; set; }
         private LogFormat LogFormat { get; set; }
+        private List<string> BlockedApplications { get; set; }
         private string LogFilePath { get; set; }
         private string StateFilePath { get; set; }
+        private string CryptosoftPath { get; set; }
+        private List<string> EncryptedExtensions { get; set; }
         private bool DarkMode { get; set; }
 
         public Configuration()
         {
             Language = "fr-FR";
             LogFormat = LogFormat.JSON;
+            BlockedApplications = new List<string>();
             LogFilePath = string.Empty;
             StateFilePath = string.Empty;
+            CryptosoftPath = string.Empty;
+            EncryptedExtensions = new List<string>();
             DarkMode = false;
         }
 
         // Getters
         public string GetLanguage() => Language;
         public LogFormat GetLogFormat() => LogFormat;
+        public List<string> GetBlockedApplications() => new List<string>(BlockedApplications);
         public string GetLogFilePath() => LogFilePath;
         public string GetStateFilePath() => StateFilePath;
+        public string GetCryptosoftPath() => CryptosoftPath;
+        public List<string> GetEncryptedExtensions() => new List<string>(EncryptedExtensions);
         public bool GetDarkMode() => DarkMode;
 
         // Setters
@@ -44,6 +53,20 @@ namespace EasySave.Models
         public void SetLogFormat(LogFormat logFormat)
         {
             LogFormat = logFormat;
+        }
+
+        public void SetBlockedApplications(IEnumerable<string> blockedApplications)
+        {
+            if (blockedApplications == null)
+            {
+                BlockedApplications = new List<string>();
+                return;
+            }
+
+            BlockedApplications = blockedApplications
+                .Where(app => !string.IsNullOrWhiteSpace(app))
+                .Select(app => app.Trim())
+                .ToList();
         }
 
         public void SetLogFilePath(string path)
@@ -60,9 +83,40 @@ namespace EasySave.Models
             StateFilePath = path;
         }
 
+        public void SetCryptosoftPath(string path)
+        {
+            CryptosoftPath = string.IsNullOrWhiteSpace(path) ? string.Empty : path.Trim();
+        }
+
+        public void SetEncryptedExtensions(IEnumerable<string> extensions)
+        {
+            if (extensions == null)
+            {
+                EncryptedExtensions = new List<string>();
+                return;
+            }
+
+            EncryptedExtensions = extensions
+                .Where(ext => !string.IsNullOrWhiteSpace(ext))
+                .Select(NormalizeExtension)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
         public void SetDarkMode(bool darkMode)
         {
             DarkMode = darkMode;
+        }
+
+        private static string NormalizeExtension(string extension)
+        {
+            string trimmed = extension.Trim();
+            if (!trimmed.StartsWith("."))
+            {
+                trimmed = "." + trimmed;
+            }
+
+            return trimmed.ToLowerInvariant();
         }
 
 
@@ -189,8 +243,11 @@ namespace EasySave.Models
             {
                 Language = "fr-FR",
                 LogFormat = LogFormat == LogFormat.JSON ? "JSON" : "XML",
+                BlockedApplications = new List<string>(),
                 LogFilePath = logPath,
                 StateFilePath = statePath,
+                CryptosoftPath = string.Empty,
+                EncryptedExtensions = new List<string>(),
                 DarkMode = false
             };
 
@@ -226,8 +283,11 @@ namespace EasySave.Models
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
+            public List<string> BlockedApplications { get; set; } = new();
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public string CryptosoftPath { get; set; } = string.Empty;
+            public List<string> EncryptedExtensions { get; set; } = new();
             public bool DarkMode { get; set; }
         }
     }
