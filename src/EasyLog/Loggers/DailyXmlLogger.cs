@@ -8,35 +8,53 @@ using System.IO;
 using System.Text;
 
 /// <summary>
-/// Logger implementation that persists log entries in JSON format using UTF-8 encoding without byte order mark.
+/// Logger implementation that persists log entries in XML format using UTF-8 encoding without BOM.
+/// Implements daily log rotation with format: {filename}_YYYY-MM-DD.xml
 /// </summary>
-public class JsonLogger : LoggerBase
+public class DailyXmlLogger : LoggerBase
 {
     private readonly string _baseOutputPath;
 
     /// <summary>
-    /// Initializes a new instance of the JsonLogger class with the specified output file path.
+    /// Initializes a new instance of the DailyXmlLogger class with the specified output path.
+    /// Can accept either a directory path or a file path.
     /// </summary>
-    public JsonLogger(string outputPath) : base(GetDailyLogPath(outputPath), LogFormat.JSON)
+    public DailyXmlLogger(string outputPath) : base(GetDailyLogPath(outputPath), LogFormat.XML)
     {
         _baseOutputPath = outputPath;
     }
 
     /// <summary>
     /// Génère le chemin du fichier de log journalier
-    /// Format: {baseOutputPath}_YYYY-MM-DD.json
+    /// Format: {directory}/{filename}_YYYY-MM-DD.xml
+    /// Si le chemin est un dossier, utilise "jobs" comme nom de base
     /// </summary>
     private static string GetDailyLogPath(string baseOutputPath)
     {
-        string directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
-        string filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
-        string dateString = DateTime.Now.ToString("yyyy-MM-dd");
+        string directory;
+        string filenameWithoutExt;
 
-        return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.json");
+        // Vérifier si le chemin est un dossier ou un fichier
+        if (Directory.Exists(baseOutputPath) ||
+            (!File.Exists(baseOutputPath) && !Path.HasExtension(baseOutputPath)))
+        {
+            // C'est un dossier
+            directory = baseOutputPath;
+            filenameWithoutExt = "jobs";
+        }
+        else
+        {
+            // C'est un fichier
+            directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
+            filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
+        }
+
+        string dateString = DateTime.Now.ToString("yyyy-MM-dd");
+        return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.xml");
     }
 
     /// <summary>
-    /// Writes formatted JSON content to the specified file path using UTF-8 encoding without byte order mark. The content is already merged in LoggerBase before writing.
+    /// Writes formatted XML content to the specified file path using UTF-8 encoding without byte order mark. The content is already merged in LoggerBase before writing.
     /// Handles daily log file rotation by checking if the current date has changed.
     /// </summary>
     protected override void WriteToFile(string content, string path)
@@ -65,7 +83,7 @@ public class JsonLogger : LoggerBase
     }
 
     /// <summary>
-    /// Reads JSON content from the specified file path using UTF-8 encoding. Returns an empty string if the file does not exist.
+    /// Reads XML content from the specified file path using UTF-8 encoding. Returns an empty string if the file does not exist.
     /// Always reads from the current daily log file.
     /// </summary>
     protected override string ReadFromFile(string path)

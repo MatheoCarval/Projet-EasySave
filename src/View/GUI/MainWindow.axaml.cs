@@ -177,10 +177,8 @@ public partial class MainWindow : Window
 
             if (result.Count > 0)
             {
-                string dir = result[0].Path.LocalPath;
-                // Determine log file name from current format setting
-                string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
-                mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
+                // Store only the directory path - daily log files will be created automatically
+                mainVm.SettingsVM.LogFilePath = result[0].Path.LocalPath;
             }
         }
     }

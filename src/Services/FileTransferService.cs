@@ -22,7 +22,7 @@ namespace EasySave.Services
         /// <summary>
         /// Logger instance for recording file transfer operations and backup events.
         /// </summary>
-        private readonly ILogger _logger;
+        private ILogger _logger;
         /// <summary>
         /// State writer instance for persisting backup job state during file transfer operations.
         /// </summary>
@@ -48,6 +48,15 @@ namespace EasySave.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateWriter = stateWriter ?? throw new ArgumentNullException(nameof(stateWriter));
             _cryptageManager = cryptageManager ?? new CryptageManager(string.Empty, Array.Empty<string>());
+        }
+
+        /// <summary>
+        /// Updates the logger instance used for recording file transfer operations.
+        /// This allows changing the log format (JSON/XML) without restarting the application.
+        /// </summary>
+        public void UpdateLogger(ILogger logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>

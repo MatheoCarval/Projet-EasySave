@@ -22,6 +22,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         /// Path to the test XML log file created in the temporary directory.
         /// </summary>
         private readonly string _testFilePath;
+        private readonly string _dailyFilePath;
 
         /// <summary>
         /// Initializes test fixtures by creating a temporary directory for test log files.
@@ -31,6 +32,7 @@ namespace EasySave.Tests.EasyLog.Loggers
             _testDirectory = Path.Combine(Path.GetTempPath(), $"XmlLoggerTest_{Guid.NewGuid()}");
             Directory.CreateDirectory(_testDirectory);
             _testFilePath = Path.Combine(_testDirectory, "test.xml");
+            _dailyFilePath = GetDailyPath(_testFilePath, DateTime.Now);
         }
 
         /// <summary>
@@ -54,7 +56,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Constructor_WithValidPath_CreatesLogger()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
 
             Assert.NotNull(logger);
         }
@@ -65,7 +67,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_WithValidEntry_WritesToFile()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
             var entry = new BackupLogEntry
             {
                 BackupName = "TestBackup",
@@ -76,8 +78,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.Log(entry);
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
             Assert.Contains("<?xml", content);
         }
@@ -88,7 +90,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_WithNull_ThrowsArgumentNullException()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
 
 #pragma warning disable CS8625
             Assert.Throws<ArgumentNullException>(() => logger.Log<BackupLogEntry>(null));
@@ -101,7 +103,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void LogCollection_WithValidEntries_WritesToFile()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
             var entries = new List<BackupLogEntry>
             {
                 new BackupLogEntry { BackupName = "Backup1" },
@@ -111,8 +113,8 @@ namespace EasySave.Tests.EasyLog.Loggers
             logger.LogCollection(entries);
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("Backup1", content);
             Assert.Contains("Backup2", content);
         }
@@ -123,7 +125,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void LogCollection_WithNull_DoesNotThrow()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
 
 #pragma warning disable CS8625
             logger.LogCollection<BackupLogEntry>(null);
@@ -138,7 +140,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void ReadLog_WithExistingFile_ReturnsEntries()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup", FileSize = 100 };
             logger.Log(entry);
             logger.Flush();
@@ -156,7 +158,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void ReadLog_WithNonExistentFile_ReturnsEmptyList()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
 
             var result = logger.ReadLog<BackupLogEntry>();
 
@@ -170,14 +172,14 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Flush_WritesBufferedDataToFile()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup" };
             logger.Log(entry);
 
             logger.Flush();
 
-            Assert.True(File.Exists(_testFilePath));
-            var content = File.ReadAllText(_testFilePath);
+            Assert.True(File.Exists(_dailyFilePath));
+            var content = File.ReadAllText(_dailyFilePath);
             Assert.Contains("TestBackup", content);
         }
 
@@ -187,7 +189,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_MultipleTimes_AppendsEntries()
         {
-            var logger = new XmlLogger(_testFilePath);
+            var logger = new DailyXmlLogger(_testFilePath);
 
             logger.Log(new BackupLogEntry { BackupName = "Backup1" });
             logger.Flush();
@@ -196,6 +198,14 @@ namespace EasySave.Tests.EasyLog.Loggers
 
             var result = logger.ReadLog<BackupLogEntry>();
             Assert.Equal(2, result.Count());
+        }
+
+        private static string GetDailyPath(string baseOutputPath, DateTime date)
+        {
+            string directory = Path.GetDirectoryName(baseOutputPath) ?? string.Empty;
+            string filenameWithoutExt = Path.GetFileNameWithoutExtension(baseOutputPath);
+            string dateString = date.ToString("yyyy-MM-dd");
+            return Path.Combine(directory, $"{filenameWithoutExt}_{dateString}.xml");
         }
     }
 }
