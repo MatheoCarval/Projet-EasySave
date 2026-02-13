@@ -1579,7 +1579,7 @@ public partial class MainWindow : Window
             FileTypeChoices = isXml
                 ? new[] { new Avalonia.Platform.Storage.FilePickerFileType("XML") { Patterns = new[] { "*.xml" } } }
                 : new[] { new Avalonia.Platform.Storage.FilePickerFileType("JSON") { Patterns = new[] { "*.json" } } }
-        
+
         });
 
         if (file != null)
