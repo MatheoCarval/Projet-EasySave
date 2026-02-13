@@ -1,0 +1,570 @@
+## ─────────────────────────────────────────────────────────────
+## Manual Release — EasySave
+## Triggered manually from Actions UI.
+## Allows publishing a specific version on any branch.
+## ─────────────────────────────────────────────────────────────
+
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0, 2.3.1)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as pre-release?"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-manual
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PROJECT_PATH: src/EasySave.csproj
+  SOLUTION_PATH: src/EasySave.slnx
+  TEST_PROJECT_PATH: src/EasySave.Tests/EasySave.Tests.csproj
+
+# ───────────────────────── JOBS ──────────────────────────────
+jobs:
+
+  # ─── 1. Validate ───────────────────────────────────────────
+  validate:
+    name: Validate & Test
+    runs-on: ubuntu-latest
+
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format '${VERSION}'. Expected: X.Y.Z (e.g. 1.0.0)"
+            exit 1
+          fi
+
+      - name: Resolve tag name
+        id: resolve
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ "${{ inputs.prerelease }}" == "true" ]]; then
+            TAG="v${VERSION}-rc.1"
+          else
+            TAG="v${VERSION}"
+          fi
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag '$TAG' already exists"
+            exit 1
+          fi
+
+          echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::Will create tag → $TAG"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_PATH }} -c Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test ${{ env.TEST_PROJECT_PATH }}
+          -c Release
+          --no-restore
+          --verbosity normal
+
+  # ─── 2. Tag ────────────────────────────────────────────────
+  tag:
+    name: Create Tag
+    needs: validate
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push tag
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.validate.outputs.tag }}" -m "Manual release ${{ needs.validate.outputs.tag }}"
+          git push origin "${{ needs.validate.outputs.tag }}"
+
+  # ─── 3. Publish + Installers (matrix) ───────────────────────
+  publish:
+    name: Publish (${{ matrix.rid }})
+    needs: [validate, tag]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: osx-arm64
+            os: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }}
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -o ./publish
+          /p:Version=${{ needs.validate.outputs.version }}
+
+      # ── Portable archive ──
+      - name: Archive (zip – Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip
+
+      - name: Archive (tar.gz – Unix)
+        if: matrix.rid != 'win-x64'
+        run: cd publish && tar -czf ../EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.tar.gz .
+
+      # ── Windows Installer (.msi) ──
+      - name: Install WiX Toolset
+        if: matrix.rid == 'win-x64'
+        run: dotnet tool install --global wix
+
+      - name: Create MSI installer
+        if: matrix.rid == 'win-x64'
+        shell: bash
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          # Find the executable name
+          EXE_NAME=$(ls publish/*.exe | head -n1 | xargs basename)
+
+          cat > installer.wxs << 'WXSEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Package Name="EasySave"
+                     Manufacturer="EasySave Team"
+                     Version="$(var.Version)"
+                     UpgradeCode="E4A5B6C7-D8E9-4F0A-B1C2-D3E4F5A6B7C8">
+
+              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+              <MediaTemplate EmbedCab="yes" />
+
+              <!-- Visual C++ Runtime Prerequisites -->
+              <Property Id="VS2022REDIST_X64">
+                <RegistrySearch Id="SearchVCRedist2022_x64"
+                                Root="HKLM"
+                                Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+                                Name="Installed"
+                                Type="raw" />
+              </Property>
+
+              <Launch Condition="Installed OR VS2022REDIST_X64"
+                      Message="This application requires Visual C++ Runtime. The installer will download it automatically. Please ensure you have an internet connection." />
+
+              <StandardDirectory Id="ProgramFiles6432Folder">
+                <Directory Id="INSTALLFOLDER" Name="EasySave">
+                  <Component Id="ApplicationFiles" Guid="A1B2C3D4-E5F6-4A7B-8C9D-E0F1A2B3C4D5">
+                    <File Id="MainExe" Source="publish\$(var.ExeName)" KeyPath="yes">
+                      <Shortcut Id="StartMenuShortcut"
+                                Directory="ProgramMenuFolder"
+                                Name="EasySave"
+                                WorkingDirectory="INSTALLFOLDER"
+                                Icon="AppIcon.exe"
+                                IconIndex="0"
+                                Advertise="yes" />
+                    </File>
+                  </Component>
+                </Directory>
+              </StandardDirectory>
+
+              <Icon Id="AppIcon.exe" SourceFile="publish\$(var.ExeName)" />
+
+              <Feature Id="Complete" Level="1">
+                <ComponentRef Id="ApplicationFiles" />
+              </Feature>
+            </Package>
+          </Wix>
+          WXSEOF
+
+          # Use heat to harvest all files from publish directory
+          wix extension add WixToolset.Util.wixext
+          
+          # Create component group for all files
+          cd publish
+          find . -type f ! -name "*.exe" -exec echo "{}" \; > ../files.txt
+          cd ..
+          
+          cat > files.wxs << 'FILESWXS'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Fragment>
+              <ComponentGroup Id="PublishFiles">
+          FILESWXS
+          
+          counter=1
+          while IFS= read -r file; do
+            file_clean=$(echo "$file" | sed 's/^\.\/\///')
+            if [ ! -z "$file_clean" ] && [ "$file_clean" != "." ]; then
+              file_id="File_${counter}"
+              comp_id="Comp_${counter}"
+              guid=$(uuidgen)
+              echo "                <Component Id=\"${comp_id}\" Directory=\"INSTALLFOLDER\" Guid=\"${guid}\">" >> files.wxs
+              echo "                  <File Id=\"${file_id}\" Source=\"publish\\${file_clean}\" />" >> files.wxs
+              echo "                </Component>" >> files.wxs
+              counter=$((counter + 1))
+            fi
+          done < files.txt
+          
+          cat >> files.wxs << 'FILESWXS2'
+              </ComponentGroup>
+            </Fragment>
+          </Wix>
+          FILESWXS2
+          
+          # Update main installer.wxs to reference the file group
+          sed -i 's/<Feature Id="Complete" Level="1">/<Feature Id="Complete" Level="1">\n                <ComponentGroupRef Id="PublishFiles" \/>/' installer.wxs
+
+          wix build installer.wxs files.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
+
+      # ── macOS Installer (.dmg) ──
+      - name: Install create-dmg
+        if: startsWith(matrix.rid, 'osx')
+        run: brew install create-dmg
+
+      - name: Create DMG installer
+        if: startsWith(matrix.rid, 'osx')
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          RID="${{ matrix.rid }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          mkdir -p EasySave.app/Contents/MacOS
+          mkdir -p EasySave.app/Contents/Resources
+
+          cp -r publish/* EasySave.app/Contents/MacOS/
+          chmod +x EasySave.app/Contents/MacOS/EasySave
+
+          cat > EasySave.app/Contents/Info.plist << PLISTEOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>EasySave</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.easysave.app</string>
+            <key>CFBundleName</key>
+            <string>EasySave</string>
+            <key>CFBundleVersion</key>
+            <string>${VERSION}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${VERSION}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+          </dict>
+          </plist>
+          PLISTEOF
+
+          # Ad-hoc code signing (allows local execution without Gatekeeper warning)
+          codesign --force --deep --sign - EasySave.app
+
+          # Create README with installation instructions
+          cat > INSTALL.txt << READMEOF
+          Installation Instructions for EasySave
+          =======================================
+
+          This application is not signed with an Apple Developer certificate.
+
+          To install:
+          1. Drag EasySave.app to your Applications folder
+          2. Right-click on EasySave.app and select "Open"
+          3. Click "Open" in the security dialog
+
+          Or use Terminal:
+             xattr -d com.apple.quarantine /Applications/EasySave.app
+
+          After first launch, you can open it normally from Launchpad or Finder.
+          READMEOF
+
+          create-dmg \
+            --volname "EasySave Installer" \
+            --window-size 600 450 \
+            --icon-size 100 \
+            --text-size 12 \
+            --icon "EasySave.app" 150 150 \
+            --hide-extension "EasySave.app" \
+            --app-drop-link 450 150 \
+            --add-file "INSTALL.txt" "INSTALL.txt" 300 300 \
+            "EasySave-${TAG}-${RID}.dmg" \
+            EasySave.app/ INSTALL.txt || true
+
+          # Fallback to hdiutil if create-dmg fails
+          if [ ! -f "EasySave-${TAG}-${RID}.dmg" ]; then
+            mkdir -p dmg-contents
+            cp -r EasySave.app dmg-contents/
+            cp INSTALL.txt dmg-contents/
+            hdiutil create -volname "EasySave Installer" \
+              -srcfolder dmg-contents \
+              -ov -format UDZO \
+              "EasySave-${TAG}-${RID}.dmg"
+          fi
+
+      # ── Debian Installer (.deb) ──
+      - name: Create DEB package
+        if: matrix.rid == 'linux-x64'
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          mkdir -p deb-pkg/DEBIAN
+          mkdir -p deb-pkg/usr/lib/easysave
+          mkdir -p deb-pkg/usr/bin
+          mkdir -p deb-pkg/usr/share/applications
+
+          cp -r publish/* deb-pkg/usr/lib/easysave/
+          chmod +x deb-pkg/usr/lib/easysave/EasySave
+          ln -sf /usr/lib/easysave/EasySave deb-pkg/usr/bin/easysave
+
+          cat > deb-pkg/DEBIAN/control << DEBEOF
+          Package: easysave
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Depends: libc6, libgcc-s1, libstdc++6, zlib1g, libicu70 | libicu72 | libicu74
+          Maintainer: EasySave Team <easysave@example.com>
+          Description: EasySave - Backup Management Tool
+           A simple and efficient backup management application
+           supporting multiple save types and configurations.
+           .
+           This package includes all required .NET runtime dependencies.
+          DEBEOF
+
+          cat > deb-pkg/usr/share/applications/easysave.desktop << DESKTOPEOF
+          [Desktop Entry]
+          Name=EasySave
+          Comment=Backup Management Tool
+          Exec=/usr/bin/easysave
+          Terminal=false
+          Type=Application
+          Categories=Utility;
+          DESKTOPEOF
+
+          dpkg-deb --build deb-pkg "EasySave-${TAG}-linux-x64.deb"
+
+      # ── RPM Installer (.rpm) ──
+      - name: Install RPM tools
+        if: matrix.rid == 'linux-x64'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+
+      - name: Create RPM package
+        if: matrix.rid == 'linux-x64'
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          mkdir -p rpmbuild/{SPECS,SOURCES,BUILD,RPMS,SRPMS}
+
+          mkdir -p easysave-${VERSION}/usr/lib/easysave
+          mkdir -p easysave-${VERSION}/usr/bin
+          cp -r publish/* easysave-${VERSION}/usr/lib/easysave/
+          chmod +x easysave-${VERSION}/usr/lib/easysave/EasySave
+          ln -sf /usr/lib/easysave/EasySave easysave-${VERSION}/usr/bin/easysave
+          tar -czf rpmbuild/SOURCES/easysave-${VERSION}.tar.gz easysave-${VERSION}
+
+          cat > rpmbuild/SPECS/easysave.spec << RPMEOF
+          Name:           easysave
+          Version:        ${VERSION}
+          Release:        1
+          Summary:        EasySave - Backup Management Tool
+          License:        Proprietary
+          Source0:        easysave-${VERSION}.tar.gz
+          Requires:       glibc libgcc libstdc++ zlib libicu
+
+          %description
+          A simple and efficient backup management application
+          supporting multiple save types and configurations.
+          This package includes all required .NET runtime dependencies.
+
+          %prep
+          %setup -q
+
+          %install
+          mkdir -p %{buildroot}/usr/lib/easysave
+          mkdir -p %{buildroot}/usr/bin
+          cp -r usr/lib/easysave/* %{buildroot}/usr/lib/easysave/
+          ln -sf /usr/lib/easysave/EasySave %{buildroot}/usr/bin/easysave
+
+          %files
+          /usr/lib/easysave/*
+          /usr/bin/easysave
+          RPMEOF
+
+          rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/easysave.spec
+          find rpmbuild/RPMS -name "*.rpm" -exec cp {} "EasySave-${TAG}-linux-x64.rpm" \;
+
+      # ── Upload all artifacts ──
+      - name: Upload portable archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-portable
+          path: |
+            EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.zip
+            EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.tar.gz
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload installer (MSI)
+        if: matrix.rid == 'win-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-msi
+          path: EasySave-${{ needs.validate.outputs.tag }}-win-x64.msi
+          retention-days: 30
+
+      - name: Upload installer (DMG)
+        if: startsWith(matrix.rid, 'osx')
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-dmg
+          path: EasySave-${{ needs.validate.outputs.tag }}-${{ matrix.rid }}.dmg
+          retention-days: 30
+
+      - name: Upload installer (DEB)
+        if: matrix.rid == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-linux-x64-deb
+          path: EasySave-${{ needs.validate.outputs.tag }}-linux-x64.deb
+          retention-days: 30
+
+      - name: Upload installer (RPM)
+        if: matrix.rid == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-linux-x64-rpm
+          path: EasySave-${{ needs.validate.outputs.tag }}-linux-x64.rpm
+          retention-days: 30
+
+  # ─── 4. GitHub Release ─────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    needs: [validate, publish]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate release notes
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+
+          PREV=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname \
+                 | grep -vE "beta|alpha|rc" \
+                 | grep -v "^${TAG}$" | head -n1)
+          [[ -z "$PREV" ]] && PREV=$(git rev-list --max-parents=0 HEAD)
+
+          {
+            echo "## Release \`${TAG}\`"
+            echo ""
+            echo "### Changes"
+            echo ""
+            git log "${PREV}..HEAD" --pretty=format:"- %s (\`%h\`)" --no-merges 2>/dev/null || echo "- Initial release"
+            echo ""
+            echo ""
+            echo "### Downloads"
+            echo ""
+            echo "#### Installers"
+            echo ""
+            echo "| Platform | Installer |"
+            echo "|----------|----------|"
+            echo "| Windows x64 | \`EasySave-${TAG}-win-x64.msi\` |"
+            echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.dmg\` |"
+            echo "| Debian / Ubuntu | \`EasySave-${TAG}-linux-x64.deb\` |"
+            echo "| RHEL / Fedora | \`EasySave-${TAG}-linux-x64.rpm\` |"
+            echo ""
+            echo "#### Portable Archives"
+            echo ""
+            echo "| Platform | Archive |"
+            echo "|----------|--------|"
+            echo "| Windows x64 | \`EasySave-${TAG}-win-x64.zip\` |"
+            echo "| Linux x64 | \`EasySave-${TAG}-linux-x64.tar.gz\` |"
+            echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.tar.gz\` |"
+          } > release_notes.md
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: "${{ inputs.prerelease && 'Pre-release' || 'Release' }} ${{ needs.validate.outputs.tag }}"
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ inputs.prerelease }}
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

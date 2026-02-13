@@ -1,0 +1,623 @@
+## ─────────────────────────────────────────────────────────────
+## CI/CD Pipeline — EasySave
+## Triggers on push / PR to develop & main.
+## • develop → beta pre-release  (v*.*.* -beta.N)
+## • main    → stable release    (v*.*.*)
+## ─────────────────────────────────────────────────────────────
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PROJECT_PATH: src/EasySave.csproj
+  SOLUTION_PATH: src/EasySave.slnx
+  TEST_PROJECT_PATH: src/EasySave.Tests/EasySave.Tests.csproj
+
+# ───────────────────────── JOBS ──────────────────────────────
+jobs:
+
+  # ─── 1. Code Quality Checks ────────────────────────────────
+  lint:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Check code formatting
+        run: dotnet format ${{ env.SOLUTION_PATH }} --verify-no-changes --verbosity diagnostic
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Check for vulnerable packages
+        run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
+
+  # ─── 2. Build & Test ───────────────────────────────────────
+  build-and-test:
+    name: Build & Test
+    needs: [lint, security]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_PATH }} -c Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test ${{ env.TEST_PROJECT_PATH }}
+          -c Release
+          --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/test-results.trx"
+          retention-days: 14
+
+  # ─── 3. Version Tag ────────────────────────────────────────
+  version:
+    name: Calculate & Tag Version
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      tag: ${{ steps.calc.outputs.tag }}
+      version: ${{ steps.calc.outputs.version }}
+      is_prerelease: ${{ steps.calc.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: calc
+        run: |
+          set -euo pipefail
+
+          # ── Latest stable tag (ignore betas) ──
+          LATEST_STABLE=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname 2>/dev/null \
+                          | grep -vE "beta|alpha|rc" 2>/dev/null | head -n1 || true)
+          [[ -z "$LATEST_STABLE" ]] && LATEST_STABLE="v0.0.0"
+
+          VERSION="${LATEST_STABLE#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          BRANCH="${{ github.ref_name }}"
+
+          if [[ "$BRANCH" == "main" ]]; then
+            # ── Detect breaking changes (Conventional Commits) ──
+            BREAKING=false
+            if git rev-parse "$LATEST_STABLE" >/dev/null 2>&1; then
+              LOGS=$(git log "${LATEST_STABLE}..HEAD" --pretty=format:"%s%n%b" 2>/dev/null || true)
+            else
+              LOGS=$(git log --pretty=format:"%s%n%b" 2>/dev/null || true)
+            fi
+
+            if echo "$LOGS" | grep -qE "BREAKING CHANGE:" 2>/dev/null || \
+               echo "$LOGS" | grep -qE "^[a-z]+(\([a-z]+\))?!:" 2>/dev/null; then
+              BREAKING=true
+            fi
+
+            if [[ "$BREAKING" == "true" ]]; then
+              MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+            else
+              MINOR=$((MINOR + 1)); PATCH=0
+            fi
+
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            IS_PRE="false"
+          else
+            # ── develop → beta with incremental number ──
+            PATCH=$((PATCH + 1))
+            BASE="${MAJOR}.${MINOR}.${PATCH}"
+
+            LATEST_BETA=$(git tag -l "v${BASE}-beta.*" --sort=-v:refname 2>/dev/null | head -n1 || true)
+            if [[ -z "$LATEST_BETA" ]]; then
+              BETA_NUM=1
+            else
+              BETA_NUM=$(echo "$LATEST_BETA" | sed -n 's/.*-beta\.\([0-9]*\)/\1/p')
+              [[ -z "$BETA_NUM" ]] && BETA_NUM=0
+              BETA_NUM=$((BETA_NUM + 1))
+            fi
+
+            TAG="v${BASE}-beta.${BETA_NUM}"
+            IS_PRE="true"
+          fi
+
+          echo "tag=$TAG"               >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}"       >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRE"  >> "$GITHUB_OUTPUT"
+          echo "::notice::Version → $TAG"
+
+      - name: Push tag
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.calc.outputs.tag }}" -m "Release ${{ steps.calc.outputs.tag }}"
+          git push origin "${{ steps.calc.outputs.tag }}"
+
+  # ─── 4. Publish + Installers (matrix) ───────────────────────
+  publish:
+    name: Publish (${{ matrix.rid }})
+    needs: [build-and-test, version]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: osx-arm64
+            os: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Resolve version properties
+        id: ver
+        shell: bash
+        run: |
+          FULL="${{ needs.version.outputs.version }}"
+          PREFIX="${FULL%%-*}"
+          SUFFIX="${FULL#"$PREFIX"}"
+          SUFFIX="${SUFFIX#-}"
+          echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
+          echo "suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }}
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -o ./publish
+          /p:PublishSingleFile=true
+          /p:VersionPrefix=${{ steps.ver.outputs.prefix }}
+          ${{ steps.ver.outputs.suffix != '' && format('/p:VersionSuffix={0}', steps.ver.outputs.suffix) || '' }}
+
+      # ── Portable archive ──
+      - name: Archive (zip – Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.zip
+
+      - name: Archive (tar.gz – Unix)
+        if: matrix.rid != 'win-x64'
+        run: cd publish && tar -czf ../EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.tar.gz .
+
+      # ── Windows Installer (.msi) ──
+      - name: Install WiX Toolset
+        if: matrix.rid == 'win-x64'
+        run: dotnet tool install --global wix
+
+      - name: Create MSI installer
+        if: matrix.rid == 'win-x64'
+        shell: bash
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          VERSION="${{ steps.ver.outputs.prefix }}"
+
+          # Find the executable name
+          EXE_NAME=$(ls publish/*.exe | head -n1 | xargs basename)
+
+          cat > installer.wxs << 'WXSEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Package Name="EasySave"
+                     Manufacturer="EasySave Team"
+                     Version="$(var.Version)"
+                     UpgradeCode="E4A5B6C7-D8E9-4F0A-B1C2-D3E4F5A6B7C8">
+
+              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+              <MediaTemplate EmbedCab="yes" />
+
+              <StandardDirectory Id="ProgramFiles6432Folder">
+                <Directory Id="INSTALLFOLDER" Name="EasySave">
+                  <Component Id="ApplicationFiles" Guid="A1B2C3D4-E5F6-4A7B-8C9D-E0F1A2B3C4D5">
+                    <File Id="MainExe" Source="publish\$(var.ExeName)" KeyPath="yes">
+                      <Shortcut Id="StartMenuShortcut"
+                                Directory="ProgramMenuFolder"
+                                Name="EasySave"
+                                WorkingDirectory="INSTALLFOLDER"
+                                Icon="AppIcon.exe"
+                                IconIndex="0"
+                                Advertise="yes" />
+                    </File>
+                  </Component>
+                </Directory>
+              </StandardDirectory>
+
+              <Icon Id="AppIcon.exe" SourceFile="publish\$(var.ExeName)" />
+
+              <Feature Id="Complete" Level="1">
+                <ComponentRef Id="ApplicationFiles" />
+              </Feature>
+            </Package>
+          </Wix>
+          WXSEOF
+
+          wix build installer.wxs -d Version="${VERSION}" -d ExeName="${EXE_NAME}" -o "EasySave-${TAG}-win-x64.msi"
+
+      # ── macOS Installer (.dmg) ──
+      - name: Install create-dmg
+        if: startsWith(matrix.rid, 'osx')
+        run: brew install create-dmg
+
+      - name: Create DMG installer
+        if: startsWith(matrix.rid, 'osx')
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          RID="${{ matrix.rid }}"
+          VERSION="${{ steps.ver.outputs.prefix }}"
+
+          # Prepare .app bundle structure
+          mkdir -p EasySave.app/Contents/MacOS
+          mkdir -p EasySave.app/Contents/Resources
+
+          cp -r publish/* EasySave.app/Contents/MacOS/
+          chmod +x EasySave.app/Contents/MacOS/EasySave
+
+          cat > EasySave.app/Contents/Info.plist << PLISTEOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>EasySave</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.easysave.app</string>
+            <key>CFBundleName</key>
+            <string>EasySave</string>
+            <key>CFBundleVersion</key>
+            <string>${VERSION}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${VERSION}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+          </dict>
+          </plist>
+          PLISTEOF
+
+          # Ad-hoc code signing (allows local execution without Gatekeeper warning)
+          codesign --force --deep --sign - EasySave.app
+
+          # Create README with installation instructions
+          cat > INSTALL.txt << READMEOF
+          Installation Instructions for EasySave
+          =======================================
+
+          This application is not signed with an Apple Developer certificate.
+
+          To install:
+          1. Drag EasySave.app to your Applications folder
+          2. Right-click on EasySave.app and select "Open"
+          3. Click "Open" in the security dialog
+
+          Or use Terminal:
+             xattr -d com.apple.quarantine /Applications/EasySave.app
+
+          After first launch, you can open it normally from Launchpad or Finder.
+          READMEOF
+
+          create-dmg \
+            --volname "EasySave Installer" \
+            --window-size 600 450 \
+            --icon-size 100 \
+            --text-size 12 \
+            --icon "EasySave.app" 150 150 \
+            --hide-extension "EasySave.app" \
+            --app-drop-link 450 150 \
+            --add-file "INSTALL.txt" "INSTALL.txt" 300 300 \
+            "EasySave-${TAG}-${RID}.dmg" \
+            EasySave.app/ INSTALL.txt || true
+
+          # Fallback to hdiutil if create-dmg fails
+          if [ ! -f "EasySave-${TAG}-${RID}.dmg" ]; then
+            mkdir -p dmg-contents
+            cp -r EasySave.app dmg-contents/
+            cp INSTALL.txt dmg-contents/
+            hdiutil create -volname "EasySave Installer" \
+              -srcfolder dmg-contents \
+              -ov -format UDZO \
+              "EasySave-${TAG}-${RID}.dmg"
+          fi
+
+      # ── Debian Installer (.deb) ──
+      - name: Create DEB package
+        if: matrix.rid == 'linux-x64'
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          VERSION="${{ steps.ver.outputs.prefix }}"
+
+          mkdir -p deb-pkg/DEBIAN
+          mkdir -p deb-pkg/usr/lib/easysave
+          mkdir -p deb-pkg/usr/bin
+          mkdir -p deb-pkg/usr/share/applications
+
+          cp -r publish/* deb-pkg/usr/lib/easysave/
+          chmod +x deb-pkg/usr/lib/easysave/EasySave
+
+          # Symlink to /usr/bin
+          ln -sf /usr/lib/easysave/EasySave deb-pkg/usr/bin/easysave
+
+          # Control file
+          cat > deb-pkg/DEBIAN/control << DEBEOF
+          Package: easysave
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: EasySave Team <easysave@example.com>
+          Description: EasySave - Backup Management Tool
+           A simple and efficient backup management application
+           supporting multiple save types and configurations.
+          DEBEOF
+
+          # Desktop entry
+          cat > deb-pkg/usr/share/applications/easysave.desktop << DESKTOPEOF
+          [Desktop Entry]
+          Name=EasySave
+          Comment=Backup Management Tool
+          Exec=/usr/bin/easysave
+          Terminal=false
+          Type=Application
+          Categories=Utility;
+          DESKTOPEOF
+
+          dpkg-deb --build deb-pkg "EasySave-${TAG}-linux-x64.deb"
+
+      # ── RPM Installer (.rpm) ──
+      - name: Install RPM tools
+        if: matrix.rid == 'linux-x64'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+
+      - name: Create RPM package
+        if: matrix.rid == 'linux-x64'
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          VERSION="${{ steps.ver.outputs.prefix }}"
+
+          mkdir -p rpmbuild/{SPECS,SOURCES,BUILD,RPMS,SRPMS}
+
+          # Create tarball source
+          mkdir -p easysave-${VERSION}/usr/lib/easysave
+          mkdir -p easysave-${VERSION}/usr/bin
+          cp -r publish/* easysave-${VERSION}/usr/lib/easysave/
+          chmod +x easysave-${VERSION}/usr/lib/easysave/EasySave
+          ln -sf /usr/lib/easysave/EasySave easysave-${VERSION}/usr/bin/easysave
+          tar -czf rpmbuild/SOURCES/easysave-${VERSION}.tar.gz easysave-${VERSION}
+
+          # Spec file
+          cat > rpmbuild/SPECS/easysave.spec << RPMEOF
+          Name:           easysave
+          Version:        ${VERSION}
+          Release:        1
+          Summary:        EasySave - Backup Management Tool
+          License:        Proprietary
+          Source0:        easysave-${VERSION}.tar.gz
+
+          %description
+          A simple and efficient backup management application
+          supporting multiple save types and configurations.
+
+          %prep
+          %setup -q
+
+          %install
+          mkdir -p %{buildroot}/usr/lib/easysave
+          mkdir -p %{buildroot}/usr/bin
+          cp -r usr/lib/easysave/* %{buildroot}/usr/lib/easysave/
+          ln -sf /usr/lib/easysave/EasySave %{buildroot}/usr/bin/easysave
+
+          %files
+          /usr/lib/easysave/*
+          /usr/bin/easysave
+          RPMEOF
+
+          rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/easysave.spec
+
+          # Move RPM to workspace root
+          find rpmbuild/RPMS -name "*.rpm" -exec cp {} "EasySave-${TAG}-linux-x64.rpm" \;
+
+      # ── Upload all artifacts ──
+      - name: Upload portable archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-portable
+          path: |
+            EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.zip
+            EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.tar.gz
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload installer (MSI)
+        if: matrix.rid == 'win-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-msi
+          path: EasySave-${{ needs.version.outputs.tag }}-win-x64.msi
+          retention-days: 30
+
+      - name: Upload installer (DMG)
+        if: startsWith(matrix.rid, 'osx')
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-${{ matrix.rid }}-dmg
+          path: EasySave-${{ needs.version.outputs.tag }}-${{ matrix.rid }}.dmg
+          retention-days: 30
+
+      - name: Upload installer (DEB)
+        if: matrix.rid == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-linux-x64-deb
+          path: EasySave-${{ needs.version.outputs.tag }}-linux-x64.deb
+          retention-days: 30
+
+      - name: Upload installer (RPM)
+        if: matrix.rid == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasySave-linux-x64-rpm
+          path: EasySave-${{ needs.version.outputs.tag }}-linux-x64.rpm
+          retention-days: 30
+
+  # ─── 5. GitHub Release ─────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    needs: [version, publish]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate release notes
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          IS_PRE="${{ needs.version.outputs.is_prerelease }}"
+
+          PREV=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname \
+                 | grep -vE "beta|alpha|rc" \
+                 | grep -v "^${TAG}$" | head -n1)
+          [[ -z "$PREV" ]] && PREV=$(git rev-list --max-parents=0 HEAD)
+
+          {
+            if [[ "$IS_PRE" == "true" ]]; then
+              echo "## Pre-release \`${TAG}\`"
+              echo ""
+              echo "> **Development build from \`develop\`. Not intended for production.**"
+            else
+              echo "## Release \`${TAG}\`"
+            fi
+            echo ""
+            echo "### Changes"
+            echo ""
+            git log "${PREV}..HEAD" --pretty=format:"- %s (\`%h\`)" --no-merges
+            echo ""
+            echo ""
+            echo "### Downloads"
+            echo ""
+            echo "#### Installers"
+            echo ""
+            echo "| Platform | Installer |"
+            echo "|----------|----------|"
+            echo "| Windows x64 | \`EasySave-${TAG}-win-x64.msi\` |"
+            echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.dmg\` |"
+            echo "| Debian / Ubuntu | \`EasySave-${TAG}-linux-x64.deb\` |"
+            echo "| RHEL / Fedora | \`EasySave-${TAG}-linux-x64.rpm\` |"
+            echo ""
+            echo "#### Portable Archives"
+            echo ""
+            echo "| Platform | Archive |"
+            echo "|----------|--------|"
+            echo "| Windows x64 | \`EasySave-${TAG}-win-x64.zip\` |"
+            echo "| Linux x64 | \`EasySave-${TAG}-linux-x64.tar.gz\` |"
+            echo "| macOS ARM64 (Apple Silicon) | \`EasySave-${TAG}-osx-arm64.tar.gz\` |"
+          } > release_notes.md
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: "${{ needs.version.outputs.is_prerelease == 'true' && 'Pre-release' || 'Release' }} ${{ needs.version.outputs.tag }}"
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ needs.version.outputs.is_prerelease == 'true' }}
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
