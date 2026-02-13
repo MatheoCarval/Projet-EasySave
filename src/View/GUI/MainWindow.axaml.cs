@@ -966,7 +966,7 @@ public partial class MainWindow : Window
             {
                 string jsonContent;
                 try { jsonContent = File.ReadAllText(filePath); }
-                catch (Exception ex) { jsonContent = $"Erreur de lecture : {ex.Message}"; }
+                catch (Exception ex) { jsonContent = $"{T("logs_read_error")}{ex.Message}"; }
 
                 _currentJsonContent = jsonContent;
                 _currentJsonFilePath = filePath;
@@ -1103,7 +1103,7 @@ public partial class MainWindow : Window
             {
                 string jsonContent;
                 try { jsonContent = File.ReadAllText(filePath); }
-                catch (Exception ex) { jsonContent = $"Erreur de lecture : {ex.Message}"; }
+                catch (Exception ex) { jsonContent = $"{T("logs_read_error")}{ex.Message}"; }
 
                 _currentJsonContent = jsonContent;
                 _currentJsonFilePath = filePath;
@@ -1319,7 +1319,7 @@ public partial class MainWindow : Window
         {
             var noLogsText = new TextBlock
             {
-                Text = "Aucun fichier log trouv\u00e9",
+                Text = T("logs_no_logs_found"),
                 FontSize = 14,
                 Foreground = TextSecondaryBrush,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -1339,7 +1339,7 @@ public partial class MainWindow : Window
         {
             var noLogsText = new TextBlock
             {
-                Text = "Aucun fichier log trouv\u00e9",
+                Text = T("logs_no_logs_found"),
                 FontSize = 14,
                 Foreground = TextSecondaryBrush,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -1459,7 +1459,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                jsonContent = $"Erreur de lecture : {ex.Message}";
+                jsonContent = $"{T("logs_read_error")}{ex.Message}";
             }
 
             _currentJsonContent = jsonContent;
@@ -1574,7 +1574,7 @@ public partial class MainWindow : Window
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
         {
-            Title = isXml ? "Save XML file" : T("logs_save_json"),
+            Title = isXml ? T("logs_save_xml") : T("logs_save_json"),
             SuggestedFileName = defaultName,
             FileTypeChoices = isXml
                 ? new[] { new Avalonia.Platform.Storage.FilePickerFileType("XML") { Patterns = new[] { "*.xml" } } }
@@ -2019,7 +2019,7 @@ public partial class MainWindow : Window
         {
             var noLogsText = new TextBlock
             {
-                Text = T("logs_no_logs_found") ?? "No logs found for this period",
+                Text = T("logs_no_logs_found"),
                 FontSize = 14,
                 Foreground = TextSecondaryBrush,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -2097,7 +2097,7 @@ public partial class MainWindow : Window
     {
         if (label == null) return;
         var surText = T("logs_page_of");
-        label.Text = $"Page {currentPage} {surText} {totalPages}";
+        label.Text = $"{T("logs_page_label")} {currentPage} {surText} {totalPages}";
     }
 
     /// <summary>
