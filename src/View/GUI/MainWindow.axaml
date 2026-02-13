@@ -1391,21 +1391,77 @@
                     <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
                             BorderThickness="0,0,1,0" Padding="15">
-                        <Grid RowDefinitions="Auto,*,Auto">
-                            <TextBox Grid.Row="0" Name="JournalSearchBox" 
-                                     Watermark="🔍 Rechercher une date..."
-                                     FontSize="13" Margin="0,0,0,10" Padding="8,6"
-                                     CornerRadius="6"
-                                     Background="{DynamicResource InputBackground}"
-                                     Foreground="{DynamicResource TextPrimary}"
-                                     BorderBrush="{DynamicResource InputBorder}"
-                                     TextChanged="JournalSearchBox_TextChanged"/>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <Grid RowDefinitions="Auto,Auto,*,Auto">
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                                <TextBox Grid.Column="0" Name="JournalSearchBox" 
+                                         Watermark="🔍 Rechercher une date..."
+                                         FontSize="13" Padding="8,6"
+                                         CornerRadius="6"
+                                         Background="{DynamicResource InputBackground}"
+                                         Foreground="{DynamicResource TextPrimary}"
+                                         BorderBrush="{DynamicResource InputBorder}"
+                                         TextChanged="JournalSearchBox_TextChanged"/>
+                                <Button Grid.Column="1" Name="JournalCalendarButton"
+                                        Content="📅" FontSize="16" Padding="6,4" Margin="6,0,0,0"
+                                        Background="Transparent"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        BorderBrush="{DynamicResource ClickableCardBorder}"
+                                        BorderThickness="1" CornerRadius="6" Cursor="Hand"
+                                        ToolTip.Tip="Calendrier"
+                                        Click="JournalCalendarButton_Clicked"/>
+                            </Grid>
+                            <Border Grid.Row="1" Name="JournalCalendarPanel" IsVisible="False"
+                                    Background="{DynamicResource CardBackground}"
+                                    BorderBrush="{DynamicResource ClickableCardBorder}"
+                                    BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                                <StackPanel Spacing="6">
+                                    <!-- Mois / Année -->
+                                    <Grid ColumnDefinitions="*,8,*">
+                                        <ComboBox Grid.Column="0" Name="CalendarMonthCombo"
+                                                  FontSize="12" Padding="6,4" CornerRadius="4"
+                                                  HorizontalAlignment="Stretch"
+                                                  Background="{DynamicResource InputBackground}"
+                                                  Foreground="{DynamicResource TextPrimary}"
+                                                  BorderBrush="{DynamicResource InputBorder}"
+                                                  SelectionChanged="CalendarMonth_Changed"/>
+                                        <ComboBox Grid.Column="2" Name="CalendarYearCombo"
+                                                  FontSize="12" Padding="6,4" CornerRadius="4"
+                                                  HorizontalAlignment="Stretch"
+                                                  Background="{DynamicResource InputBackground}"
+                                                  Foreground="{DynamicResource TextPrimary}"
+                                                  BorderBrush="{DynamicResource InputBorder}"
+                                                  SelectionChanged="CalendarYear_Changed"/>
+                                    </Grid>
+                                    <!-- Jours de la semaine + jours -->
+                                    <WrapPanel Name="CalendarDaysPanel" HorizontalAlignment="Center"/>
+                                    <!-- Selection label -->
+                                    <TextBlock Name="CalendarSelectionLabel" IsVisible="False"
+                                               FontSize="11" FontStyle="Italic"
+                                               Foreground="{DynamicResource AccentBlue}"
+                                               HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    <!-- Aujourd'hui + Effacer -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                                        <Button Name="CalendarTodayButton" Content="Aujourd'hui"
+                                                FontSize="12" Padding="10,5"
+                                                Background="Transparent" Foreground="{DynamicResource TextSecondary}"
+                                                BorderBrush="{DynamicResource ClickableCardBorder}"
+                                                BorderThickness="1" CornerRadius="6" Cursor="Hand"
+                                                Click="CalendarToday_Clicked"/>
+                                        <Button Name="CalendarClearButton" Content="✕ Effacer"
+                                                FontSize="12" Padding="10,5"
+                                                Background="Transparent" Foreground="{DynamicResource SearchErrorText}"
+                                                BorderBrush="{DynamicResource SearchErrorText}"
+                                                BorderThickness="1" CornerRadius="6" Cursor="Hand"
+                                                Click="CalendarClear_Clicked"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                                 <StackPanel Spacing="5" Name="DateListPanel">
                                     <!-- Dates are loaded dynamically from log files -->
                                 </StackPanel>
                             </ScrollViewer>
-                            <Border Grid.Row="2" Name="JournalPaginationBorder" 
+                            <Border Grid.Row="3" Name="JournalPaginationBorder" 
                                     Background="{DynamicResource CardBackground}"
                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                     BorderThickness="1" CornerRadius="8" 

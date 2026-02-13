@@ -216,7 +216,12 @@
     "logs_search_json": "\ud83d\udd0d Search in JSON...",
     "logs_search_not_found": "\u274c Element not found in the JSON file",
     "logs_page_of": "of",
-    "logs_page_goto": "Go to"
+    "logs_page_goto": "Go to",
+    "logs_calendar_months": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "logs_calendar_days": "M,T,W,T,F,S,S",
+    "logs_calendar_today": "Today",
+    "logs_calendar_clear": "\u2715 Clear",
+    "logs_calendar_tooltip": "Calendar"
   },
   "fr": {
     "app_title": "EasySave",
@@ -435,6 +440,11 @@
     "logs_search_json": "\ud83d\udd0d Rechercher dans le JSON...",
     "logs_search_not_found": "\u274c \u00c9l\u00e9ment introuvable dans le fichier JSON",
     "logs_page_of": "sur",
-    "logs_page_goto": "Aller \u00e0"
+    "logs_page_goto": "Aller \u00e0",
+    "logs_calendar_months": "Janvier,F\u00e9vrier,Mars,Avril,Mai,Juin,Juillet,Ao\u00fbt,Septembre,Octobre,Novembre,D\u00e9cembre",
+    "logs_calendar_days": "L,M,M,J,V,S,D",
+    "logs_calendar_today": "Aujourd'hui",
+    "logs_calendar_clear": "\u2715 Effacer",
+    "logs_calendar_tooltip": "Calendrier"
   }
 }

@@ -459,6 +459,14 @@ public partial class MainWindow : Window
         var etatGotoLabel = this.FindControl<TextBlock>("EtatPageGotoLabel");
         if (journalGotoLabel != null) journalGotoLabel.Text = T("logs_page_goto");
         if (etatGotoLabel != null) etatGotoLabel.Text = T("logs_page_goto");
+
+        var calendarTodayBtn = this.FindControl<Button>("CalendarTodayButton");
+        var calendarClearBtn = this.FindControl<Button>("CalendarClearButton");
+        if (calendarTodayBtn != null) calendarTodayBtn.Content = T("logs_calendar_today");
+        if (calendarClearBtn != null) calendarClearBtn.Content = T("logs_calendar_clear");
+
+        var calendarBtn = this.FindControl<Button>("JournalCalendarButton");
+        if (calendarBtn != null) ToolTip.SetTip(calendarBtn, T("logs_calendar_tooltip"));
     }
 
     /// <summary>
@@ -551,12 +559,14 @@ public partial class MainWindow : Window
     /// </summary>
     private void JournalSearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
+        if (_journalSearchUpdating) return;
         if (sender is not TextBox searchBox) return;
         var filter = searchBox.Text?.Trim() ?? "";
 
         if (string.IsNullOrEmpty(filter))
         {
             // Reset: show all items with pagination
+            _journalFilteredDateItems = null;
             _journalCurrentPage = 1;
             ApplyJournalPagination();
             return;
@@ -578,6 +588,555 @@ public partial class MainWindow : Window
         }
 
         if (paginationBorder != null) paginationBorder.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Toggles the custom calendar panel visibility
+    /// </summary>
+    private void JournalCalendarButton_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var panel = this.FindControl<Border>("JournalCalendarPanel");
+        if (panel == null) return;
+        panel.IsVisible = !panel.IsVisible;
+
+        if (panel.IsVisible)
+        {
+            var date = (_calendarYear > 0 && _calendarMonth > 0)
+                ? new DateTime(_calendarYear, _calendarMonth, 1)
+                : DateTime.Today;
+            InitializeCalendar(date);
+        }
+    }
+
+    /// <summary>
+    /// Initializes the calendar combos and builds the day grid for the given date
+    /// </summary>
+    private void InitializeCalendar(DateTime date)
+    {
+        _calendarUpdating = true;
+        _calendarMonth = date.Month;
+        _calendarYear = date.Year;
+
+        var monthCombo = this.FindControl<ComboBox>("CalendarMonthCombo");
+        var yearCombo = this.FindControl<ComboBox>("CalendarYearCombo");
+
+        var monthsStr = T("logs_calendar_months");
+        var months = !string.IsNullOrEmpty(monthsStr)
+            ? monthsStr.Split(',')
+            : new[] { "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December" };
+
+        if (monthCombo != null)
+        {
+            monthCombo.ItemsSource = months;
+            monthCombo.SelectedIndex = _calendarMonth - 1;
+        }
+
+        if (yearCombo != null)
+        {
+            var years = new List<string>();
+            for (int y = 1980; y <= 2050; y++)
+                years.Add(y.ToString());
+            yearCombo.ItemsSource = years;
+            yearCombo.SelectedItem = _calendarYear.ToString();
+        }
+
+        _calendarUpdating = false;
+        BuildCalendarDays();
+    }
+
+    /// <summary>
+    /// Handles month selection change in the calendar
+    /// </summary>
+    private void CalendarMonth_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_calendarUpdating) return;
+        if (sender is ComboBox combo && combo.SelectedIndex >= 0)
+        {
+            _calendarMonth = combo.SelectedIndex + 1;
+            BuildCalendarDays();
+        }
+    }
+
+    /// <summary>
+    /// Handles year selection change in the calendar
+    /// </summary>
+    private void CalendarYear_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_calendarUpdating) return;
+        if (sender is ComboBox combo && combo.SelectedItem is string yearStr && int.TryParse(yearStr, out int year))
+        {
+            _calendarYear = year;
+            BuildCalendarDays();
+        }
+    }
+
+    /// <summary>
+    /// Builds the day grid: weekday headers + day buttons in a WrapPanel (7 columns)
+    /// </summary>
+    private void BuildCalendarDays()
+    {
+        var daysPanel = this.FindControl<WrapPanel>("CalendarDaysPanel");
+        if (daysPanel == null) return;
+        daysPanel.PointerReleased -= CalendarDays_PointerReleased;
+        daysPanel.PointerMoved -= CalendarDays_PointerMoved;
+        daysPanel.Children.Clear();
+        daysPanel.PointerReleased += CalendarDays_PointerReleased;
+        daysPanel.PointerMoved += CalendarDays_PointerMoved;
+
+        var logsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "logs");
+
+        // Weekday headers
+        var dayHeadersStr = T("logs_calendar_days");
+        string[] dayHeaders = !string.IsNullOrEmpty(dayHeadersStr)
+            ? dayHeadersStr.Split(',')
+            : new[] { "M", "T", "W", "T", "F", "S", "S" };
+        foreach (var dh in dayHeaders)
+        {
+            daysPanel.Children.Add(new TextBlock
+            {
+                Text = dh,
+                Width = 32, Height = 28,
+                FontSize = 11, FontWeight = FontWeight.SemiBold,
+                TextAlignment = Avalonia.Media.TextAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Foreground = new SolidColorBrush(Color.Parse("#9E9E9E"))
+            });
+        }
+
+        // Offset for first day of month (Monday = 0)
+        var firstDay = new DateTime(_calendarYear, _calendarMonth, 1);
+        int startOffset = ((int)firstDay.DayOfWeek + 6) % 7;
+        for (int i = 0; i < startOffset; i++)
+            daysPanel.Children.Add(new Border { Width = 32, Height = 32 });
+
+        int daysInMonth = DateTime.DaysInMonth(_calendarYear, _calendarMonth);
+        var today = DateTime.Today;
+
+        for (int d = 1; d <= daysInMonth; d++)
+        {
+            var dateStr = $"{_calendarYear}-{_calendarMonth:D2}-{d:D2}";
+            var logPath = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            bool hasLog = File.Exists(logPath);
+            bool isToday = (d == today.Day && _calendarMonth == today.Month && _calendarYear == today.Year);
+            bool isSelected = _calendarSelectedDays.Contains(d);
+
+            var tb = new TextBlock
+            {
+                Text = d.ToString(),
+                FontSize = 12,
+                TextAlignment = Avalonia.Media.TextAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            };
+
+            var dayBorder = new Border
+            {
+                Width = 32, Height = 32,
+                CornerRadius = new Avalonia.CornerRadius(4),
+                BorderThickness = new Avalonia.Thickness(1),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                Tag = d,
+                Child = tb
+            };
+
+            ApplyDayCellStyle(dayBorder, tb, isSelected, isToday, hasLog);
+
+            dayBorder.PointerPressed += CalendarDay_PointerPressed;
+            dayBorder.PointerEntered += CalendarDay_PointerEntered;
+            daysPanel.Children.Add(dayBorder);
+        }
+
+        // Update selection label
+        UpdateCalendarSelectionLabel();
+    }
+
+    /// <summary>
+    /// Apply visual style to a calendar day cell
+    /// </summary>
+    private void ApplyDayCellStyle(Border dayBorder, TextBlock tb, bool isSelected, bool isToday, bool hasLog)
+    {
+        if (isSelected)
+        {
+            dayBorder.Background = new SolidColorBrush(Color.Parse("#2196F3"));
+            tb.Foreground = Brushes.White;
+            dayBorder.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
+            tb.FontWeight = FontWeight.Bold;
+        }
+        else if (isToday)
+        {
+            dayBorder.Background = new SolidColorBrush(Color.Parse("#E3F2FD"));
+            tb.Foreground = new SolidColorBrush(Color.Parse("#2196F3"));
+            dayBorder.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
+            tb.FontWeight = FontWeight.Bold;
+        }
+        else
+        {
+            dayBorder.Background = Brushes.Transparent;
+            tb.Foreground = new SolidColorBrush(Color.Parse("#555555"));
+            dayBorder.BorderBrush = Brushes.Transparent;
+            tb.FontWeight = FontWeight.Normal;
+        }
+    }
+
+    /// <summary>
+    /// Pointer pressed on a calendar day — start drag selection
+    /// </summary>
+    private void CalendarDay_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (sender is not Border border || border.Tag is not int day) return;
+        _calendarDragStartDay = day;
+        _calendarIsDragging = true;
+        _calendarSelectedDays.Clear();
+        _calendarSelectedDays.Add(day);
+        UpdateCalendarDayHighlights();
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Pointer enters a day cell — extend selection if dragging
+    /// </summary>
+    private void CalendarDay_PointerEntered(object? sender, Avalonia.Input.PointerEventArgs e)
+    {
+        if (!_calendarIsDragging || _calendarDragStartDay < 0) return;
+        if (sender is not Border border || border.Tag is not int day) return;
+        _calendarSelectedDays.Clear();
+        int min = Math.Min(_calendarDragStartDay, day);
+        int max = Math.Max(_calendarDragStartDay, day);
+        for (int d = min; d <= max; d++)
+            _calendarSelectedDays.Add(d);
+        UpdateCalendarDayHighlights();
+    }
+
+    /// <summary>
+    /// Pointer moved on the days panel — extend selection via hit-test while dragging
+    /// </summary>
+    private void CalendarDays_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
+    {
+        if (!_calendarIsDragging || _calendarDragStartDay < 0) return;
+        if (sender is not WrapPanel panel) return;
+        var pos = e.GetPosition(panel);
+        // Find the day cell under the pointer
+        foreach (var child in panel.Children)
+        {
+            if (child is not Border border || border.Tag is not int day) continue;
+            var bounds = border.Bounds;
+            if (bounds.Contains(pos))
+            {
+                _calendarSelectedDays.Clear();
+                int min = Math.Min(_calendarDragStartDay, day);
+                int max = Math.Max(_calendarDragStartDay, day);
+                for (int d = min; d <= max; d++)
+                    _calendarSelectedDays.Add(d);
+                UpdateCalendarDayHighlights();
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Pointer released on the days panel — finalize drag selection
+    /// </summary>
+    private void CalendarDays_PointerReleased(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
+    {
+        if (!_calendarIsDragging) return;
+        _calendarIsDragging = false;
+
+        // Close calendar
+        var calPanel = this.FindControl<Border>("JournalCalendarPanel");
+        if (calPanel != null) calPanel.IsVisible = false;
+
+        if (_calendarSelectedDays.Count == 1)
+        {
+            SelectCalendarDate(new DateTime(_calendarYear, _calendarMonth, _calendarSelectedDays.First()));
+        }
+        else if (_calendarSelectedDays.Count > 1)
+        {
+            ApplyCalendarRangeSelection();
+        }
+    }
+
+    /// <summary>
+    /// Refresh visual highlights on all day cells based on _calendarSelectedDays
+    /// </summary>
+    private void UpdateCalendarDayHighlights()
+    {
+        var daysPanel = this.FindControl<WrapPanel>("CalendarDaysPanel");
+        if (daysPanel == null) return;
+
+        var logsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "logs");
+        var today = DateTime.Today;
+
+        foreach (var child in daysPanel.Children)
+        {
+            if (child is not Border border || border.Tag is not int day) continue;
+            if (border.Child is not TextBlock tb) continue;
+
+            bool isSelected = _calendarSelectedDays.Contains(day);
+            var dateStr = $"{_calendarYear}-{_calendarMonth:D2}-{day:D2}";
+            var logPath = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            bool hasLog = File.Exists(logPath);
+            bool isToday = (day == today.Day && _calendarMonth == today.Month && _calendarYear == today.Year);
+
+            ApplyDayCellStyle(border, tb, isSelected, isToday, hasLog);
+        }
+
+        UpdateCalendarSelectionLabel();
+    }
+
+    /// <summary>
+    /// Update the selection label under the calendar showing the selected range
+    /// </summary>
+    private void UpdateCalendarSelectionLabel()
+    {
+        var label = this.FindControl<TextBlock>("CalendarSelectionLabel");
+        if (label == null) return;
+
+        if (_calendarSelectedDays.Count == 0)
+        {
+            label.IsVisible = false;
+            return;
+        }
+
+        var sorted = _calendarSelectedDays.OrderBy(d => d).ToList();
+        if (sorted.Count == 1)
+        {
+            label.Text = $"{sorted[0]:D2}/{_calendarMonth:D2}/{_calendarYear}";
+        }
+        else
+        {
+            label.Text = $"{sorted.First():D2}/{_calendarMonth:D2}/{_calendarYear} → {sorted.Last():D2}/{_calendarMonth:D2}/{_calendarYear}";
+        }
+        label.IsVisible = true;
+    }
+
+    /// <summary>
+    /// Apply a multi-day calendar range selection: filter the date list to matching dates
+    /// </summary>
+    private void ApplyCalendarRangeSelection()
+    {
+        var selectedDates = _calendarSelectedDays.OrderBy(d => d)
+            .Select(d => new DateTime(_calendarYear, _calendarMonth, d))
+            .ToList();
+
+        // Find matching items in the date list
+        var logsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "logs");
+
+        var matchingItems = new List<Border>();
+        foreach (var date in selectedDates)
+        {
+            var dateStr = date.ToString("yyyy-MM-dd");
+            var expectedFile = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+            var match = _journalAllDateItems.FirstOrDefault(b =>
+                b.Tag is string path && path.Equals(expectedFile, StringComparison.OrdinalIgnoreCase));
+            if (match != null) matchingItems.Add(match);
+        }
+
+        // Set filtered list and paginate
+        _journalFilteredDateItems = matchingItems;
+        _journalCurrentPage = 1;
+        ApplyJournalPagination();
+
+        // Auto-select and load the first matching item
+        if (matchingItems.Count > 0)
+        {
+            ClearSelectedDates();
+            var firstItem = matchingItems[0];
+            if (!firstItem.Classes.Contains("SelectedDate"))
+                firstItem.Classes.Add("SelectedDate");
+
+            if (firstItem.Tag is string filePath)
+            {
+                string jsonContent;
+                try { jsonContent = File.ReadAllText(filePath); }
+                catch (Exception ex) { jsonContent = $"Erreur de lecture : {ex.Message}"; }
+
+                _currentJsonContent = jsonContent;
+                _currentJsonFilePath = filePath;
+
+                var copyBtn = this.FindControl<Button>("CopyJsonButton");
+                var dlBtn = this.FindControl<Button>("DownloadJsonButton");
+                if (copyBtn != null) copyBtn.IsVisible = true;
+                if (dlBtn != null) dlBtn.IsVisible = true;
+
+                var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
+                if (jsonGrid != null)
+                {
+                    if (jsonGrid.Children.Count > 2) jsonGrid.Children.RemoveAt(2);
+
+                    var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
+                    if (searchBar != null) searchBar.IsVisible = true;
+
+                    var jSearchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
+                    if (jSearchBox != null) jSearchBox.Text = "";
+                    var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
+                    if (searchCount != null) searchCount.Text = "";
+                    var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
+                    if (searchError != null) searchError.IsVisible = false;
+
+                    _journalJsonSearchMatches.Clear();
+                    _journalJsonSearchIndex = -1;
+                    _journalJsonLastQuery = "";
+
+                    var scrollViewer = new ScrollViewer
+                    {
+                        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                        HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                    };
+
+                    var jsonText = new TextBox
+                    {
+                        Name = "JournalJsonTextBox",
+                        FontFamily = new Avalonia.Media.FontFamily("Consolas"),
+                        FontSize = 13,
+                        Padding = new Avalonia.Thickness(15),
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                        IsReadOnly = true,
+                        AcceptsReturn = true,
+                        Text = jsonContent
+                    };
+                    jsonText.Classes.Add("JsonViewer");
+                    _journalJsonTextBox = jsonText;
+
+                    scrollViewer.Content = jsonText;
+                    Grid.SetRow(scrollViewer, 2);
+                    jsonGrid.Children.Add(scrollViewer);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Navigates the calendar view to today's month/year (without selecting)
+    /// </summary>
+    private void CalendarToday_Clicked(object? sender, RoutedEventArgs e)
+    {
+        _calendarSelectedDays.Clear();
+        InitializeCalendar(DateTime.Today);
+    }
+
+    /// <summary>
+    /// Clears calendar date filter — restores all logs with pagination
+    /// </summary>
+    private void CalendarClear_Clicked(object? sender, RoutedEventArgs e)
+    {
+        _calendarSelectedDays.Clear();
+        UpdateCalendarDayHighlights();
+
+        // Clear search box safely
+        var searchBox = this.FindControl<TextBox>("JournalSearchBox");
+        if (searchBox != null)
+        {
+            searchBox.TextChanged -= JournalSearchBox_TextChanged;
+            searchBox.Text = "";
+            // Resubscribe after a dispatcher cycle to avoid async TextChanged
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                searchBox.TextChanged += JournalSearchBox_TextChanged;
+            });
+        }
+
+        // Reset filtered list and restore full pagination
+        _journalFilteredDateItems = null;
+        _journalCurrentPage = 1;
+        ApplyJournalPagination();
+
+        // Hide calendar
+        var panel = this.FindControl<Border>("JournalCalendarPanel");
+        if (panel != null) panel.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Selects a single date from the calendar: filters the date list to that date and loads its JSON
+    /// </summary>
+    private void SelectCalendarDate(DateTime selectedDate)
+    {
+        var dateStr = selectedDate.ToString("yyyy-MM-dd");
+        var logsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave", "logs");
+        var expectedFile = Path.Combine(logsDir, $"jobs_{dateStr}.json");
+
+        // Find the matching item in the list
+        var matchingItem = _journalAllDateItems.FirstOrDefault(b =>
+            b.Tag is string path && path.Equals(expectedFile, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingItem != null)
+        {
+            // Set filtered list to just this one item and paginate
+            _journalFilteredDateItems = new List<Border> { matchingItem };
+            _journalCurrentPage = 1;
+            ApplyJournalPagination();
+
+            ClearSelectedDates();
+            if (!matchingItem.Classes.Contains("SelectedDate"))
+                matchingItem.Classes.Add("SelectedDate");
+
+            if (matchingItem.Tag is string filePath)
+            {
+                string jsonContent;
+                try { jsonContent = File.ReadAllText(filePath); }
+                catch (Exception ex) { jsonContent = $"Erreur de lecture : {ex.Message}"; }
+
+                _currentJsonContent = jsonContent;
+                _currentJsonFilePath = filePath;
+
+                var copyBtn = this.FindControl<Button>("CopyJsonButton");
+                var dlBtn = this.FindControl<Button>("DownloadJsonButton");
+                if (copyBtn != null) copyBtn.IsVisible = true;
+                if (dlBtn != null) dlBtn.IsVisible = true;
+
+                var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
+                if (jsonGrid != null)
+                {
+                    if (jsonGrid.Children.Count > 2) jsonGrid.Children.RemoveAt(2);
+
+                    var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
+                    if (searchBar != null) searchBar.IsVisible = true;
+
+                    var jSearchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
+                    if (jSearchBox != null) jSearchBox.Text = "";
+                    var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
+                    if (searchCount != null) searchCount.Text = "";
+                    var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
+                    if (searchError != null) searchError.IsVisible = false;
+
+                    _journalJsonSearchMatches.Clear();
+                    _journalJsonSearchIndex = -1;
+                    _journalJsonLastQuery = "";
+
+                    var scrollViewer = new ScrollViewer
+                    {
+                        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                        HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                    };
+
+                    var jsonText = new TextBox
+                    {
+                        Name = "JournalJsonTextBox",
+                        FontFamily = new Avalonia.Media.FontFamily("Consolas"),
+                        FontSize = 13,
+                        Padding = new Avalonia.Thickness(15),
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                        IsReadOnly = true,
+                        AcceptsReturn = true,
+                        Text = jsonContent
+                    };
+                    jsonText.Classes.Add("JsonViewer");
+                    _journalJsonTextBox = jsonText;
+
+                    scrollViewer.Content = jsonText;
+                    Grid.SetRow(scrollViewer, 2);
+                    jsonGrid.Children.Add(scrollViewer);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -1337,9 +1896,19 @@ public partial class MainWindow : Window
 
     private const int ItemsPerPage = 10;
 
+    // Calendar state
+    private int _calendarMonth;
+    private int _calendarYear;
+    private bool _calendarUpdating;
+    private HashSet<int> _calendarSelectedDays = new();
+    private int _calendarDragStartDay = -1;
+    private bool _calendarIsDragging;
+
     // Journal pagination state
     private List<Border> _journalAllDateItems = new();
+    private List<Border>? _journalFilteredDateItems = null;
     private int _journalCurrentPage = 1;
+    private bool _journalSearchUpdating;
 
     // Etat pagination state
     private List<Border> _etatAllJobItems = new();
@@ -1358,16 +1927,22 @@ public partial class MainWindow : Window
 
         panel.Children.Clear();
 
-        var totalPages = Math.Max(1, (int)Math.Ceiling(_journalAllDateItems.Count / (double)ItemsPerPage));
+        var sourceItems = _journalFilteredDateItems ?? _journalAllDateItems;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(sourceItems.Count / (double)ItemsPerPage));
         if (_journalCurrentPage > totalPages) _journalCurrentPage = totalPages;
         if (_journalCurrentPage < 1) _journalCurrentPage = 1;
 
-        var pageItems = _journalAllDateItems
+        var pageItems = sourceItems
             .Skip((_journalCurrentPage - 1) * ItemsPerPage)
-            .Take(ItemsPerPage);
+            .Take(ItemsPerPage)
+            .ToList();
 
         foreach (var item in pageItems)
+        {
+            if (item.Parent is Panel oldParent)
+                oldParent.Children.Remove(item);
             panel.Children.Add(item);
+        }
 
         BuildPaginationButtons(buttonsPanel, _journalCurrentPage, totalPages, page =>
         {
@@ -1574,7 +2149,8 @@ public partial class MainWindow : Window
         var jumpBox = this.FindControl<TextBox>("JournalPageJumpBox");
         if (jumpBox == null) return;
 
-        var totalPages = Math.Max(1, (int)Math.Ceiling(_journalAllDateItems.Count / (double)ItemsPerPage));
+        var sourceItems = _journalFilteredDateItems ?? _journalAllDateItems;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(sourceItems.Count / (double)ItemsPerPage));
         if (int.TryParse(jumpBox.Text?.Trim(), out int page) && page >= 1 && page <= totalPages)
         {
             _journalCurrentPage = page;
