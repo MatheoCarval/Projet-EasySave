@@ -38,6 +38,7 @@ public class Program
     /// </summary>
     private static void Main(string[] args)
     {
+        Console.WriteLine("Starting EasySave...");
         // Setup native library path on Windows for SkiaSharp/HarfBuzz
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -120,7 +121,8 @@ public class Program
             catch { }
 
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"{T("error")}: {ex.Message}");
+            var errorLabel = _localizationService != null ? T("error") : "Error";
+            Console.WriteLine($"{errorLabel}: {ex.Message}");
             Console.ResetColor();
             Environment.Exit(1);
         }

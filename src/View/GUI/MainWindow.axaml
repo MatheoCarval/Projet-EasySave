@@ -186,7 +186,7 @@
                     <Border Grid.Row="2"/>
 
                     <!-- View Logs Button -->
-                    <Grid Grid.Row="2" Margin="12,8">
+                    <Grid Grid.Row="3" Margin="12,8">
                         <Button Classes="SidebarButton"
                                 Command="{Binding ViewLogsCommand}"
                                 ToolTip.Tip="View Logs">
@@ -2709,8 +2709,8 @@
                                                             Classes="BrowseButton"
                                                             Width="42"
                                                             Margin="8,0,0,0"
-                                                            Command="{Binding $parent[Window].DataContext.BrowseSourcePathCommand}"
-                                                            CommandParameter="{Binding}"
+                                                            Click="BrowseSourcePath_Click"
+                                                            DataContext="{Binding}"
                                                             ToolTip.Tip="{Binding $parent[Window].DataContext.TxtTooltipBrowse}">
                                                         <Viewbox Width="18" Height="18">
                                                             <Canvas Width="24" Height="24">
@@ -2743,7 +2743,7 @@
                                         Classes="BrowseButton"
                                         Width="42"
                                         Margin="8,0,0,0"
-                                        Command="{Binding BrowseTargetPathCommand}"
+                                        Click="BrowseTargetPath_Click"
                                         ToolTip.Tip="{Binding TxtTooltipBrowse}">
                                     <Viewbox Width="18" Height="18">
                                         <Canvas Width="24" Height="24">

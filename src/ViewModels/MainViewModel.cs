@@ -51,7 +51,7 @@ public class MainViewModel : ViewModelBase
     /// Callback to open a folder picker dialog. Set by the View (MainWindow) to decouple ViewModel from UI.
     /// Returns the selected folder path or null if cancelled.
     /// </summary>
-    public Func<Task<string?>>? BrowseFolderCallback { get; set; }
+    public Func<Task<string?>>? BrowseFolderCallback { get; set; } // kept for potential future use
 
     // Modal form fields
     private string _modalName = string.Empty;
@@ -954,36 +954,12 @@ public class MainViewModel : ViewModelBase
 
     private async void BrowseSourcePath(SourcePathViewModel? sourcePathVm)
     {
-        if (sourcePathVm == null || BrowseFolderCallback == null) return;
-        try
-        {
-            var path = await BrowseFolderCallback();
-            if (!string.IsNullOrEmpty(path))
-            {
-                sourcePathVm.Path = path;
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"BrowseSourcePath error: {ex.Message}");
-        }
+        // Now handled in code-behind via BrowseSourcePath_Click
     }
 
     private async void BrowseTargetPath()
     {
-        if (BrowseFolderCallback == null) return;
-        try
-        {
-            var path = await BrowseFolderCallback();
-            if (!string.IsNullOrEmpty(path))
-            {
-                ModalTargetPath = path;
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"BrowseTargetPath error: {ex.Message}");
-        }
+        // Now handled in code-behind via BrowseTargetPath_Click
     }
 
     private void LoadBackupJobs()

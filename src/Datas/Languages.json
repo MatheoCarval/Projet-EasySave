@@ -336,7 +336,7 @@
     "gui_exec_order_title": "Execution Order",
     "gui_exec_order_desc": "Hold and drag to reorder (1 = first executed)",
     "gui_delete_confirm_title": "Confirm Deletion",
-    "gui_delete_confirm_warning": "This action cannot be undone."
+    "gui_delete_confirm_warning": "This action cannot be undone.",
     "logs_tab_journal": "Logs",
     "logs_tab_state": "State",
     "logs_json_content": "JSON Content",
@@ -694,7 +694,7 @@
     "gui_exec_order_title": "Ordre d'exécution",
     "gui_exec_order_desc": "Maintenez et glissez pour réordonner (1 = exécuté en premier)",
     "gui_delete_confirm_title": "Confirmer la suppression",
-    "gui_delete_confirm_warning": "Cette action est irréversible."
+    "gui_delete_confirm_warning": "Cette action est irréversible.",
     "logs_tab_journal": "Journal",
     "logs_tab_state": "\u00c9tat",
     "logs_json_content": "Contenu du JSON",

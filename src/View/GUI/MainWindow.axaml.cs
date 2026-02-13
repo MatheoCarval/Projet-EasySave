@@ -15,6 +15,7 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.IO;
+using System.Threading;
 using System.Globalization;
 
 namespace EasySave.View.GUI;
@@ -37,6 +38,9 @@ public partial class MainWindow : Window
     private DispatcherTimer? _autoScrollTimer;
     private double _autoScrollSpeed;
 
+    // Semaphore to prevent concurrent folder picker dialogs (COM limitation on Windows)
+    private readonly SemaphoreSlim _browseSemaphore = new(1, 1);
+
     /// <summary>
     /// Initializes a new instance of the MainWindow class
     /// </summary>
@@ -44,31 +48,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         var vm = new MainViewModel(App.BackupManager!);
-
-        // Register the folder picker callback so the ViewModel can open native dialogs
-        vm.BrowseFolderCallback = async () =>
-        {
-            try
-            {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select Folder",
-                    AllowMultiple = false
-                };
-
-                var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-                if (result.Count > 0 && result[0].Path != null)
-                {
-                    return result[0].Path.LocalPath;
-                }
-            }
-            catch (Exception ex)
-            {
-                App.LogCrash("BrowseFolderCallback", ex);
-            }
-            return null;
-        };
 
         DataContext = vm;
 
@@ -124,6 +103,66 @@ public partial class MainWindow : Window
         if (sender is TextBox textBox && DataContext is MainViewModel vm)
         {
             vm.SearchText = textBox.Text ?? string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Opens the native folder picker dialog. Handles COM cleanup to prevent
+    /// crashes when opening the picker multiple times in sequence on Windows.
+    /// </summary>
+    private async Task<string?> OpenFolderPickerSafeAsync()
+    {
+        try
+        {
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Select Folder",
+                AllowMultiple = false
+            };
+
+            var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+            if (result.Count > 0 && result[0].Path != null)
+            {
+                return result[0].Path.LocalPath;
+            }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("OpenFolderPickerSafe", ex);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Handles clicking the Browse button for a source path in the modal.
+    /// Called directly from XAML Click event — no delegate indirection.
+    /// </summary>
+    private async void BrowseSourcePath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is SourcePathViewModel sourceVm)
+        {
+            var path = await OpenFolderPickerSafeAsync();
+            if (!string.IsNullOrEmpty(path))
+            {
+                sourceVm.Path = path;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles clicking the Browse button for the target path in the modal.
+    /// Called directly from XAML Click event — no delegate indirection.
+    /// </summary>
+    private async void BrowseTargetPath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            var path = await OpenFolderPickerSafeAsync();
+            if (!string.IsNullOrEmpty(path))
+            {
+                vm.ModalTargetPath = path;
+            }
         }
     }
 
@@ -192,12 +231,26 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Forces COM cleanup to prevent Windows folder/file picker crashes
+    /// when opening multiple dialogs in sequence.
+    /// </summary>
+    private async Task ForceComCleanup()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        await Task.Delay(100);
+    }
+
+    /// <summary>
     /// Handles the Browse button click for log file path (Settings)
     /// </summary>
     private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
     {
+        if (!await _browseSemaphore.WaitAsync(0)) return;
         try
         {
+            await ForceComCleanup();
             if (DataContext is MainViewModel mainVm)
             {
                 var options = new FolderPickerOpenOptions
@@ -211,7 +264,6 @@ public partial class MainWindow : Window
                 if (result.Count > 0 && result[0].Path != null)
                 {
                     string dir = result[0].Path.LocalPath;
-                    // Determine log file name from current format setting
                     string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
                     mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
                 }
@@ -221,6 +273,10 @@ public partial class MainWindow : Window
         {
             App.LogCrash("BrowseLogPath", ex);
         }
+        finally
+        {
+            _browseSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -228,8 +284,10 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
     {
+        if (!await _browseSemaphore.WaitAsync(0)) return;
         try
         {
+            await ForceComCleanup();
             if (DataContext is MainViewModel mainVm)
             {
                 var options = new FolderPickerOpenOptions
@@ -251,6 +309,10 @@ public partial class MainWindow : Window
         {
             App.LogCrash("BrowseStatePath", ex);
         }
+        finally
+        {
+            _browseSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -258,34 +320,47 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseCryptosoftPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel mainVm)
+        if (!await _browseSemaphore.WaitAsync(0)) return;
+        try
         {
-            var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
-
-            if (OperatingSystem.IsWindows())
+            await ForceComCleanup();
+            if (DataContext is MainViewModel mainVm)
             {
-                fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
+                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+
+                if (OperatingSystem.IsWindows())
+                {
+                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
+                }
+                else
+                {
+                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
+                }
+
+                var options = new FilePickerOpenOptions
+                {
+                    Title = OperatingSystem.IsWindows()
+                        ? "Select Cryptosoft executable (.exe)"
+                        : "Select Cryptosoft executable",
+                    AllowMultiple = false,
+                    FileTypeFilter = fileTypes
+                };
+
+                var result = await StorageProvider.OpenFilePickerAsync(options);
+
+                if (result.Count > 0)
+                {
+                    mainVm.SettingsVM.CryptosoftPath = result[0].Path.LocalPath;
+                }
             }
-            else
-            {
-                fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-            }
-
-            var options = new FilePickerOpenOptions
-            {
-                Title = OperatingSystem.IsWindows()
-                    ? "Select Cryptosoft executable (.exe)"
-                    : "Select Cryptosoft executable",
-                AllowMultiple = false,
-                FileTypeFilter = fileTypes
-            };
-
-            var result = await StorageProvider.OpenFilePickerAsync(options);
-
-            if (result.Count > 0)
-            {
-                mainVm.SettingsVM.CryptosoftPath = result[0].Path.LocalPath;
-            }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("BrowseCryptosoftPath", ex);
+        }
+        finally
+        {
+            _browseSemaphore.Release();
         }
     }
 
@@ -295,43 +370,55 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseExe_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel mainVm)
+        if (!await _browseSemaphore.WaitAsync(0)) return;
+        try
         {
-            var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+            await ForceComCleanup();
+            if (DataContext is MainViewModel mainVm)
+            {
+                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
 
-            if (OperatingSystem.IsWindows())
-            {
-                fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                fileTypes.Add(new FilePickerFileType("Applications") { Patterns = new[] { "*.app", "*" } });
-            }
-            else
-            {
-                // Linux: executables have no extension
-                fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-            }
-
-            var options = new FilePickerOpenOptions
-            {
-                Title = OperatingSystem.IsWindows()
-                    ? "Select an application (.exe)"
-                    : "Select an application",
-                AllowMultiple = false,
-                FileTypeFilter = fileTypes
-            };
-
-            var result = await StorageProvider.OpenFilePickerAsync(options);
-
-            if (result.Count > 0)
-            {
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(result[0].Name);
-                if (!string.IsNullOrWhiteSpace(fileName))
+                if (OperatingSystem.IsWindows())
                 {
-                    mainVm.SettingsVM.AddBlockedApplication(fileName);
+                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    fileTypes.Add(new FilePickerFileType("Applications") { Patterns = new[] { "*.app", "*" } });
+                }
+                else
+                {
+                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
+                }
+
+                var options = new FilePickerOpenOptions
+                {
+                    Title = OperatingSystem.IsWindows()
+                        ? "Select an application (.exe)"
+                        : "Select an application",
+                    AllowMultiple = false,
+                    FileTypeFilter = fileTypes
+                };
+
+                var result = await StorageProvider.OpenFilePickerAsync(options);
+
+                if (result.Count > 0)
+                {
+                    string fileName = System.IO.Path.GetFileNameWithoutExtension(result[0].Name);
+                    if (!string.IsNullOrWhiteSpace(fileName))
+                    {
+                        mainVm.SettingsVM.AddBlockedApplication(fileName);
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("BrowseExe", ex);
+        }
+        finally
+        {
+            _browseSemaphore.Release();
         }
     }
 
