@@ -147,7 +147,7 @@ public class Program
         string logPath = config.GetLogFilePath();
         if (string.IsNullOrWhiteSpace(logPath))
         {
-            logPath = Path.Combine(appData, "logs.json");
+            logPath = config.GetDefaultLogPath();
         }
 
         string statePath = config.GetStateFilePath();
@@ -161,8 +161,8 @@ public class Program
         EnsureDirectoryForFile(statePath);
 
         ILogger logger = config.GetLogFormat() == LogFormat.XML
-            ? new XmlLogger(logPath)
-            : new JsonLogger(logPath);
+            ? new DailyXmlLogger(logPath)
+            : new DailyJsonLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
         var cryptageManager = new CryptageManager(

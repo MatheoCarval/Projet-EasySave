@@ -326,13 +326,8 @@ public class SettingsViewModel : ViewModelBase
             // Log format
             var format = _logFormatIndex == 1 ? LogFormat.XML : LogFormat.JSON;
 
-            // Paths — ensure they point to files, not directories
+            // Paths — log path can be a directory (for daily logs) or a file
             string logPath = _logFilePath;
-            if (!string.IsNullOrWhiteSpace(logPath) && Directory.Exists(logPath))
-            {
-                string ext = format == LogFormat.XML ? "xml" : "json";
-                logPath = System.IO.Path.Combine(logPath, $"jobs.{ext}");
-            }
 
             string statePath = _stateFilePath;
             if (!string.IsNullOrWhiteSpace(statePath) && Directory.Exists(statePath))

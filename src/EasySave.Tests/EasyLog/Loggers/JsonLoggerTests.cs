@@ -56,7 +56,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Constructor_WithValidPath_CreatesLogger()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
 
             Assert.NotNull(logger);
         }
@@ -67,7 +67,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_WithValidEntry_WritesToFile()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
             var entry = new BackupLogEntry
             {
                 BackupName = "TestBackup",
@@ -89,7 +89,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_WithNull_ThrowsArgumentNullException()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
 
 #pragma warning disable CS8625
             Assert.Throws<ArgumentNullException>(() => logger.Log<BackupLogEntry>(null));
@@ -102,7 +102,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void LogCollection_WithValidEntries_WritesToFile()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
             var entries = new List<BackupLogEntry>
             {
                 new BackupLogEntry { BackupName = "Backup1" },
@@ -124,7 +124,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void LogCollection_WithNull_DoesNotThrow()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
 
 #pragma warning disable CS8625
             logger.LogCollection<BackupLogEntry>(null);
@@ -139,7 +139,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void ReadLog_WithExistingFile_ReturnsEntries()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup", FileSize = 100 };
             logger.Log(entry);
             logger.Flush();
@@ -157,7 +157,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void ReadLog_WithNonExistentFile_ReturnsEmptyList()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
 
             var result = logger.ReadLog<BackupLogEntry>();
 
@@ -171,7 +171,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Flush_WritesBufferedDataToFile()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
             var entry = new BackupLogEntry { BackupName = "TestBackup" };
             logger.Log(entry);
 
@@ -188,7 +188,7 @@ namespace EasySave.Tests.EasyLog.Loggers
         [Fact]
         public void Log_MultipleTimes_AppendsEntries()
         {
-            var logger = new JsonLogger(_testFilePath);
+            var logger = new DailyJsonLogger(_testFilePath);
 
             logger.Log(new BackupLogEntry { BackupName = "Backup1" });
             logger.Flush();
