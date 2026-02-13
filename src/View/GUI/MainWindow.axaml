@@ -113,6 +113,26 @@
             <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
         </Style>
+
+        <!-- Active page button: force blue background in all states -->
+        <Style Selector="Button.ActivePage">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Button.ActivePage:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentBlueHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueHover}"/>
+        </Style>
+        <Style Selector="Button.ActivePage /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Button.ActivePage:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource AccentBlueHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueHover}"/>
+        </Style>
     </Window.Styles>
 
     <Grid>
@@ -1371,16 +1391,64 @@
                     <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
                             BorderThickness="0,0,1,0" Padding="15">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="5" Name="DateListPanel">
-                                <!-- Dates are loaded dynamically from log files -->
-                            </StackPanel>
-                        </ScrollViewer>
+                        <Grid RowDefinitions="Auto,*,Auto">
+                            <TextBox Grid.Row="0" Name="JournalSearchBox" 
+                                     Watermark="🔍 Rechercher une date..."
+                                     FontSize="13" Margin="0,0,0,10" Padding="8,6"
+                                     CornerRadius="6"
+                                     Background="{DynamicResource InputBackground}"
+                                     Foreground="{DynamicResource TextPrimary}"
+                                     BorderBrush="{DynamicResource InputBorder}"
+                                     TextChanged="JournalSearchBox_TextChanged"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="5" Name="DateListPanel">
+                                    <!-- Dates are loaded dynamically from log files -->
+                                </StackPanel>
+                            </ScrollViewer>
+                            <Border Grid.Row="2" Name="JournalPaginationBorder" 
+                                    Background="{DynamicResource CardBackground}"
+                                    BorderBrush="{DynamicResource ClickableCardBorder}"
+                                    BorderThickness="1" CornerRadius="8" 
+                                    Padding="12,8" Margin="0,10,0,0">
+                                <StackPanel Name="JournalPaginationPanel"
+                                            HorizontalAlignment="Center" Spacing="6">
+                                    <StackPanel Name="JournalPaginationButtons" Orientation="Horizontal" 
+                                                HorizontalAlignment="Center" Spacing="4">
+                                        <!-- Pagination buttons generated dynamically -->
+                                    </StackPanel>
+                                    <TextBlock Name="JournalPageCountLabel" 
+                                               Text="Page 1 sur 1" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Name="JournalPageGotoLabel" Text="Aller à" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox Name="JournalPageJumpBox" 
+                                                 Width="45" FontSize="11" Padding="4,4" 
+                                                 CornerRadius="4" 
+                                                 HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="{DynamicResource InputBackground}"
+                                                 Foreground="{DynamicResource TextPrimary}"
+                                                 BorderBrush="{DynamicResource InputBorder}"
+                                                 KeyDown="JournalPageJumpBox_KeyDown"/>
+                                        <Button Content="OK" FontSize="10" 
+                                                Padding="6,3"
+                                                Background="Transparent" 
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                BorderBrush="{DynamicResource ClickableCardBorder}" 
+                                                BorderThickness="1" CornerRadius="4" Cursor="Hand"
+                                                Click="JournalPageJump_Clicked"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
                     <Border Grid.Column="1" Background="{DynamicResource CardBackground}" Margin="20" Padding="20" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
-                        <Grid RowDefinitions="Auto,*" Name="JournalJsonGrid">
-                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,15">
+                        <Grid RowDefinitions="Auto,Auto,*" Name="JournalJsonGrid">
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
                                 <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="CopyJsonButton" Content="&#x1F4CB; Copier" 
@@ -1396,7 +1464,34 @@
                                         CornerRadius="4" Cursor="Hand" IsVisible="False"
                                         Click="DownloadJson_Clicked"/>
                             </Grid>
-                            <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
+                            <Grid Grid.Row="1" RowDefinitions="Auto,Auto" Margin="0,0,0,10"
+                                  Name="JournalJsonSearchBar" IsVisible="False">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBox Grid.Column="0" Name="JournalJsonSearchBox"
+                                             Watermark="🔍 Rechercher dans le JSON..."
+                                             FontSize="12" Padding="6,4" CornerRadius="4"
+                                             Background="{DynamicResource InputBackground}"
+                                             Foreground="{DynamicResource TextPrimary}"
+                                             BorderBrush="{DynamicResource InputBorder}"
+                                             KeyDown="JournalJsonSearchBox_KeyDown"/>
+                                    <TextBlock Grid.Column="1" Name="JournalJsonSearchCount" 
+                                               Text="" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" Margin="8,0"/>
+                                    <Button Grid.Column="2" Content="▲" FontSize="10" Padding="6,2" Margin="0,0,2,0"
+                                            Background="Transparent" Foreground="{DynamicResource TextSecondary}"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1"
+                                            CornerRadius="4" Cursor="Hand" Click="JournalJsonSearchPrev_Clicked"/>
+                                    <Button Grid.Column="3" Content="▼" FontSize="10" Padding="6,2"
+                                            Background="Transparent" Foreground="{DynamicResource TextSecondary}"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1"
+                                            CornerRadius="4" Cursor="Hand" Click="JournalJsonSearchNext_Clicked"/>
+                                </Grid>
+                                <TextBlock Grid.Row="1" Name="JournalJsonSearchError"
+                                           Text="❌ Élément introuvable dans le fichier JSON"
+                                           FontSize="11" Foreground="{DynamicResource SearchErrorText}"
+                                           Margin="4,4,0,0" IsVisible="False"/>
+                            </Grid>
+                            <Border Grid.Row="2" Background="{DynamicResource AppBackground}" 
                                     BorderBrush="{DynamicResource ClickableCardBorder}" 
                                     BorderThickness="1" CornerRadius="8">
                                 <TextBlock Name="JournalPlaceholderText" Text="Sélectionnez une date" 
@@ -1413,16 +1508,64 @@
                     <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
                             BorderThickness="0,0,1,0" Padding="15">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="5" Name="EtatJobListPanel">
-                                <!-- Jobs are loaded dynamically from state.json -->
-                            </StackPanel>
-                        </ScrollViewer>
+                        <Grid RowDefinitions="Auto,*,Auto">
+                            <TextBox Grid.Row="0" Name="EtatSearchBox" 
+                                     Watermark="🔍 Rechercher un job..."
+                                     FontSize="13" Margin="0,0,0,10" Padding="8,6"
+                                     CornerRadius="6"
+                                     Background="{DynamicResource InputBackground}"
+                                     Foreground="{DynamicResource TextPrimary}"
+                                     BorderBrush="{DynamicResource InputBorder}"
+                                     TextChanged="EtatSearchBox_TextChanged"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="5" Name="EtatJobListPanel">
+                                    <!-- Jobs are loaded dynamically from state.json -->
+                                </StackPanel>
+                            </ScrollViewer>
+                            <Border Grid.Row="2" Name="EtatPaginationBorder" 
+                                    Background="{DynamicResource CardBackground}"
+                                    BorderBrush="{DynamicResource ClickableCardBorder}"
+                                    BorderThickness="1" CornerRadius="8" 
+                                    Padding="12,8" Margin="0,10,0,0">
+                                <StackPanel Name="EtatPaginationPanel"
+                                            HorizontalAlignment="Center" Spacing="6">
+                                    <StackPanel Name="EtatPaginationButtons" Orientation="Horizontal" 
+                                                HorizontalAlignment="Center" Spacing="4">
+                                        <!-- Pagination buttons generated dynamically -->
+                                    </StackPanel>
+                                    <TextBlock Name="EtatPageCountLabel" 
+                                               Text="Page 1 sur 1" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Name="EtatPageGotoLabel" Text="Aller à" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox Name="EtatPageJumpBox" 
+                                                 Width="45" FontSize="11" Padding="4,4" 
+                                                 CornerRadius="4" 
+                                                 HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="{DynamicResource InputBackground}"
+                                                 Foreground="{DynamicResource TextPrimary}"
+                                                 BorderBrush="{DynamicResource InputBorder}"
+                                                 KeyDown="EtatPageJumpBox_KeyDown"/>
+                                        <Button Content="OK" FontSize="10" 
+                                                Padding="6,3"
+                                                Background="Transparent" 
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                BorderBrush="{DynamicResource ClickableCardBorder}" 
+                                                BorderThickness="1" CornerRadius="4" Cursor="Hand"
+                                                Click="EtatPageJump_Clicked"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
                     <Border Grid.Column="1" Background="{DynamicResource CardBackground}" Margin="20" Padding="20" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
-                        <Grid RowDefinitions="Auto,*" Name="EtatJsonGrid">
-                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,15">
+                        <Grid RowDefinitions="Auto,Auto,*" Name="EtatJsonGrid">
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
                                 <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="EtatCopyJsonButton" Content="📋 Copier" 
@@ -1438,7 +1581,34 @@
                                         CornerRadius="4" Cursor="Hand" IsVisible="False"
                                         Click="EtatDownloadJson_Clicked"/>
                             </Grid>
-                            <Border Grid.Row="1" Background="{DynamicResource AppBackground}" 
+                            <Grid Grid.Row="1" RowDefinitions="Auto,Auto" Margin="0,0,0,10"
+                                  Name="EtatJsonSearchBar" IsVisible="False">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBox Grid.Column="0" Name="EtatJsonSearchBox"
+                                             Watermark="🔍 Rechercher dans le JSON..."
+                                             FontSize="12" Padding="6,4" CornerRadius="4"
+                                             Background="{DynamicResource InputBackground}"
+                                             Foreground="{DynamicResource TextPrimary}"
+                                             BorderBrush="{DynamicResource InputBorder}"
+                                             KeyDown="EtatJsonSearchBox_KeyDown"/>
+                                    <TextBlock Grid.Column="1" Name="EtatJsonSearchCount" 
+                                               Text="" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" Margin="8,0"/>
+                                    <Button Grid.Column="2" Content="▲" FontSize="10" Padding="6,2" Margin="0,0,2,0"
+                                            Background="Transparent" Foreground="{DynamicResource TextSecondary}"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1"
+                                            CornerRadius="4" Cursor="Hand" Click="EtatJsonSearchPrev_Clicked"/>
+                                    <Button Grid.Column="3" Content="▼" FontSize="10" Padding="6,2"
+                                            Background="Transparent" Foreground="{DynamicResource TextSecondary}"
+                                            BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1"
+                                            CornerRadius="4" Cursor="Hand" Click="EtatJsonSearchNext_Clicked"/>
+                                </Grid>
+                                <TextBlock Grid.Row="1" Name="EtatJsonSearchError"
+                                           Text="❌ Élément introuvable dans le fichier JSON"
+                                           FontSize="11" Foreground="{DynamicResource SearchErrorText}"
+                                           Margin="4,4,0,0" IsVisible="False"/>
+                            </Grid>
+                            <Border Grid.Row="2" Background="{DynamicResource AppBackground}" 
                                     BorderBrush="{DynamicResource ClickableCardBorder}" 
                                     BorderThickness="1" CornerRadius="8">
                                 <TextBlock Name="EtatPlaceholderText" Text="Sélectionnez un job" 

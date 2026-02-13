@@ -439,6 +439,26 @@ public partial class MainWindow : Window
         if (downloadBtn != null) downloadBtn.Content = T("logs_download");
         if (etatCopyBtn != null) etatCopyBtn.Content = T("logs_copy");
         if (etatDownloadBtn != null) etatDownloadBtn.Content = T("logs_download");
+
+        var journalSearch = this.FindControl<TextBox>("JournalSearchBox");
+        var etatSearch = this.FindControl<TextBox>("EtatSearchBox");
+        if (journalSearch != null) journalSearch.Watermark = T("logs_search_date");
+        if (etatSearch != null) etatSearch.Watermark = T("logs_search_job");
+
+        var journalJsonSearch = this.FindControl<TextBox>("JournalJsonSearchBox");
+        var etatJsonSearch = this.FindControl<TextBox>("EtatJsonSearchBox");
+        if (journalJsonSearch != null) journalJsonSearch.Watermark = T("logs_search_json");
+        if (etatJsonSearch != null) etatJsonSearch.Watermark = T("logs_search_json");
+
+        var journalJsonError = this.FindControl<TextBlock>("JournalJsonSearchError");
+        var etatJsonError = this.FindControl<TextBlock>("EtatJsonSearchError");
+        if (journalJsonError != null) journalJsonError.Text = T("logs_search_not_found");
+        if (etatJsonError != null) etatJsonError.Text = T("logs_search_not_found");
+
+        var journalGotoLabel = this.FindControl<TextBlock>("JournalPageGotoLabel");
+        var etatGotoLabel = this.FindControl<TextBlock>("EtatPageGotoLabel");
+        if (journalGotoLabel != null) journalGotoLabel.Text = T("logs_page_goto");
+        if (etatGotoLabel != null) etatGotoLabel.Text = T("logs_page_goto");
     }
 
     /// <summary>
@@ -527,6 +547,70 @@ public partial class MainWindow : Window
     private string? _currentEtatJsonContent;
 
     /// <summary>
+    /// Filters the Journal date list based on search text and re-applies pagination
+    /// </summary>
+    private void JournalSearchBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox searchBox) return;
+        var filter = searchBox.Text?.Trim() ?? "";
+
+        if (string.IsNullOrEmpty(filter))
+        {
+            // Reset: show all items with pagination
+            _journalCurrentPage = 1;
+            ApplyJournalPagination();
+            return;
+        }
+
+        // Filter and show only matching items (no pagination during search)
+        var panel = this.FindControl<StackPanel>("DateListPanel");
+        var paginationBorder = this.FindControl<Border>("JournalPaginationBorder");
+        if (panel == null) return;
+
+        panel.Children.Clear();
+        foreach (var border in _journalAllDateItems)
+        {
+            var textBlock = border.GetVisualDescendants().OfType<TextBlock>()
+                .FirstOrDefault(tb => tb.FontWeight == Avalonia.Media.FontWeight.SemiBold);
+            var displayText = textBlock?.Text ?? border.Tag?.ToString() ?? "";
+            if (displayText.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                panel.Children.Add(border);
+        }
+
+        if (paginationBorder != null) paginationBorder.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Filters the Etat job list based on search text and re-applies pagination
+    /// </summary>
+    private void EtatSearchBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox searchBox) return;
+        var filter = searchBox.Text?.Trim() ?? "";
+
+        if (string.IsNullOrEmpty(filter))
+        {
+            _etatCurrentPage = 1;
+            ApplyEtatPagination();
+            return;
+        }
+
+        var panel = this.FindControl<StackPanel>("EtatJobListPanel");
+        var paginationBorder = this.FindControl<Border>("EtatPaginationBorder");
+        if (panel == null) return;
+
+        panel.Children.Clear();
+        foreach (var border in _etatAllJobItems)
+        {
+            var jobName = border.Tag?.ToString() ?? "";
+            if (jobName.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                panel.Children.Add(border);
+        }
+
+        if (paginationBorder != null) paginationBorder.IsVisible = false;
+    }
+
+    /// <summary>
     /// Returns the path to the EasySave state.json file in AppData
     /// </summary>
     private static string GetStateFilePath()
@@ -536,7 +620,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Loads job entries from state.json and populates the Etat job list dynamically
+    /// Loads job entries from state.json and populates the Etat job list dynamically with pagination
     /// </summary>
     private void LoadStateJobs()
     {
@@ -544,6 +628,7 @@ public partial class MainWindow : Window
         if (panel == null) return;
 
         panel.Children.Clear();
+        _etatAllJobItems.Clear();
 
         var stateFilePath = GetStateFilePath();
         if (!File.Exists(stateFilePath)) return;
@@ -594,14 +679,17 @@ public partial class MainWindow : Window
                 border.Classes.Add("JobItem");
                 border.PointerPressed += JobItem_Clicked;
 
-                panel.Children.Add(border);
+                _etatAllJobItems.Add(border);
             }
         }
         catch { /* state.json might be malformed or locked */ }
+
+        _etatCurrentPage = 1;
+        ApplyEtatPagination();
     }
 
     /// <summary>
-    /// Scans the EasySave logs directory and populates the date list dynamically
+    /// Scans the EasySave logs directory and populates the date list dynamically with pagination
     /// </summary>
     private void LoadLogDates()
     {
@@ -609,6 +697,7 @@ public partial class MainWindow : Window
         if (dateListPanel == null) return;
 
         dateListPanel.Children.Clear();
+        _journalAllDateItems.Clear();
 
         var logsDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -694,8 +783,11 @@ public partial class MainWindow : Window
             border.Classes.Add("JobItem");
             border.PointerPressed += DateItem_Clicked;
 
-            dateListPanel.Children.Add(border);
+            _journalAllDateItems.Add(border);
         }
+
+        _journalCurrentPage = 1;
+        ApplyJournalPagination();
     }
 
     /// <summary>
@@ -748,10 +840,28 @@ public partial class MainWindow : Window
             var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
             if (jsonGrid != null)
             {
-                if (jsonGrid.Children.Count > 1)
+                // Remove previous content (placeholder or scrollviewer) at index 2
+                if (jsonGrid.Children.Count > 2)
                 {
-                    jsonGrid.Children.RemoveAt(1);
+                    jsonGrid.Children.RemoveAt(2);
                 }
+
+                // Show the JSON search bar
+                var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
+                if (searchBar != null) searchBar.IsVisible = true;
+
+                // Reset search state
+                var searchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
+                if (searchBox != null) searchBox.Text = "";
+                var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
+                if (searchCount != null) searchCount.Text = "";
+                var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
+                if (searchError != null) searchError.IsVisible = false;
+
+                // Clear previous search matches
+                _journalJsonSearchMatches.Clear();
+                _journalJsonSearchIndex = -1;
+                _journalJsonLastQuery = "";
 
                 var scrollViewer = new ScrollViewer
                 {
@@ -761,6 +871,7 @@ public partial class MainWindow : Window
 
                 var jsonText = new TextBox
                 {
+                    Name = "JournalJsonTextBox",
                     FontFamily = new Avalonia.Media.FontFamily("Consolas"),
                     FontSize = 13,
                     Padding = new Avalonia.Thickness(15),
@@ -771,8 +882,12 @@ public partial class MainWindow : Window
                 };
                 jsonText.Classes.Add("JsonViewer");
 
+                // Store direct reference for search and attach KeyDown for Enter navigation
+                _journalJsonTextBox = jsonText;
+                jsonText.KeyDown += JournalJsonTextBox_KeyDown;
+
                 scrollViewer.Content = jsonText;
-                Grid.SetRow(scrollViewer, 1);
+                Grid.SetRow(scrollViewer, 2);
                 jsonGrid.Children.Add(scrollViewer);
             }
         }
@@ -884,11 +999,28 @@ public partial class MainWindow : Window
                 
                 if (jsonGrid != null)
                 {
-                    // Remove the placeholder and add the JSON content
-                    if (jsonGrid.Children.Count > 1)
+                    // Remove previous content (placeholder or scrollviewer) at index 2
+                    if (jsonGrid.Children.Count > 2)
                     {
-                        jsonGrid.Children.RemoveAt(1);
+                        jsonGrid.Children.RemoveAt(2);
                     }
+
+                    // Show the JSON search bar
+                    var etatSearchBar = this.FindControl<Grid>("EtatJsonSearchBar");
+                    if (etatSearchBar != null) etatSearchBar.IsVisible = true;
+
+                    // Reset search state
+                    var etatSearchBox = this.FindControl<TextBox>("EtatJsonSearchBox");
+                    if (etatSearchBox != null) etatSearchBox.Text = "";
+                    var etatSearchCount = this.FindControl<TextBlock>("EtatJsonSearchCount");
+                    if (etatSearchCount != null) etatSearchCount.Text = "";
+                    var etatSearchError = this.FindControl<TextBlock>("EtatJsonSearchError");
+                    if (etatSearchError != null) etatSearchError.IsVisible = false;
+
+                    // Clear previous search matches
+                    _etatJsonSearchMatches.Clear();
+                    _etatJsonSearchIndex = -1;
+                    _etatJsonLastQuery = "";
 
                     var scrollViewer = new ScrollViewer
                     {
@@ -898,6 +1030,7 @@ public partial class MainWindow : Window
 
                     var jsonText = new TextBox
                     {
+                        Name = "EtatJsonTextBox",
                         FontFamily = new Avalonia.Media.FontFamily("Consolas"),
                         FontSize = 13,
                         Padding = new Avalonia.Thickness(15),
@@ -908,8 +1041,12 @@ public partial class MainWindow : Window
                     };
                     jsonText.Classes.Add("JsonViewer");
 
+                    // Store direct reference for search and attach KeyDown for Enter navigation
+                    _etatJsonTextBox = jsonText;
+                    jsonText.KeyDown += EtatJsonTextBox_KeyDown;
+
                     scrollViewer.Content = jsonText;
-                    Grid.SetRow(scrollViewer, 1);
+                    Grid.SetRow(scrollViewer, 2);
                     jsonGrid.Children.Add(scrollViewer);
                 }
             }
@@ -960,6 +1097,521 @@ public partial class MainWindow : Window
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new System.IO.StreamWriter(stream);
             await writer.WriteAsync(_currentEtatJsonContent);
+        }
+    }
+
+    #endregion
+
+    #region JSON Search
+
+    // Direct references to dynamically created JSON TextBoxes
+    private TextBox? _journalJsonTextBox;
+    private TextBox? _etatJsonTextBox;
+
+    // Search state for Journal JSON
+    private List<int> _journalJsonSearchMatches = new();
+    private int _journalJsonSearchIndex = -1;
+    private string _journalJsonLastQuery = "";
+
+    // Search state for Etat JSON
+    private List<int> _etatJsonSearchMatches = new();
+    private int _etatJsonSearchIndex = -1;
+    private string _etatJsonLastQuery = "";
+
+    /// <summary>
+    /// Handles Enter key press in Journal JSON search box.
+    /// First Enter: performs search. Subsequent Enter: navigates to next match.
+    /// </summary>
+    private void JournalJsonSearchBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        if (sender is not TextBox searchBox) return;
+        var query = searchBox.Text?.Trim() ?? "";
+        var countLabel = this.FindControl<TextBlock>("JournalJsonSearchCount");
+        var errorLabel = this.FindControl<TextBlock>("JournalJsonSearchError");
+
+        // Same query and matches exist → navigate to next
+        if (query == _journalJsonLastQuery && _journalJsonSearchMatches.Count > 0)
+        {
+            NavigateJsonSearch(1, _journalJsonTextBox, countLabel, _journalJsonSearchMatches, ref _journalJsonSearchIndex);
+            return;
+        }
+
+        _journalJsonLastQuery = query;
+        PerformJsonSearch(query, _journalJsonTextBox, countLabel, errorLabel,
+            ref _journalJsonSearchMatches, ref _journalJsonSearchIndex);
+    }
+
+    private void JournalJsonSearchPrev_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var countLabel = this.FindControl<TextBlock>("JournalJsonSearchCount");
+        NavigateJsonSearch(-1, _journalJsonTextBox, countLabel, _journalJsonSearchMatches, ref _journalJsonSearchIndex);
+    }
+
+    private void JournalJsonSearchNext_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var countLabel = this.FindControl<TextBlock>("JournalJsonSearchCount");
+        NavigateJsonSearch(1, _journalJsonTextBox, countLabel, _journalJsonSearchMatches, ref _journalJsonSearchIndex);
+    }
+
+    /// <summary>
+    /// Handles Enter key press in Etat JSON search box.
+    /// First Enter: performs search. Subsequent Enter: navigates to next match.
+    /// </summary>
+    private void EtatJsonSearchBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        if (sender is not TextBox searchBox) return;
+        var query = searchBox.Text?.Trim() ?? "";
+        var countLabel = this.FindControl<TextBlock>("EtatJsonSearchCount");
+        var errorLabel = this.FindControl<TextBlock>("EtatJsonSearchError");
+
+        // Same query and matches exist → navigate to next
+        if (query == _etatJsonLastQuery && _etatJsonSearchMatches.Count > 0)
+        {
+            NavigateJsonSearch(1, _etatJsonTextBox, countLabel, _etatJsonSearchMatches, ref _etatJsonSearchIndex);
+            return;
+        }
+
+        _etatJsonLastQuery = query;
+        PerformJsonSearch(query, _etatJsonTextBox, countLabel, errorLabel,
+            ref _etatJsonSearchMatches, ref _etatJsonSearchIndex);
+    }
+
+    private void EtatJsonSearchPrev_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var countLabel = this.FindControl<TextBlock>("EtatJsonSearchCount");
+        NavigateJsonSearch(-1, _etatJsonTextBox, countLabel, _etatJsonSearchMatches, ref _etatJsonSearchIndex);
+    }
+
+    private void EtatJsonSearchNext_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var countLabel = this.FindControl<TextBlock>("EtatJsonSearchCount");
+        NavigateJsonSearch(1, _etatJsonTextBox, countLabel, _etatJsonSearchMatches, ref _etatJsonSearchIndex);
+    }
+
+    /// <summary>
+    /// Performs a case-insensitive search in the JSON TextBox, finds all matches,
+    /// highlights the first one with SelectionBrush, or shows a red error if not found.
+    /// </summary>
+    private void PerformJsonSearch(string query, TextBox? textBox, TextBlock? countLabel,
+        TextBlock? errorLabel, ref List<int> matches, ref int currentIndex)
+    {
+        matches.Clear();
+        currentIndex = -1;
+
+        // Hide error by default
+        if (errorLabel != null) errorLabel.IsVisible = false;
+
+        if (textBox == null || string.IsNullOrEmpty(query) || string.IsNullOrEmpty(textBox.Text))
+        {
+            if (countLabel != null) countLabel.Text = "";
+            // Reset selection
+            if (textBox != null)
+            {
+                textBox.SelectionStart = 0;
+                textBox.SelectionEnd = 0;
+            }
+            return;
+        }
+
+        var text = textBox.Text;
+        int pos = 0;
+        while ((pos = text.IndexOf(query, pos, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            matches.Add(pos);
+            pos += query.Length;
+        }
+
+        if (matches.Count == 0)
+        {
+            if (countLabel != null) countLabel.Text = "0/0";
+            // Show red error message
+            if (errorLabel != null) errorLabel.IsVisible = true;
+            // Clear any previous selection
+            textBox.SelectionStart = 0;
+            textBox.SelectionEnd = 0;
+            return;
+        }
+
+        // Apply highlight brush for visible selection
+        ApplySearchHighlightBrush(textBox);
+
+        currentIndex = 0;
+        SelectMatch(textBox, countLabel, matches, currentIndex, query.Length);
+    }
+
+    /// <summary>
+    /// Sets the SelectionBrush on the TextBox to the theme-aware highlight color
+    /// so the selected/found text is clearly visible.
+    /// </summary>
+    private void ApplySearchHighlightBrush(TextBox textBox)
+    {
+        try
+        {
+            var highlightBrush = this.FindResource("SearchHighlight") as IBrush;
+            var highlightTextBrush = this.FindResource("SearchHighlightText") as IBrush;
+            if (highlightBrush != null)
+                textBox.SelectionBrush = highlightBrush;
+            if (highlightTextBrush != null)
+                textBox.SelectionForegroundBrush = highlightTextBrush;
+        }
+        catch
+        {
+            // Fallback: bright yellow highlight
+            textBox.SelectionBrush = new SolidColorBrush(Color.FromRgb(255, 235, 59));
+            textBox.SelectionForegroundBrush = new SolidColorBrush(Color.FromRgb(26, 26, 26));
+        }
+    }
+
+    /// <summary>
+    /// Navigates to the previous or next match in the JSON TextBox.
+    /// </summary>
+    private void NavigateJsonSearch(int direction, TextBox? textBox, TextBlock? countLabel,
+        List<int> matches, ref int currentIndex)
+    {
+        if (matches.Count == 0 || textBox == null) return;
+
+        currentIndex += direction;
+        if (currentIndex < 0) currentIndex = matches.Count - 1;
+        if (currentIndex >= matches.Count) currentIndex = 0;
+
+        // Determine query length from the search box
+        var searchBox = textBox == _journalJsonTextBox
+            ? this.FindControl<TextBox>("JournalJsonSearchBox")
+            : this.FindControl<TextBox>("EtatJsonSearchBox");
+        var queryLen = searchBox?.Text?.Trim().Length ?? 0;
+        if (queryLen == 0) return;
+
+        SelectMatch(textBox, countLabel, matches, currentIndex, queryLen);
+    }
+
+    /// <summary>
+    /// Selects the match at the given index in the TextBox and updates the counter label.
+    /// Focuses the TextBox so the selection highlight stays visible.
+    /// </summary>
+    private void SelectMatch(TextBox textBox, TextBlock? countLabel,
+        List<int> matches, int index, int queryLength)
+    {
+        if (index < 0 || index >= matches.Count) return;
+
+        // Move caret first to scroll the match into view
+        textBox.CaretIndex = matches[index];
+        textBox.SelectionStart = matches[index];
+        textBox.SelectionEnd = matches[index] + queryLength;
+
+        // Focus the TextBox so the highlight remains visible
+        textBox.Focus();
+
+        if (countLabel != null)
+            countLabel.Text = $"{index + 1}/{matches.Count}";
+    }
+
+    /// <summary>
+    /// Handles Enter key on Journal JSON TextBox to navigate to next search match.
+    /// </summary>
+    private void JournalJsonTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || _journalJsonSearchMatches.Count == 0) return;
+        e.Handled = true;
+        var countLabel = this.FindControl<TextBlock>("JournalJsonSearchCount");
+        NavigateJsonSearch(1, _journalJsonTextBox, countLabel, _journalJsonSearchMatches, ref _journalJsonSearchIndex);
+    }
+
+    /// <summary>
+    /// Handles Enter key on Etat JSON TextBox to navigate to next search match.
+    /// </summary>
+    private void EtatJsonTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || _etatJsonSearchMatches.Count == 0) return;
+        e.Handled = true;
+        var countLabel = this.FindControl<TextBlock>("EtatJsonSearchCount");
+        NavigateJsonSearch(1, _etatJsonTextBox, countLabel, _etatJsonSearchMatches, ref _etatJsonSearchIndex);
+    }
+
+    #endregion
+
+    #region Pagination
+
+    private const int ItemsPerPage = 10;
+
+    // Journal pagination state
+    private List<Border> _journalAllDateItems = new();
+    private int _journalCurrentPage = 1;
+
+    // Etat pagination state
+    private List<Border> _etatAllJobItems = new();
+    private int _etatCurrentPage = 1;
+
+    /// <summary>
+    /// Applies pagination to the Journal date list, showing only the current page items.
+    /// </summary>
+    private void ApplyJournalPagination()
+    {
+        var panel = this.FindControl<StackPanel>("DateListPanel");
+        var paginationBorder = this.FindControl<Border>("JournalPaginationBorder");
+        var buttonsPanel = this.FindControl<StackPanel>("JournalPaginationButtons");
+        var countLabel = this.FindControl<TextBlock>("JournalPageCountLabel");
+        if (panel == null) return;
+
+        panel.Children.Clear();
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling(_journalAllDateItems.Count / (double)ItemsPerPage));
+        if (_journalCurrentPage > totalPages) _journalCurrentPage = totalPages;
+        if (_journalCurrentPage < 1) _journalCurrentPage = 1;
+
+        var pageItems = _journalAllDateItems
+            .Skip((_journalCurrentPage - 1) * ItemsPerPage)
+            .Take(ItemsPerPage);
+
+        foreach (var item in pageItems)
+            panel.Children.Add(item);
+
+        BuildPaginationButtons(buttonsPanel, _journalCurrentPage, totalPages, page =>
+        {
+            _journalCurrentPage = page;
+            ApplyJournalPagination();
+        });
+
+        UpdatePageCountLabel(countLabel, _journalCurrentPage, totalPages);
+        if (paginationBorder != null) paginationBorder.IsVisible = true;
+    }
+
+    /// <summary>
+    /// Applies pagination to the Etat job list, showing only the current page items.
+    /// </summary>
+    private void ApplyEtatPagination()
+    {
+        var panel = this.FindControl<StackPanel>("EtatJobListPanel");
+        var paginationBorder = this.FindControl<Border>("EtatPaginationBorder");
+        var buttonsPanel = this.FindControl<StackPanel>("EtatPaginationButtons");
+        var countLabel = this.FindControl<TextBlock>("EtatPageCountLabel");
+        if (panel == null) return;
+
+        panel.Children.Clear();
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling(_etatAllJobItems.Count / (double)ItemsPerPage));
+        if (_etatCurrentPage > totalPages) _etatCurrentPage = totalPages;
+        if (_etatCurrentPage < 1) _etatCurrentPage = 1;
+
+        var pageItems = _etatAllJobItems
+            .Skip((_etatCurrentPage - 1) * ItemsPerPage)
+            .Take(ItemsPerPage);
+
+        foreach (var item in pageItems)
+            panel.Children.Add(item);
+
+        BuildPaginationButtons(buttonsPanel, _etatCurrentPage, totalPages, page =>
+        {
+            _etatCurrentPage = page;
+            ApplyEtatPagination();
+        });
+
+        UpdatePageCountLabel(countLabel, _etatCurrentPage, totalPages);
+        if (paginationBorder != null) paginationBorder.IsVisible = true;
+    }
+
+    /// <summary>
+    /// Updates the "Page X sur Y" label.
+    /// </summary>
+    private void UpdatePageCountLabel(TextBlock? label, int currentPage, int totalPages)
+    {
+        if (label == null) return;
+        var surText = T("logs_page_of");
+        label.Text = $"Page {currentPage} {surText} {totalPages}";
+    }
+
+    /// <summary>
+    /// Builds pagination buttons (◀ 1 2 3 ... N ▶) inside the given panel.
+    /// Always visible, even with just 1 page.
+    /// </summary>
+    private void BuildPaginationButtons(StackPanel? panel, int currentPage, int totalPages, Action<int> onPageChanged)
+    {
+        if (panel == null) return;
+        panel.Children.Clear();
+
+        // Previous button — only shown when not on first page
+        if (currentPage > 1)
+        {
+            var prevBtn = CreatePageButton("◀", true, () => onPageChanged(currentPage - 1));
+            panel.Children.Add(prevBtn);
+        }
+
+        // Page number buttons
+        var pages = GetPageNumbers(currentPage, totalPages);
+        foreach (var p in pages)
+        {
+            if (p == -1)
+            {
+                var ellipsis = new TextBlock
+                {
+                    Text = "...",
+                    FontSize = 12,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Margin = new Avalonia.Thickness(2, 0)
+                };
+                try
+                {
+                    var fgBrush = this.FindResource("TextSecondary") as IBrush;
+                    if (fgBrush != null) ellipsis.Foreground = fgBrush;
+                }
+                catch { ellipsis.Foreground = TextSecondaryBrush; }
+                panel.Children.Add(ellipsis);
+            }
+            else
+            {
+                var pageNum = p;
+                var btn = CreatePageButton(p.ToString(), true, () => onPageChanged(pageNum));
+                if (p == currentPage)
+                {
+                    btn.Classes.Add("ActivePage");
+                }
+                panel.Children.Add(btn);
+            }
+        }
+
+        // Next button — only shown when not on last page
+        if (currentPage < totalPages)
+        {
+            var nextBtn = CreatePageButton("▶", true, () => onPageChanged(currentPage + 1));
+            panel.Children.Add(nextBtn);
+        }
+    }
+
+    /// <summary>
+    /// Creates a styled pagination button.
+    /// </summary>
+    private Button CreatePageButton(string text, bool isEnabled, Action onClick)
+    {
+        var btn = new Button
+        {
+            Content = text,
+            FontSize = 11,
+            Padding = new Avalonia.Thickness(8, 4),
+            MinWidth = 30,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            IsEnabled = isEnabled,
+            Cursor = isEnabled ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null,
+            Background = Brushes.Transparent,
+            BorderThickness = new Avalonia.Thickness(1),
+            CornerRadius = new Avalonia.CornerRadius(4)
+        };
+
+        try
+        {
+            var borderBrush = this.FindResource("ClickableCardBorder") as IBrush;
+            var fgBrush = this.FindResource("TextSecondary") as IBrush;
+            if (borderBrush != null) btn.BorderBrush = borderBrush;
+            if (fgBrush != null) btn.Foreground = fgBrush;
+        }
+        catch
+        {
+            btn.BorderBrush = CardBorderBrush;
+            btn.Foreground = TextSecondaryBrush;
+        }
+
+        btn.Click += (_, _) => onClick();
+        return btn;
+    }
+
+    /// <summary>
+    /// Generates page number list with ellipsis (-1) for large page counts.
+    /// Shows a window of pages around the current page.
+    /// </summary>
+    private static List<int> GetPageNumbers(int current, int total)
+    {
+        var pages = new List<int>();
+        if (total <= 7)
+        {
+            for (int i = 1; i <= total; i++) pages.Add(i);
+            return pages;
+        }
+
+        // Always show first page
+        pages.Add(1);
+
+        int start = Math.Max(2, current - 1);
+        int end = Math.Min(total - 1, current + 1);
+
+        // Adjust range near boundaries
+        if (current <= 3) end = Math.Min(4, total - 1);
+        if (current >= total - 2) start = Math.Max(total - 3, 2);
+
+        if (start > 2) pages.Add(-1); // ellipsis
+
+        for (int i = start; i <= end; i++) pages.Add(i);
+
+        if (end < total - 1) pages.Add(-1); // ellipsis
+
+        // Always show last page
+        pages.Add(total);
+
+        return pages;
+    }
+
+    /// <summary>
+    /// Handles page jump for Journal via Enter key in the jump TextBox.
+    /// </summary>
+    private void JournalPageJumpBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        JumpToJournalPage();
+    }
+
+    /// <summary>
+    /// Handles page jump for Journal via OK button click.
+    /// </summary>
+    private void JournalPageJump_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        JumpToJournalPage();
+    }
+
+    private void JumpToJournalPage()
+    {
+        var jumpBox = this.FindControl<TextBox>("JournalPageJumpBox");
+        if (jumpBox == null) return;
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling(_journalAllDateItems.Count / (double)ItemsPerPage));
+        if (int.TryParse(jumpBox.Text?.Trim(), out int page) && page >= 1 && page <= totalPages)
+        {
+            _journalCurrentPage = page;
+            ApplyJournalPagination();
+            jumpBox.Text = "";
+        }
+    }
+
+    /// <summary>
+    /// Handles page jump for Etat via Enter key in the jump TextBox.
+    /// </summary>
+    private void EtatPageJumpBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        JumpToEtatPage();
+    }
+
+    /// <summary>
+    /// Handles page jump for Etat via OK button click.
+    /// </summary>
+    private void EtatPageJump_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        JumpToEtatPage();
+    }
+
+    private void JumpToEtatPage()
+    {
+        var jumpBox = this.FindControl<TextBox>("EtatPageJumpBox");
+        if (jumpBox == null) return;
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling(_etatAllJobItems.Count / (double)ItemsPerPage));
+        if (int.TryParse(jumpBox.Text?.Trim(), out int page) && page >= 1 && page <= totalPages)
+        {
+            _etatCurrentPage = page;
+            ApplyEtatPagination();
+            jumpBox.Text = "";
         }
     }
 

@@ -210,7 +210,13 @@
     "logs_copied": "\u2705 Copied!",
     "logs_save_json": "Save JSON file",
     "logs_history": "History",
-    "logs_details_json": "Details (JSON):"
+    "logs_details_json": "Details (JSON):",
+    "logs_search_date": "\ud83d\udd0d Search a date...",
+    "logs_search_job": "\ud83d\udd0d Search a job...",
+    "logs_search_json": "\ud83d\udd0d Search in JSON...",
+    "logs_search_not_found": "\u274c Element not found in the JSON file",
+    "logs_page_of": "of",
+    "logs_page_goto": "Go to"
   },
   "fr": {
     "app_title": "EasySave",
@@ -423,6 +429,12 @@
     "logs_copied": "\u2705 Copi\u00e9 !",
     "logs_save_json": "Enregistrer le fichier JSON",
     "logs_history": "Historique",
-    "logs_details_json": "D\u00e9tails (JSON) :"
+    "logs_details_json": "D\u00e9tails (JSON) :",
+    "logs_search_date": "\ud83d\udd0d Rechercher une date...",
+    "logs_search_job": "\ud83d\udd0d Rechercher un job...",
+    "logs_search_json": "\ud83d\udd0d Rechercher dans le JSON...",
+    "logs_search_not_found": "\u274c \u00c9l\u00e9ment introuvable dans le fichier JSON",
+    "logs_page_of": "sur",
+    "logs_page_goto": "Aller \u00e0"
   }
 }
