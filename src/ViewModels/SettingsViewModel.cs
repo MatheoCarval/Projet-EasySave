@@ -248,6 +248,11 @@ public class SettingsViewModel : ViewModelBase
     public string TxtBrowse => T("gui_browse");
     public string TxtOn => T("gui_on");
     public string TxtOff => T("gui_off");
+    public string TxtAboutSoftware => T("gui_about_software");
+    public string TxtAboutCompany => T("gui_about_company");
+    public string TxtAboutLicense => T("gui_about_license");
+    public string TxtAboutLicenseValue => T("gui_about_license_value");
+    public string TxtAboutArchitecture => T("gui_about_architecture");
     public string AppVersion => "2.0";
     public string DotNetVersion => $".NET {Environment.Version}";
     public string AvaloniaVersion => "11.0.10";
@@ -446,6 +451,11 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtBrowse));
         OnPropertyChanged(nameof(TxtOn));
         OnPropertyChanged(nameof(TxtOff));
+        OnPropertyChanged(nameof(TxtAboutSoftware));
+        OnPropertyChanged(nameof(TxtAboutCompany));
+        OnPropertyChanged(nameof(TxtAboutLicense));
+        OnPropertyChanged(nameof(TxtAboutLicenseValue));
+        OnPropertyChanged(nameof(TxtAboutArchitecture));
     }
 
     private static List<string> ParseBlockedApplications(string? text)

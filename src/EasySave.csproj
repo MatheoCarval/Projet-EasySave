@@ -47,6 +47,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\app-icon.png" />
+    <AvaloniaResource Include="Assets\app-icon.ico" />
     <AvaloniaResource Include="Assets\app-icon-in.png" />
   </ItemGroup>
 

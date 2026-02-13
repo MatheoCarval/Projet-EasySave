@@ -11,6 +11,7 @@ using EasySave.ViewModels;
 using System;
 using System.Linq;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace EasySave.View.GUI;
 
@@ -38,7 +39,41 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = new MainViewModel(App.BackupManager!);
+        var vm = new MainViewModel(App.BackupManager!);
+
+        // Register the folder picker callback so the ViewModel can open native dialogs
+        vm.BrowseFolderCallback = async () =>
+        {
+            try
+            {
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = "Select Folder",
+                    AllowMultiple = false
+                };
+
+                var result = await StorageProvider.OpenFolderPickerAsync(options);
+
+                if (result.Count > 0 && result[0].Path != null)
+                {
+                    return result[0].Path.LocalPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                App.LogCrash("BrowseFolderCallback", ex);
+            }
+            return null;
+        };
+
+        DataContext = vm;
+
+        // Catch all unobserved task exceptions (async void crashes)
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            App.LogCrash("UnobservedTaskException", e.Exception);
+            e.SetObserved();
+        };
     }
 
     /// <summary>
@@ -101,47 +136,55 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handles the Browse button click for source paths
+    /// Handles the Tapped event on the error stat card to filter error jobs
     /// </summary>
-    private async void BrowseSourcePath_Click(object? sender, RoutedEventArgs e)
+    private void ErrorCard_Tapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Button button && button.Tag is SourcePathViewModel sourcePathVm)
+        if (DataContext is MainViewModel mainVm)
         {
-            var options = new FolderPickerOpenOptions
-            {
-                Title = "Select Source Folder",
-                AllowMultiple = false
-            };
-
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-            if (result.Count > 0)
-            {
-                sourcePathVm.Path = result[0].Path.LocalPath;
-            }
+            mainVm.FilterErrorJobsCommand.Execute(null);
         }
     }
 
-    /// <summary>
-    /// Handles the Browse button click for target path
-    /// </summary>
-    private async void BrowseTargetPath_Click(object? sender, RoutedEventArgs e)
+    private void TotalCard_Tapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is MainViewModel viewModel)
+        if (DataContext is MainViewModel mainVm)
         {
-            var options = new FolderPickerOpenOptions
-            {
-                Title = "Select Destination Folder",
-                AllowMultiple = false
-            };
+            mainVm.FilterAllJobsCommand.Execute(null);
+        }
+    }
 
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
+    private void ActiveCard_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            mainVm.FilterActiveJobsCommand.Execute(null);
+        }
+    }
 
-            if (result.Count > 0)
+    private void CompletedCard_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            mainVm.FilterCompletedJobsCommand.Execute(null);
+        }
+    }
+
+    private async void CopyEmail_Tapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard != null)
             {
-                viewModel.ModalTargetPath = result[0].Path.LocalPath;
+                await clipboard.SetTextAsync("support@prosoft.com");
+                if (DataContext is MainViewModel mainVm)
+                {
+                    mainVm.ShowToast(mainVm.T("help_email_copied"));
+                }
             }
         }
+        catch { }
     }
 
     /// <summary>
@@ -149,23 +192,30 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel mainVm)
+        try
         {
-            var options = new FolderPickerOpenOptions
+            if (DataContext is MainViewModel mainVm)
             {
-                Title = "Select Log Directory",
-                AllowMultiple = false
-            };
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = "Select Log Directory",
+                    AllowMultiple = false
+                };
 
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
+                var result = await StorageProvider.OpenFolderPickerAsync(options);
 
-            if (result.Count > 0)
-            {
-                string dir = result[0].Path.LocalPath;
-                // Determine log file name from current format setting
-                string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
-                mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
+                if (result.Count > 0 && result[0].Path != null)
+                {
+                    string dir = result[0].Path.LocalPath;
+                    // Determine log file name from current format setting
+                    string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
+                    mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("BrowseLogPath", ex);
         }
     }
 
@@ -174,21 +224,28 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel mainVm)
+        try
         {
-            var options = new FolderPickerOpenOptions
+            if (DataContext is MainViewModel mainVm)
             {
-                Title = "Select State File Directory",
-                AllowMultiple = false
-            };
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = "Select State File Directory",
+                    AllowMultiple = false
+                };
 
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
+                var result = await StorageProvider.OpenFolderPickerAsync(options);
 
-            if (result.Count > 0)
-            {
-                string dir = result[0].Path.LocalPath;
-                mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
+                if (result.Count > 0 && result[0].Path != null)
+                {
+                    string dir = result[0].Path.LocalPath;
+                    mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("BrowseStatePath", ex);
         }
     }
 

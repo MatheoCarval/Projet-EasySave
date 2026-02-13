@@ -113,6 +113,30 @@ public class BackupJobViewModel : ViewModelBase
         ? "Never"
         : _backupJob.LastExecution.ToString("g");
 
+    public string? ErrorReason => _backupJob.ErrorReason;
+
+    public bool HasError => _backupJob.BackupState == BackupState.ERROR && !string.IsNullOrEmpty(_backupJob.ErrorReason);
+
+    public string ErrorReasonDisplay
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_backupJob.ErrorReason)) return string.Empty;
+            try
+            {
+                var key = _backupJob.ErrorReason switch
+                {
+                    "error_path_not_found" => "gui_error_path_not_found",
+                    "error_access_denied" => "gui_error_access_denied",
+                    "error_io" => "gui_error_io",
+                    _ => "gui_execution_error"
+                };
+                return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? _backupJob.ErrorReason;
+            }
+            catch { return _backupJob.ErrorReason; }
+        }
+    }
+
     public float Progress => _backupJob.Progress;
 
     public string ProgressDisplay => $"{_backupJob.Progress:F0}%";
@@ -131,6 +155,9 @@ public class BackupJobViewModel : ViewModelBase
         OnPropertyChanged(nameof(StateColor));
         OnPropertyChanged(nameof(LastExecution));
         OnPropertyChanged(nameof(LastExecutionDisplay));
+        OnPropertyChanged(nameof(ErrorReason));
+        OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(ErrorReasonDisplay));
         OnPropertyChanged(nameof(Progress));
         OnPropertyChanged(nameof(ProgressDisplay));
     }

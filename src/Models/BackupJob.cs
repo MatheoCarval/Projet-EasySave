@@ -70,6 +70,10 @@ namespace Models
         /// </summary>
         public bool EncryptFiles { get; set; }
         /// <summary>
+        /// The reason for the last error, if any.
+        /// </summary>
+        public string? ErrorReason { get; set; }
+        /// <summary>
         /// List of file extensions specific to this backup job that should be encrypted (in addition to global settings).
         /// </summary>
         public List<string> EncryptedExtensions { get; set; }
@@ -155,6 +159,7 @@ namespace Models
         /// </summary>
         public void MarkAsError()
         {
+            LastExecution = DateTime.Now;
             Progress = 0;
             CurrentSourceFile = null;
             CurrentTargetFile = null;

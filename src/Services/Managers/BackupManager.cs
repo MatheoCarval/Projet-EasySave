@@ -205,11 +205,13 @@ public class BackupManager
             }
 
             job.MarkAsCompleted();
+            job.ErrorReason = null;
             _stateWriter.UpdateJobState(job);
         }
         catch (Exception ex)
         {
             job.MarkAsError();
+            job.ErrorReason = GetUserFriendlyError(ex);
             _stateWriter.UpdateJobState(job);
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
@@ -480,5 +482,22 @@ public class BackupManager
         {
             throw new IOException($"Error deleting job '{jobId}' from jobs.json.", ex);
         }
+    }
+
+    /// <summary>
+    /// Maps an exception to a short error key for display on the job card.
+    /// </summary>
+    private static string GetUserFriendlyError(Exception ex)
+    {
+        var inner = ex is InvalidOperationException ? (ex.InnerException ?? ex) : ex;
+
+        if (inner is DirectoryNotFoundException)
+            return "error_path_not_found";
+        if (inner is UnauthorizedAccessException)
+            return "error_access_denied";
+        if (inner is IOException)
+            return "error_io";
+
+        return "error_generic";
     }
 }
