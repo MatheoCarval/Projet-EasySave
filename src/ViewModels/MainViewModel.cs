@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Models;
 using Models.Enums;
+using Models.Entries;
 using Services.Managers;
 using EasySave.Services.Managers;
+using EasyLog.Abstractions;
+using EasyLog.Enums;
+using EasyLog.Loggers;
 using Avalonia.Threading;
 
 namespace EasySave.ViewModels;
@@ -22,6 +26,8 @@ public class MainViewModel : ViewModelBase
     private bool _isAddEditModalOpen;
     private BackupJobViewModel? _editingBackupJob;
     private string _modalTitle = "Add Backup Task";
+    private bool _modalEncryptFiles;
+    private string _modalEncryptedExtensions = string.Empty;
     private bool _isProgressPopupOpen;
     private bool _isExecuteOrderOpen;
     private bool _isDeleteConfirmOpen;
@@ -30,11 +36,14 @@ public class MainViewModel : ViewModelBase
     private string _blockedPopupMessage = string.Empty;
     private bool _isSettingsOpen;
     private bool _isHelpOpen;
+    private bool _isLogsOpen;
+    private string _logsMessage = string.Empty;
     private string _toastMessage = string.Empty;
     private bool _isToastVisible;
     private DispatcherTimer? _toastTimer;
 
     public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
+    public ObservableCollection<BackupLogEntry> LogEntries { get; } = new();
     public SettingsViewModel SettingsVM { get; }
 
     // Modal form fields
@@ -46,6 +55,9 @@ public class MainViewModel : ViewModelBase
     private bool _isFilterOpen;
     private readonly HashSet<string> _selectedTypes = new(StringComparer.OrdinalIgnoreCase) { "COMPLETE", "DIFFERENTIAL" };
     private readonly HashSet<string> _selectedStates = new(StringComparer.OrdinalIgnoreCase) { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
+    private int _currentPage = 1;
+    private int _filteredCount;
+    private const int PageSize = 5;
 
     private static readonly string[] AllTypes = { "COMPLETE", "DIFFERENTIAL" };
     private static readonly string[] AllStates = { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
@@ -77,6 +89,7 @@ public class MainViewModel : ViewModelBase
         SaveModalCommand = new RelayCommand(SaveModal);
         CancelModalCommand = new RelayCommand(CloseModal);
         ViewLogsCommand = new RelayCommand(ViewLogs);
+        CloseLogsCommand = new RelayCommand(() => IsLogsOpen = false);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         OpenHelpCommand = new RelayCommand(OpenHelp);
         GoHomeCommand = new RelayCommand(GoHome);
@@ -106,6 +119,8 @@ public class MainViewModel : ViewModelBase
         ToggleAllStatesCommand = new RelayCommand(ToggleAllStates);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
         DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
+        PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
+        NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -124,7 +139,7 @@ public class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _searchText, value))
             {
-                ApplyFilter();
+                ApplyFilter(resetPage: true);
             }
         }
     }
@@ -181,6 +196,18 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _modalValidationError, value);
     }
 
+    public bool ModalEncryptFiles
+    {
+        get => _modalEncryptFiles;
+        set => SetProperty(ref _modalEncryptFiles, value);
+    }
+
+    public string ModalEncryptedExtensions
+    {
+        get => _modalEncryptedExtensions;
+        set => SetProperty(ref _modalEncryptedExtensions, value);
+    }
+
     public bool IsEditMode => _editingBackupJob != null;
 
     public bool HasSelectedJobs => BackupJobs.Any(j => j.IsSelected);
@@ -192,6 +219,40 @@ public class MainViewModel : ViewModelBase
     public bool HasNoJobs => BackupJobs.Count == 0;
 
     public bool HasNoFilteredJobs => FilteredBackupJobs.Count == 0 && !HasNoJobs;
+
+    public int CurrentPage
+    {
+        get => _currentPage;
+        set
+        {
+            if (SetProperty(ref _currentPage, value))
+            {
+                ApplyFilter(resetPage: false);
+                OnPropertyChanged(nameof(CanGoToPreviousPage));
+                OnPropertyChanged(nameof(CanGoToNextPage));
+                ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_filteredCount / PageSize));
+
+    public bool CanGoToPreviousPage => CurrentPage > 1;
+
+    public bool CanGoToNextPage => CurrentPage < TotalPages;
+
+    public int PageItemCount
+    {
+        get
+        {
+            if (_filteredCount == 0)
+                return 0;
+            int start = (CurrentPage - 1) * PageSize + 1;
+            int end = Math.Min(CurrentPage * PageSize, _filteredCount);
+            return end - start + 1;
+        }
+    }
 
     public bool IsFilterOpen
     {
@@ -236,6 +297,21 @@ public class MainViewModel : ViewModelBase
 
     public string TxtBlockedPopupTitle => T("gui_blocked_popup_title");
     public string TxtBlockedPopupClose => T("gui_blocked_popup_close");
+    public string TxtLastExecution => T("gui_last_execution");
+    public string TxtProgress => T("gui_progress");
+    public string TxtBackupTasks => T("gui_backup_tasks");
+    public string TxtManageSubtitle => T("gui_manage_subtitle");
+    public string TxtTotal => T("gui_total");
+    public string TxtActive => T("gui_active");
+    public string TxtDone => T("gui_done");
+    public string TxtErrors => T("gui_errors");
+    public string TxtSelectAll => T("gui_select_all");
+    public string TxtSearchByName => T("gui_search_by_name");
+    public string TxtNoTasksFound => T("gui_no_tasks_found");
+    public string TxtPaginationPage => T("gui_pagination_page");
+    public string TxtPaginationPageOf => T("gui_pagination_page_of");
+    public string TxtPaginationPrevious => T("gui_pagination_previous");
+    public string TxtPaginationNext => T("gui_pagination_next");
 
     public bool IsExecuteOrderOpen
     {
@@ -273,6 +349,18 @@ public class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsSettingsOpen));
             }
         }
+    }
+
+    public bool IsLogsOpen
+    {
+        get => _isLogsOpen;
+        set => SetProperty(ref _isLogsOpen, value);
+    }
+
+    public string LogsMessage
+    {
+        get => _logsMessage;
+        set => SetProperty(ref _logsMessage, value);
     }
 
     public string DeleteConfirmMessage
@@ -314,6 +402,7 @@ public class MainViewModel : ViewModelBase
     public ICommand SaveModalCommand { get; }
     public ICommand CancelModalCommand { get; }
     public ICommand ViewLogsCommand { get; }
+    public ICommand CloseLogsCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand OpenHelpCommand { get; }
     public ICommand GoHomeCommand { get; }
@@ -343,6 +432,8 @@ public class MainViewModel : ViewModelBase
     public ICommand ClearFiltersCommand { get; }
     public ICommand DismissToastCommand { get; }
     public ICommand CloseBlockedPopupCommand { get; }
+    public ICommand PreviousPageCommand { get; }
+    public ICommand NextPageCommand { get; }
 
     #endregion
 
@@ -357,6 +448,8 @@ public class MainViewModel : ViewModelBase
         ModalSourcePaths.Add(new SourcePathViewModel());
         ModalTargetPath = string.Empty;
         ModalBackupTypeIndex = 0;
+        ModalEncryptFiles = false;
+        ModalEncryptedExtensions = string.Empty;
         ModalValidationError = string.Empty;
         IsAddEditModalOpen = true;
         OnPropertyChanged(nameof(IsEditMode));
@@ -384,6 +477,8 @@ public class MainViewModel : ViewModelBase
         }
         ModalTargetPath = job.TargetPath;
         ModalBackupTypeIndex = job.BackupType == BackupType.COMPLETE ? 0 : 1;
+        ModalEncryptFiles = job.GetBackupJob().EncryptFiles;
+        ModalEncryptedExtensions = string.Join(", ", job.GetBackupJob().EncryptedExtensions);
         IsAddEditModalOpen = true;
         OnPropertyChanged(nameof(IsEditMode));
         ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
@@ -400,6 +495,7 @@ public class MainViewModel : ViewModelBase
 
         var backupType = ModalBackupTypeIndex == 0 ? BackupType.COMPLETE : BackupType.DIFFERENTIAL;
         var sourcePaths = ModalSourcePaths.Where(s => !string.IsNullOrWhiteSpace(s.Path)).Select(s => s.Path).ToList();
+        var encryptedExtensions = ParseEncryptedExtensions(ModalEncryptedExtensions);
 
         try
         {
@@ -407,6 +503,8 @@ public class MainViewModel : ViewModelBase
             {
                 // Edit existing
                 var job = _editingBackupJob.GetBackupJob();
+                job.EncryptFiles = ModalEncryptFiles;
+                job.EncryptedExtensions = encryptedExtensions;
                 _backupManager.ModifyJob(job.Id, ModalName, sourcePaths, ModalTargetPath, backupType);
 
                 // Reload the list to reflect changes
@@ -416,6 +514,9 @@ public class MainViewModel : ViewModelBase
             {
                 // Add new
                 var backupJob = _backupManager.CreateJob(ModalName, sourcePaths, ModalTargetPath, backupType);
+                backupJob.EncryptFiles = ModalEncryptFiles;
+                backupJob.EncryptedExtensions = encryptedExtensions;
+                _backupManager.SaveJob(backupJob);
 
                 // Reload the list to include the new job
                 ReloadBackupJobs();
@@ -557,7 +658,42 @@ public class MainViewModel : ViewModelBase
 
     private void ViewLogs()
     {
-        // TODO: Implement logs view
+        LogEntries.Clear();
+        LogsMessage = string.Empty;
+
+        try
+        {
+            var config = ConfigurationManager.GetInstance().LoadConfiguration();
+            var logPath = config.GetLogFilePath();
+            if (string.IsNullOrWhiteSpace(logPath))
+            {
+                logPath = config.GetDefaultLogPath();
+            }
+
+            ILogger logger = config.GetLogFormat() == LogFormat.XML
+                ? new XmlLogger(logPath)
+                : new JsonLogger(logPath);
+
+            var entries = logger.ReadLog<BackupLogEntry>()
+                .OrderByDescending(entry => entry.Timestamp)
+                .ToList();
+
+            foreach (var entry in entries)
+            {
+                LogEntries.Add(entry);
+            }
+
+            if (LogEntries.Count == 0)
+            {
+                LogsMessage = T("gui_logs_empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogsMessage = $"Error: {ex.Message}";
+        }
+
+        IsLogsOpen = true;
     }
 
     private void OpenSettings()
@@ -697,7 +833,7 @@ public class MainViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(HasNoJobs));
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ReloadBackupJobs()
@@ -724,14 +860,42 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedJobsCount));
         OnPropertyChanged(nameof(AreAllSelected));
         NotifyStats();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
-    private void ApplyFilter()
+    private void ApplyFilter(bool resetPage)
     {
         FilteredBackupJobs.Clear();
         var query = _searchText?.Trim() ?? string.Empty;
 
+        var filteredList = GetFilteredJobs(query).ToList();
+        _filteredCount = filteredList.Count;
+
+        if (resetPage)
+        {
+            _currentPage = 1;
+            OnPropertyChanged(nameof(CurrentPage));
+        }
+
+        // Apply pagination
+        var paginatedFiltered = filteredList
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize);
+
+        foreach (var job in paginatedFiltered)
+            FilteredBackupJobs.Add(job);
+
+        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        OnPropertyChanged(nameof(PageItemCount));
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(CanGoToNextPage));
+        OnPropertyChanged(nameof(CanGoToPreviousPage));
+        ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+    }
+
+    private IEnumerable<BackupJobViewModel> GetFilteredJobs(string query)
+    {
         IEnumerable<BackupJobViewModel> filtered = BackupJobs;
 
         // Text search: name only
@@ -746,10 +910,7 @@ public class MainViewModel : ViewModelBase
         if (_selectedStates.Count < AllStates.Length)
             filtered = filtered.Where(j => _selectedStates.Contains(j.BackupStateDisplay));
 
-        foreach (var job in filtered)
-            FilteredBackupJobs.Add(job);
-
-        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        return filtered;
     }
 
     private void ToggleFilterType(string? type)
@@ -763,7 +924,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedTypes.Add(type);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleFilterState(string? state)
@@ -777,7 +938,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedStates.Add(state);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllTypes()
@@ -787,7 +948,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var t in AllTypes) _selectedTypes.Add(t);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllStates()
@@ -797,7 +958,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ClearFilters()
@@ -806,7 +967,7 @@ public class MainViewModel : ViewModelBase
         foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterTypeChanged();
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
         IsFilterOpen = false;
     }
 
@@ -888,6 +1049,22 @@ public class MainViewModel : ViewModelBase
     private void CloseBlockedPopup()
     {
         IsBlockedPopupOpen = false;
+    }
+
+    private void PreviousPage()
+    {
+        if (CanGoToPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CanGoToNextPage)
+        {
+            CurrentPage++;
+        }
     }
 
     /// <summary>
@@ -1014,6 +1191,8 @@ public class MainViewModel : ViewModelBase
     public string HelpSettingsLogPath => T("help_settings_log_path");
     public string HelpSettingsStatePath => T("help_settings_state_path");
     public string HelpSettingsBlockedApps => T("help_settings_blocked_apps");
+    public string HelpSettingsCryptosoftPath => T("help_settings_cryptosoft_path");
+    public string HelpSettingsEncryptedExtensions => T("help_settings_encrypted_ext");
     public string HelpLogs => T("help_logs");
     public string HelpLogsDesc => T("help_logs_desc");
     public string HelpLogsTip => T("help_logs_tip");
@@ -1035,6 +1214,22 @@ public class MainViewModel : ViewModelBase
         {
             OnPropertyChanged(prop.Name);
         }
+    }
+
+    /// <summary>
+    /// Parse a comma, semicolon, or newline-separated list of file extensions.
+    /// </summary>
+    private List<string> ParseEncryptedExtensions(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return new List<string>();
+
+        return input
+            .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(ext => ext.Trim())
+            .Where(ext => !string.IsNullOrWhiteSpace(ext))
+            .Distinct()
+            .ToList();
     }
 }
 

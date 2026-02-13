@@ -72,6 +72,8 @@ namespace EasySave.Services.Managers
                 BlockedApplications = config.GetBlockedApplications(),
                 LogFilePath = config.GetLogFilePath(),
                 StateFilePath = config.GetStateFilePath(),
+                CryptosoftPath = config.GetCryptosoftPath(),
+                EncryptedExtensions = config.GetEncryptedExtensions(),
                 DarkMode = config.GetDarkMode()
             };
 
@@ -115,6 +117,8 @@ namespace EasySave.Services.Managers
 
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
+            config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
+            config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
 
             return config;
@@ -140,6 +144,8 @@ namespace EasySave.Services.Managers
             public List<string>? BlockedApplications { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public string? CryptosoftPath { get; set; }
+            public List<string>? EncryptedExtensions { get; set; }
             public bool DarkMode { get; set; }
         }
     }

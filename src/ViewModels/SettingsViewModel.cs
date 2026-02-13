@@ -28,8 +28,11 @@ public class SettingsViewModel : ViewModelBase
     private int _logFormatIndex;   // 0 = JSON, 1 = XML
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
+    private string _cryptosoftPath = string.Empty;
+    private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
     private string? _selectedDetectedApplication;
+    private string _detectedAppsSearch = string.Empty;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
 
@@ -37,12 +40,14 @@ public class SettingsViewModel : ViewModelBase
     {
         _configManager = ConfigurationManager.GetInstance();
         DetectedApplications = new ObservableCollection<string>();
+        FilteredDetectedApplications = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
         ResetCommand = new RelayCommand(LoadSettings);
         RefreshDetectedAppsCommand = new RelayCommand(RefreshDetectedApplications);
         AddDetectedAppCommand = new RelayCommand(AddSelectedDetectedApplication, () => !string.IsNullOrWhiteSpace(SelectedDetectedApplication));
+        ClearDetectedAppsSearchCommand = new RelayCommand(() => DetectedAppsSearch = string.Empty);
     }
 
     #region Properties
@@ -113,6 +118,30 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public string CryptosoftPath
+    {
+        get => _cryptosoftPath;
+        set
+        {
+            if (SetProperty(ref _cryptosoftPath, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
+    public string EncryptedExtensionsText
+    {
+        get => _encryptedExtensionsText;
+        set
+        {
+            if (SetProperty(ref _encryptedExtensionsText, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
     public string BlockedApplicationsText
     {
         get => _blockedApplicationsText;
@@ -126,6 +155,19 @@ public class SettingsViewModel : ViewModelBase
     }
 
     public ObservableCollection<string> DetectedApplications { get; }
+    public ObservableCollection<string> FilteredDetectedApplications { get; }
+
+    public string DetectedAppsSearch
+    {
+        get => _detectedAppsSearch;
+        set
+        {
+            if (SetProperty(ref _detectedAppsSearch, value))
+            {
+                ApplyDetectedAppsFilter();
+            }
+        }
+    }
 
     public string? SelectedDetectedApplication
     {
@@ -175,6 +217,16 @@ public class SettingsViewModel : ViewModelBase
     public string TxtStatePathDesc => T("gui_state_path_desc");
     public string TxtBackup => T("gui_backup");
     public string TxtBackupDesc => T("gui_backup_desc");
+    public string TxtEncryption => T("gui_encryption");
+    public string TxtEncryptionDesc => T("gui_encryption_desc");
+    public string TxtCryptosoftPath => T("gui_cryptosoft_path");
+    public string TxtCryptosoftPathDesc => T("gui_cryptosoft_path_desc");
+    public string TxtEncryptedExtensions => T("gui_encrypted_extensions");
+    public string TxtEncryptedExtensionsDesc => T("gui_encrypted_extensions_desc");
+    public string TxtEncryptedExtensionsPlaceholder => T("gui_encrypted_extensions_placeholder");
+    public string TxtModalEncryptedExtensions => T("gui_modal_encrypted_extensions");
+    public string TxtModalEncryptedExtensionsDesc => T("gui_modal_encrypted_extensions_desc");
+    public string TxtModalEncryptedExtensionsPlaceholder => T("gui_modal_encrypted_extensions_placeholder");
     public string TxtBlockedApps => T("gui_blocked_apps");
     public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
     public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
@@ -183,6 +235,7 @@ public class SettingsViewModel : ViewModelBase
     public string TxtDetectAppsButton => T("gui_detect_apps_button");
     public string TxtAddBlockedAppButton => T("gui_add_blocked_app_button");
     public string TxtBrowseExeButton => T("gui_browse_exe_button");
+    public string TxtSearchProcessPlaceholder => T("gui_search_process_placeholder");
     public string TxtAbout => T("gui_about");
     public string TxtAboutDesc => T("gui_about_desc");
     public string TxtVersion => T("gui_version");
@@ -209,6 +262,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand ResetCommand { get; }
     public ICommand RefreshDetectedAppsCommand { get; }
     public ICommand AddDetectedAppCommand { get; }
+    public ICommand ClearDetectedAppsSearchCommand { get; }
 
     #endregion
 
@@ -243,6 +297,12 @@ public class SettingsViewModel : ViewModelBase
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "EasySave", "state.json");
         OnPropertyChanged(nameof(StateFilePath));
+
+        _cryptosoftPath = config.GetCryptosoftPath();
+        OnPropertyChanged(nameof(CryptosoftPath));
+
+        _encryptedExtensionsText = string.Join(Environment.NewLine, config.GetEncryptedExtensions());
+        OnPropertyChanged(nameof(EncryptedExtensionsText));
 
         var blockedApps = config.GetBlockedApplications();
         _blockedApplicationsText = string.Join(Environment.NewLine, blockedApps);
@@ -286,6 +346,8 @@ public class SettingsViewModel : ViewModelBase
             config.SetLogFormat(format);
             config.SetDarkMode(_isDarkTheme);
             config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
+            config.SetCryptosoftPath(_cryptosoftPath);
+            config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
             if (!string.IsNullOrWhiteSpace(logPath))
                 config.SetLogFilePath(logPath);
             if (!string.IsNullOrWhiteSpace(statePath))
@@ -353,6 +415,16 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtStatePathDesc));
         OnPropertyChanged(nameof(TxtBackup));
         OnPropertyChanged(nameof(TxtBackupDesc));
+        OnPropertyChanged(nameof(TxtEncryption));
+        OnPropertyChanged(nameof(TxtEncryptionDesc));
+        OnPropertyChanged(nameof(TxtCryptosoftPath));
+        OnPropertyChanged(nameof(TxtCryptosoftPathDesc));
+        OnPropertyChanged(nameof(TxtEncryptedExtensions));
+        OnPropertyChanged(nameof(TxtEncryptedExtensionsDesc));
+        OnPropertyChanged(nameof(TxtEncryptedExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensions));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensionsDesc));
+        OnPropertyChanged(nameof(TxtModalEncryptedExtensionsPlaceholder));
         OnPropertyChanged(nameof(TxtBlockedApps));
         OnPropertyChanged(nameof(TxtBlockedAppsDesc));
         OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
@@ -361,6 +433,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtDetectAppsButton));
         OnPropertyChanged(nameof(TxtAddBlockedAppButton));
         OnPropertyChanged(nameof(TxtBrowseExeButton));
+        OnPropertyChanged(nameof(TxtSearchProcessPlaceholder));
         OnPropertyChanged(nameof(TxtAbout));
         OnPropertyChanged(nameof(TxtAboutDesc));
         OnPropertyChanged(nameof(TxtVersion));
@@ -391,6 +464,22 @@ public class SettingsViewModel : ViewModelBase
             .ToList();
     }
 
+    private static List<string> ParseEncryptedExtensions(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { ',', ';', '\n', '\r' };
+        return text
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(ext => ext.Trim())
+            .Where(ext => !string.IsNullOrWhiteSpace(ext))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     private void RefreshDetectedApplications()
     {
         var detected = DetectRunningApplications();
@@ -398,6 +487,20 @@ public class SettingsViewModel : ViewModelBase
         foreach (var app in detected.OrderBy(a => a, StringComparer.OrdinalIgnoreCase))
         {
             DetectedApplications.Add(app);
+        }
+        ApplyDetectedAppsFilter();
+    }
+
+    private void ApplyDetectedAppsFilter()
+    {
+        FilteredDetectedApplications.Clear();
+        var query = _detectedAppsSearch?.Trim() ?? string.Empty;
+        var filtered = string.IsNullOrEmpty(query)
+            ? DetectedApplications
+            : DetectedApplications.Where(a => a.Contains(query, StringComparison.OrdinalIgnoreCase));
+        foreach (var app in filtered)
+        {
+            FilteredDetectedApplications.Add(app);
         }
     }
 
