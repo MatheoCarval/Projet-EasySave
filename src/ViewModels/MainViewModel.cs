@@ -442,7 +442,6 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isSettingsOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
-                OnPropertyChanged(nameof(IsHelpOpen));
             }
         }
     }
@@ -455,7 +454,6 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isHelpOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
-                OnPropertyChanged(nameof(IsSettingsOpen));
             }
         }
     }
@@ -778,67 +776,48 @@ public class MainViewModel : ViewModelBase
 
     private void ViewLogs()
     {
-        LogEntries.Clear();
-        LogsMessage = string.Empty;
-
-        try
-        {
-            var config = ConfigurationManager.GetInstance().LoadConfiguration();
-            var logPath = config.GetLogFilePath();
-            if (string.IsNullOrWhiteSpace(logPath))
-            {
-                logPath = config.GetDefaultLogPath();
-            }
-
-            ILogger logger = config.GetLogFormat() == LogFormat.XML
-                ? new DailyXmlLogger(logPath)
-                : new DailyJsonLogger(logPath);
-
-            var entries = logger.ReadLog<BackupLogEntry>()
-                .OrderByDescending(entry => entry.Timestamp)
-                .ToList();
-
-            foreach (var entry in entries)
-            {
-                LogEntries.Add(entry);
-            }
-
-            if (LogEntries.Count == 0)
-            {
-                LogsMessage = T("gui_logs_empty");
-            }
-        }
-        catch (Exception ex)
-        {
-            LogsMessage = $"Error: {ex.Message}";
-        }
-
-        IsLogsOpen = true;
+        _isSettingsOpen = false;
+        _isHelpOpen = false;
+        _isLogsOpen = true;
+        NotifyNavigationChanged();
     }
 
     private void OpenSettings()
     {
         SettingsVM.LoadSettings();
+        _isSettingsOpen = true;
         _isHelpOpen = false;
-        OnPropertyChanged(nameof(IsHelpOpen));
-        IsLogsOpen = false;
-        IsSettingsOpen = true;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
     }
 
     private void OpenHelp()
     {
         _isSettingsOpen = false;
-        OnPropertyChanged(nameof(IsSettingsOpen));
-        IsLogsOpen = false;
-        IsHelpOpen = true;
+        _isHelpOpen = true;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
         RefreshHelpTranslations();
     }
 
     private void GoHome()
     {
-        IsSettingsOpen = false;
-        IsHelpOpen = false;
-        IsLogsOpen = false;
+        _isSettingsOpen = false;
+        _isHelpOpen = false;
+        _isLogsOpen = false;
+        NotifyNavigationChanged();
+    }
+
+    /// <summary>
+    /// Notifies all navigation-related properties at once to avoid
+    /// inconsistent intermediate states during page transitions.
+    /// </summary>
+    private void NotifyNavigationChanged()
+    {
+        OnPropertyChanged(nameof(IsSettingsOpen));
+        OnPropertyChanged(nameof(IsHelpOpen));
+        OnPropertyChanged(nameof(IsLogsOpen));
+        OnPropertyChanged(nameof(IsHomeActive));
     }
 
     private async void ExecuteBackup()

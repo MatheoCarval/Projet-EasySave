@@ -342,6 +342,7 @@
     "logs_tab_journal": "Logs",
     "logs_tab_state": "State",
     "logs_json_content": "JSON Content",
+    "logs_xml_content": "XML Content",
     "logs_select_date": "Select a date",
     "logs_select_job": "Select a job",
     "logs_copy": "\ud83d\udccb Copy",
@@ -361,7 +362,10 @@
     "logs_calendar_today": "Today",
     "logs_calendar_clear": "\u2715 Clear",
     "logs_calendar_tooltip": "Calendar",
-    "logs_no_logs_found": "No logs found for this period"
+    "logs_no_logs_found": "No log file found",
+    "logs_read_error": "Read error: ",
+    "logs_save_xml": "Save XML file",
+    "logs_page_label": "Page"
   },
   "fr": {
     "app_title": "EasySave",
@@ -702,6 +706,7 @@
     "logs_tab_journal": "Journal",
     "logs_tab_state": "\u00c9tat",
     "logs_json_content": "Contenu du JSON",
+    "logs_xml_content": "Contenu du XML",
     "logs_select_date": "S\u00e9lectionnez une date",
     "logs_select_job": "S\u00e9lectionnez un job",
     "logs_copy": "\ud83d\udccb Copier",
@@ -721,6 +726,9 @@
     "logs_calendar_today": "Aujourd'hui",
     "logs_calendar_clear": "\u2715 Effacer",
     "logs_calendar_tooltip": "Calendrier",
-    "logs_no_logs_found": "Aucune log trouv\u00e9e pour cette p\u00e9riode"
+    "logs_no_logs_found": "Aucun fichier log trouv\u00e9",
+    "logs_read_error": "Erreur de lecture : ",
+    "logs_save_xml": "Enregistrer le fichier XML",
+    "logs_page_label": "Page"
   }
 }
