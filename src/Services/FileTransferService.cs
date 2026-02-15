@@ -60,15 +60,6 @@ namespace EasySave.Services
         }
 
         /// <summary>
-        /// Updates the logger instance used for recording file transfer operations.
-        /// This allows changing the log format (JSON/XML) without restarting the application.
-        /// </summary>
-        public void UpdateLogger(ILogger logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        /// <summary>
         /// Recursively transfers all files from the source directory to the target directory, skipping files based on the backup type and updating job progress.
         /// </summary>
         public void TransferDirectory(string sourceDir, string targetDir, BackupJob job)
