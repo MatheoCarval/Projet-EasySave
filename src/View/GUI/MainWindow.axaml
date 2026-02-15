@@ -5,7 +5,7 @@
         xmlns:vm="clr-namespace:EasySave.ViewModels"
         mc:Ignorable="d" d:DesignWidth="2400" d:DesignHeight="1400"
         x:Class="EasySave.View.GUI.MainWindow"
-        Icon="/Assets/app-icon.png"
+        Icon="/Assets/app-icon.ico"
         Title="EasySave - Backup Manager"
         Width="1200"
         Height="700"
@@ -141,13 +141,13 @@
 
             <!-- Sidebar -->
             <Border Grid.Column="0" Classes="Sidebar">
-                <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
 
                     <!-- Home Button -->
                     <Grid Grid.Row="0" Margin="12,16,12,8">
                         <Button Classes="SidebarButton"
                                 Command="{Binding GoHomeCommand}"
-                                ToolTip.Tip="Home">
+                                ToolTip.Tip="{Binding TxtTooltipHome}">
                             <Panel>
                                 <Viewbox Width="32" Height="32">
                                     <Canvas Width="24" Height="24">
@@ -169,11 +169,24 @@
                                 IsVisible="{Binding IsHomeActive}"/>
                     </Grid>
 
+                    <!-- Add Backup Button -->
+                    <Grid Grid.Row="1" Margin="12,8">
+                        <Button Classes="SidebarButton"
+                                Command="{Binding AddBackupCommand}"
+                                ToolTip.Tip="{Binding TxtTooltipAddBackup}">
+                            <Viewbox Width="32" Height="32">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{DynamicResource SidebarIcon}" Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Button>
+                    </Grid>
+
                     <!-- Spacer -->
-                    <Border Grid.Row="1"/>
+                    <Border Grid.Row="2"/>
 
                     <!-- View Logs Button -->
-                    <Grid Grid.Row="2" Margin="12,8">
+                    <Grid Grid.Row="3" Margin="12,8">
                         <Button Classes="SidebarButton"
                                 Command="{Binding ViewLogsCommand}"
                                 ToolTip.Tip="View Logs">
@@ -192,10 +205,10 @@
                     </Grid>
 
                     <!-- Settings Button -->
-                    <Grid Grid.Row="3" Margin="12,8">
+                    <Grid Grid.Row="4" Margin="12,8">
                         <Button Classes="SidebarButton"
                                 Command="{Binding OpenSettingsCommand}"
-                                ToolTip.Tip="Settings">
+                                ToolTip.Tip="{Binding TxtTooltipSettings}">
                             <Viewbox Width="32" Height="32">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{DynamicResource SidebarIcon}" Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
@@ -211,10 +224,10 @@
                     </Grid>
 
                     <!-- Help Button -->
-                    <Grid Grid.Row="4" Margin="12,8,12,16">
+                    <Grid Grid.Row="5" Margin="12,8,12,16">
                         <Button Classes="SidebarButton"
                                 Command="{Binding OpenHelpCommand}"
-                                ToolTip.Tip="Help">
+                                ToolTip.Tip="{Binding TxtTooltipHelp}">
                             <Viewbox Width="32" Height="32">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{DynamicResource SidebarIcon}" Data="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
@@ -261,7 +274,8 @@
 
                         <!-- Dashboard Stats -->
                         <Grid ColumnDefinitions="*,12,*,12,*,12,*" IsVisible="{Binding !HasNoJobs}">
-                            <Border Grid.Column="0" Classes="Card" Padding="16,14">
+                            <Border Grid.Column="0" Classes="Card" Padding="16,14" Cursor="Hand"
+                                    Tapped="TotalCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="#222196F3">
                                         <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -276,7 +290,8 @@
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="2" Classes="Card" Padding="16,14">
+                            <Border Grid.Column="2" Classes="Card" Padding="16,14" Cursor="Hand"
+                                    Tapped="ActiveCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="#224CAF50">
                                         <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -291,7 +306,8 @@
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="4" Classes="Card" Padding="16,14">
+                            <Border Grid.Column="4" Classes="Card" Padding="16,14" Cursor="Hand"
+                                    Tapped="CompletedCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="#222196F3">
                                         <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -306,7 +322,8 @@
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="6" Classes="Card" Padding="16,14">
+                            <Border Grid.Column="6" Classes="Card" Padding="16,14" Cursor="Hand"
+                                    Tapped="ErrorCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="#22F44336">
                                         <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -437,13 +454,13 @@
                                 <!-- Filter Header -->
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
-                                               Text="Filters"
+                                               Text="{Binding TxtFilters}"
                                                FontSize="15"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextPrimary}"/>
                                     <Button Grid.Column="1"
                                             Command="{Binding ClearFiltersCommand}"
-                                            Content="Clear all"
+                                            Content="{Binding TxtClearAll}"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Foreground="{DynamicResource AccentBlue}"
@@ -455,14 +472,14 @@
 
                                 <!-- Backup Type Filter -->
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="Backup Type"
+                                    <TextBlock Text="{Binding TxtFilterBackupType}"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextSecondary}"/>
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <!-- All Types -->
                                         <Panel>
-                                            <Button Content="All"
+                                            <Button Content="{Binding TxtFilterAll}"
                                                     Command="{Binding ToggleAllTypesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="{DynamicResource TextPrimary}"
@@ -470,7 +487,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeAllSelected}"/>
-                                            <Button Content="All"
+                                            <Button Content="{Binding TxtFilterAll}"
                                                     Command="{Binding ToggleAllTypesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="White"
@@ -481,7 +498,7 @@
                                         </Panel>
                                         <!-- Complete -->
                                         <Panel>
-                                            <Button Content="Complete"
+                                            <Button Content="{Binding TxtFilterComplete}"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="COMPLETE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -490,7 +507,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeCompleteSelected}"/>
-                                            <Button Content="Complete"
+                                            <Button Content="{Binding TxtFilterComplete}"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="COMPLETE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -502,7 +519,7 @@
                                         </Panel>
                                         <!-- Differential -->
                                         <Panel>
-                                            <Button Content="Differential"
+                                            <Button Content="{Binding TxtFilterDifferential}"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="DIFFERENTIAL"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -511,7 +528,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsTypeDifferentialSelected}"/>
-                                            <Button Content="Differential"
+                                            <Button Content="{Binding TxtFilterDifferential}"
                                                     Command="{Binding ToggleFilterTypeCommand}"
                                                     CommandParameter="DIFFERENTIAL"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -526,7 +543,7 @@
 
                                 <!-- Backup State Filter -->
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="Status"
+                                    <TextBlock Text="{Binding TxtFilterStatus}"
                                                FontSize="12"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextSecondary}"/>
@@ -538,7 +555,7 @@
                                         </WrapPanel.Styles>
                                         <!-- All States -->
                                         <Panel>
-                                            <Button Content="All"
+                                            <Button Content="{Binding TxtFilterAll}"
                                                     Command="{Binding ToggleAllStatesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="{DynamicResource TextPrimary}"
@@ -546,7 +563,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateAllSelected}"/>
-                                            <Button Content="All"
+                                            <Button Content="{Binding TxtFilterAll}"
                                                     Command="{Binding ToggleAllStatesCommand}"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
                                                     Foreground="White"
@@ -557,7 +574,7 @@
                                         </Panel>
                                         <!-- Pending -->
                                         <Panel>
-                                            <Button Content="Pending"
+                                            <Button Content="{Binding TxtFilterPending}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PENDING"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -566,7 +583,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStatePendingSelected}"/>
-                                            <Button Content="Pending"
+                                            <Button Content="{Binding TxtFilterPending}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PENDING"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -578,7 +595,7 @@
                                         </Panel>
                                         <!-- Active -->
                                         <Panel>
-                                            <Button Content="Active"
+                                            <Button Content="{Binding TxtFilterActive}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ACTIVE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -587,7 +604,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateActiveSelected}"/>
-                                            <Button Content="Active"
+                                            <Button Content="{Binding TxtFilterActive}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ACTIVE"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -599,7 +616,7 @@
                                         </Panel>
                                         <!-- Completed -->
                                         <Panel>
-                                            <Button Content="Completed"
+                                            <Button Content="{Binding TxtFilterCompleted}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="COMPLETED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -608,7 +625,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateCompletedSelected}"/>
-                                            <Button Content="Completed"
+                                            <Button Content="{Binding TxtFilterCompleted}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="COMPLETED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -620,7 +637,7 @@
                                         </Panel>
                                         <!-- Paused -->
                                         <Panel>
-                                            <Button Content="Paused"
+                                            <Button Content="{Binding TxtFilterPaused}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PAUSED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -629,7 +646,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStatePausedSelected}"/>
-                                            <Button Content="Paused"
+                                            <Button Content="{Binding TxtFilterPaused}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="PAUSED"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -641,7 +658,7 @@
                                         </Panel>
                                         <!-- Error -->
                                         <Panel>
-                                            <Button Content="Error"
+                                            <Button Content="{Binding TxtFilterError}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ERROR"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -650,7 +667,7 @@
                                                     BorderBrush="{DynamicResource ClickableCardBorder}"
                                                     Background="{DynamicResource InputBackground}"
                                                     IsVisible="{Binding !IsStateErrorSelected}"/>
-                                            <Button Content="Error"
+                                            <Button Content="{Binding TxtFilterError}"
                                                     Command="{Binding ToggleFilterStateCommand}"
                                                     CommandParameter="ERROR"
                                                     CornerRadius="8" Padding="12,6" FontSize="12" Cursor="Hand"
@@ -676,12 +693,12 @@
                                         <Path Fill="{DynamicResource EmptyStateIcon}" Data="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="No backup tasks yet"
+                                <TextBlock Text="{Binding TxtEmptyTitle}"
                                            FontSize="18"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextTertiary}"
                                            HorizontalAlignment="Center"/>
-                                <TextBlock Text="Click the 'Add Backup Task' button below to create your first backup"
+                                <TextBlock Text="{Binding TxtEmptyDesc}"
                                            FontSize="14"
                                            Foreground="{DynamicResource EmptyStateText}"
                                            HorizontalAlignment="Center"
@@ -718,10 +735,10 @@
                                             Cursor="Hand"
                                             Tapped="BackupCard_Tapped">
 
-                                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
 
                                             <!-- Selection Zone (full height, left side) -->
-                                            <Border Grid.Column="0" Grid.RowSpan="4"
+                                            <Border Grid.Column="0" Grid.RowSpan="5"
                                                     Background="Transparent"
                                                     Width="56"
                                                     Cursor="Hand"
@@ -756,8 +773,31 @@
                                                            Foreground="White"/>
                                             </Border>
 
-                                            <!-- Source → Destination -->
-                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"
+                                            <!-- Error Reason Banner (visible only when ERROR) -->
+                                            <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"
+                                                    IsVisible="{Binding HasError}"
+                                                    Background="#18F44336"
+                                                    CornerRadius="8"
+                                                    Padding="10,6"
+                                                    Margin="0,6,24,0"
+                                                    VerticalAlignment="Top">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#F44336" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                    <TextBlock Text="{Binding ErrorReasonDisplay}"
+                                                               FontSize="12"
+                                                               Foreground="#F44336"
+                                                               FontWeight="SemiBold"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Source -> Destination -->
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"
                                                         Orientation="Horizontal"
                                                         Spacing="6"
                                                         Margin="0,8,24,0">
@@ -783,7 +823,7 @@
                                             </StackPanel>
 
                                             <!-- Last Execution -->
-                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"
                                                         Orientation="Horizontal"
                                                         Spacing="8"
                                                         Margin="0,12,24,0">
@@ -792,7 +832,7 @@
                                             </StackPanel>
 
                                             <!-- Progress Bar -->
-                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"
+                                            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="4"
                                                         Spacing="8"
                                                         Margin="0,12,24,24">
                                                 <Grid ColumnDefinitions="120,*,Auto">
@@ -850,7 +890,7 @@
                                             </Style>
                                         </Button.Styles>
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="‹" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&lt;" FontSize="16" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding TxtPaginationPrevious}" FontSize="13" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -890,7 +930,7 @@
                                         </Button.Styles>
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <TextBlock Text="{Binding TxtPaginationNext}" FontSize="13" VerticalAlignment="Center"/>
-                                            <TextBlock Text="›" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&gt;" FontSize="16" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                 </Grid>
@@ -906,49 +946,6 @@
 
             <!-- Floating Buttons (hidden when settings/help open) -->
             <Panel Grid.Column="1" IsVisible="{Binding IsHomeActive}">
-
-            <!-- Floating Action Button -->
-            <Border Width="64"
-                    Height="64"
-                    CornerRadius="32"
-                    BoxShadow="0 4 16 0 #502196F3"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Margin="0,0,40,40"
-                    Cursor="Hand"
-                    ToolTip.Tip="Add Backup Task"
-                    IsVisible="{Binding !HasSelectedJobs}"
-                    RenderTransformOrigin="0.5,0.5"
-                    Tapped="FAB_Tapped">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#2196F3" Offset="0"/>
-                        <GradientStop Color="#42A5F5" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-                <Border.Styles>
-                    <Style Selector="Border">
-                        <Setter Property="Transitions">
-                            <Setter.Value>
-                                <Transitions>
-                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
-                                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
-                                </Transitions>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                    <Style Selector="Border:pointerover">
-                        <Setter Property="Background" Value="#1E88E5"/>
-                        <Setter Property="BoxShadow" Value="0 8 24 0 #602196F3"/>
-                        <Setter Property="RenderTransform" Value="translateY(-3px)"/>
-                    </Style>
-                </Border.Styles>
-                <Viewbox Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Canvas Width="24" Height="24">
-                        <Path Fill="White" Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                    </Canvas>
-                </Viewbox>
-            </Border>
 
             <!-- Floating Selection Action Bar -->
             <Border HorizontalAlignment="Center"
@@ -976,7 +973,7 @@
                             BorderThickness="0"
                             Padding="10,8"
                             Cursor="Hand"
-                            ToolTip.Tip="Deselect All">
+                            ToolTip.Tip="{Binding TxtTooltipDeselect}">
                         <Viewbox Width="22" Height="22">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{DynamicResource TextSecondary}" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -994,7 +991,7 @@
                             CornerRadius="12"
                             Padding="0"
                             Cursor="Hand"
-                            ToolTip.Tip="Execute Selected">
+                            ToolTip.Tip="{Binding TxtTooltipExecute}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="White" Data="M8 5v14l11-7z"/>
@@ -1009,7 +1006,7 @@
                             CornerRadius="12"
                             Padding="0"
                             Cursor="Hand"
-                            ToolTip.Tip="Delete Selected">
+                            ToolTip.Tip="{Binding TxtTooltipDelete}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="White" Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -1022,13 +1019,13 @@
 
             </Panel> <!-- End floating buttons panel -->
 
-            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- =============================================================== -->
             <!-- Settings Panel -->
-            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- =============================================================== -->
             <DockPanel Grid.Column="1"
                        IsVisible="{Binding IsSettingsOpen}">
 
-            <!-- ───── Sticky Save Bar (docked bottom) ───── -->
+            <!-- === Sticky Save Bar (docked bottom)  ===  -->
             <Border DockPanel.Dock="Bottom"
                     Background="{DynamicResource CardBackground}"
                     BorderBrush="{DynamicResource ClickableCardBorder}"
@@ -1100,7 +1097,7 @@
                                    VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- ───── General Section ───── -->
+                    <!-- === General Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="20">
                             <!-- Section header with icon -->
@@ -1156,13 +1153,13 @@
                                           Classes="ModernComboBox"
                                           VerticalAlignment="Center">
                                     <ComboBoxItem Content="English"/>
-                                    <ComboBoxItem Content="Français"/>
+                                    <ComboBoxItem Content="Fran&#231;ais"/>
                                 </ComboBox>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- ───── Logging Section ───── -->
+                    <!-- === Logging Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="20">
                             <!-- Section header with icon -->
@@ -1238,7 +1235,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ───── State Section ───── -->
+                    <!-- === State Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="20">
                             <!-- Section header with icon -->
@@ -1290,7 +1287,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ───── Backup Section ───── -->
+                    <!-- === Backup Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="20">
                             <!-- Section header with icon -->
@@ -1426,7 +1423,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ───── Encryption Section ───── -->
+                    <!-- === Encryption Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="20">
                             <!-- Section header with icon -->
@@ -1532,7 +1529,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ───── About Section ───── -->
+                    <!-- === About Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="16">
                             <!-- Section header with icon -->
@@ -1561,7 +1558,7 @@
                                             </Canvas>
                                         </Viewbox>
                                         <StackPanel Spacing="1">
-                                            <TextBlock Text="Software" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding TxtAboutSoftware}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBlock Text="EasySave" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -1574,7 +1571,7 @@
                                             </Canvas>
                                         </Viewbox>
                                         <StackPanel Spacing="1">
-                                            <TextBlock Text="Company" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding TxtAboutCompany}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBlock Text="ProSoft" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -1600,8 +1597,8 @@
                                             </Canvas>
                                         </Viewbox>
                                         <StackPanel Spacing="1">
-                                            <TextBlock Text="License" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                            <TextBlock Text="Proprietary" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding TxtAboutLicense}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding TxtAboutLicenseValue}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
@@ -1658,7 +1655,7 @@
                                             </Canvas>
                                         </Viewbox>
                                         <StackPanel Spacing="1">
-                                            <TextBlock Text="Architecture" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding TxtAboutArchitecture}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBlock Text="{Binding Architecture}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -1999,277 +1996,651 @@
 
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!-- Help Panel -->
-            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- =============================================================== -->
             <ScrollViewer Grid.Column="1" Padding="32" IsVisible="{Binding IsHelpOpen}">
-                <StackPanel Spacing="28" MaxWidth="820" HorizontalAlignment="Center">
+                <StackPanel Spacing="32" MaxWidth="880" HorizontalAlignment="Center">
 
-                    <!-- Header -->
-                    <StackPanel Spacing="6">
-                        <StackPanel Orientation="Horizontal" Spacing="14">
-                            <Viewbox Width="36" Height="36" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="#2196F3" Data="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock Text="{Binding HelpTitle}"
-                                       FontSize="28"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimary}"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding HelpSubtitle}"
-                                   FontSize="14"
-                                   Foreground="{DynamicResource TextSecondary}"
-                                   Margin="0,4,0,0"/>
-                    </StackPanel>
-
-                    <!-- ──── Getting Started ──── -->
-                    <Border Classes="Card" Padding="24">
-                        <StackPanel Spacing="14">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <Border Width="44" Height="44" CornerRadius="12" Background="#222196F3">
-                                    <Viewbox Width="22" Height="22" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <Canvas Width="24" Height="24">
-                                            <Path Fill="#2196F3" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                        </Canvas>
-                                    </Viewbox>
+                    <!-- ============ HERO HEADER ============ -->
+                    <Border Classes="Card" Padding="32">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Width="64" Height="64" CornerRadius="16" Background="#1A2196F3"
+                                    Margin="0,0,24,0" VerticalAlignment="Center">
+                                <Viewbox Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#2196F3" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                                <TextBlock Text="{Binding HelpTitle}"
+                                           FontSize="30" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="{Binding HelpSubtitle}"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           TextWrapping="Wrap"/>
+                                <Border Background="#1A2196F3" CornerRadius="8" Padding="10,4"
+                                        HorizontalAlignment="Left" Margin="0,6,0,0">
+                                    <TextBlock Text="EasySave - ProSoft" FontSize="12"
+                                               Foreground="#2196F3" FontWeight="SemiBold"/>
                                 </Border>
-                                <StackPanel Spacing="2" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding HelpGettingStarted}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-                                    <TextBlock Text="{Binding HelpGettingStartedDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                </StackPanel>
                             </StackPanel>
-                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,2"/>
-                            <StackPanel Spacing="12">
-                                <StackPanel Spacing="4">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Border Width="24" Height="24" CornerRadius="12" Background="#222196F3">
-                                            <TextBlock Text="1" FontSize="12" FontWeight="Bold" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <TextBlock Text="{Binding HelpStep1Title}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding HelpStep1Desc}" FontSize="13" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Margin="32,0,0,0"/>
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Border Width="24" Height="24" CornerRadius="12" Background="#222196F3">
-                                            <TextBlock Text="2" FontSize="12" FontWeight="Bold" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <TextBlock Text="{Binding HelpStep2Title}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding HelpStep2Desc}" FontSize="13" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Margin="32,0,0,0"/>
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Border Width="24" Height="24" CornerRadius="12" Background="#222196F3">
-                                            <TextBlock Text="3" FontSize="12" FontWeight="Bold" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <TextBlock Text="{Binding HelpStep3Title}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding HelpStep3Desc}" FontSize="13" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Margin="32,0,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </StackPanel>
+                        </Grid>
                     </Border>
 
-                    <!-- ──── Features Grid (2 columns) ──── -->
-                    <Grid ColumnDefinitions="*,16,*" RowDefinitions="Auto,16,Auto,16,Auto">
+                    <!-- ============ QUICK START ============ -->
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="4" Height="24" CornerRadius="2" Background="#2196F3"/>
+                            <TextBlock Text="{Binding HelpGettingStarted}" FontSize="22" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding HelpGettingStartedDesc}" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondary}" Margin="16,0,0,0"/>
 
-                        <!-- Backup Types -->
-                        <Border Grid.Column="0" Grid.Row="0" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#224CAF50">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#4CAF50" Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpBackupTypes}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
+                        <!-- 3 Step cards in a row -->
+                        <Grid ColumnDefinitions="*,12,*,12,*">
+                            <!-- Step 1 -->
+                            <Border Grid.Column="0" Classes="Card" Padding="0" ClipToBounds="True">
+                                <StackPanel>
+                                    <Border Height="4" Background="#2196F3"/>
+                                    <StackPanel Margin="20" Spacing="10">
+                                        <Border Width="38" Height="38" CornerRadius="19"
+                                                Background="#1A2196F3" HorizontalAlignment="Left">
+                                            <TextBlock Text="1" FontSize="16" FontWeight="Bold"
+                                                       Foreground="#2196F3" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpStep1Title}" FontSize="14"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding HelpStep1Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
                                 </StackPanel>
+                            </Border>
+
+                            <!-- Step 2 -->
+                            <Border Grid.Column="2" Classes="Card" Padding="0" ClipToBounds="True">
+                                <StackPanel>
+                                    <Border Height="4" Background="#4CAF50"/>
+                                    <StackPanel Margin="20" Spacing="10">
+                                        <Border Width="38" Height="38" CornerRadius="19"
+                                                Background="#1A4CAF50" HorizontalAlignment="Left">
+                                            <TextBlock Text="2" FontSize="16" FontWeight="Bold"
+                                                       Foreground="#4CAF50" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpStep2Title}" FontSize="14"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding HelpStep2Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Step 3 -->
+                            <Border Grid.Column="4" Classes="Card" Padding="0" ClipToBounds="True">
+                                <StackPanel>
+                                    <Border Height="4" Background="#FF9800"/>
+                                    <StackPanel Margin="20" Spacing="10">
+                                        <Border Width="38" Height="38" CornerRadius="19"
+                                                Background="#1AFF9800" HorizontalAlignment="Left">
+                                            <TextBlock Text="3" FontSize="16" FontWeight="Bold"
+                                                       Foreground="#FF9800" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpStep3Title}" FontSize="14"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding HelpStep3Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- ============ CORE FEATURES ============ -->
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="4" Height="24" CornerRadius="2" Background="#4CAF50"/>
+                            <TextBlock Text="{Binding HelpSectionFeatures}" FontSize="22" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto,12,Auto,12,Auto,12,Auto">
+
+                            <!-- === Backup Types  ===  -->
+                            <Border Grid.Column="0" Grid.Row="0" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1A4CAF50">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#4CAF50" Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpBackupTypes}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding HelpComplete, StringFormat='● {0}'}"
+                                                       FontSize="13" FontWeight="SemiBold" Foreground="#4CAF50"/>
+                                            <TextBlock Text="{Binding HelpCompleteDesc}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding HelpDifferential, StringFormat='● {0}'}"
+                                                       FontSize="13" FontWeight="SemiBold" Foreground="#FF9800"/>
+                                            <TextBlock Text="{Binding HelpDifferentialDesc}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Multiple Sources  ===  -->
+                            <Border Grid.Column="2" Grid.Row="0" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1A5C6BC0">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#5C6BC0" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpMultiSources}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpMultiSourcesDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <Border Background="#0A5C6BC0" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding HelpMultiSourcesTip}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Execution Order  ===  -->
+                            <Border Grid.Column="0" Grid.Row="2" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1A2196F3">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#2196F3" Data="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpExecOrder}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpExecOrderDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <Border Background="#0A2196F3" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding HelpExecOrderTip}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Search &amp; Filters  ===  -->
+                            <Border Grid.Column="2" Grid.Row="2" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1AFF9800">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#FF9800" Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpSearchFilters}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpSearchFiltersDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <Border Background="#0AFF9800" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding HelpSearchFiltersTip}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Dashboard  ===  -->
+                            <Border Grid.Column="0" Grid.Row="4" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1A009688">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#009688" Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpDashboard}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpDashboardDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <Border Background="#0A009688" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding HelpDashboardTip}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Encryption  ===  -->
+                            <Border Grid.Column="2" Grid.Row="4" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1A00BCD4">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#00BCD4" Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpEncryption}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpEncryptionDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Error Handling  ===  -->
+                            <Border Grid.Column="0" Grid.Row="6" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1AE91E63">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#E91E63" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpErrorHandling}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpErrorHandlingDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- === Logs  ===  -->
+                            <Border Grid.Column="2" Grid.Row="6" Classes="Card" Padding="20">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="40" Height="40" CornerRadius="10" Background="#1AF44336">
+                                            <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#F44336" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpLogs}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpLogsDesc}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <Border Background="#0AF44336" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding HelpLogsTip}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- ============ SETTINGS GUIDE ============ -->
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="4" Height="24" CornerRadius="2" Background="#9C27B0"/>
+                            <TextBlock Text="{Binding HelpSettings}" FontSize="22" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Border Classes="Card" Padding="24">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="{Binding HelpSettingsDesc}" FontSize="13"
+                                           Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4"/>
+
+                                <Grid ColumnDefinitions="*,14,*" RowDefinitions="Auto,10,Auto,10,Auto,10,Auto">
+
+                                    <!-- Theme -->
+                                    <Border Grid.Column="0" Grid.Row="0" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsTheme}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Language -->
+                                    <Border Grid.Column="2" Grid.Row="0" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsLanguage}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Log Format -->
+                                    <Border Grid.Column="0" Grid.Row="2" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsLogFormat}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Log Path -->
+                                    <Border Grid.Column="2" Grid.Row="2" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsLogPath}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- State Path -->
+                                    <Border Grid.Column="0" Grid.Row="4" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M19 3H4.99c-1.11 0-1.98.89-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsStatePath}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Blocked Apps -->
+                                    <Border Grid.Column="2" Grid.Row="4" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 014 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0120 12c0 4.42-3.58 8-8 8z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsBlockedApps}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Cryptosoft Path -->
+                                    <Border Grid.Column="0" Grid.Row="6" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsCryptosoftPath}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Encrypted Extensions -->
+                                    <Border Grid.Column="2" Grid.Row="6" Background="#0A9C27B0" CornerRadius="10" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="#9C27B0" Data="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpSettingsEncryptedExtensions}" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ============ TIPS &amp; BEST PRACTICES ============ -->
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="4" Height="24" CornerRadius="2" Background="#FF9800"/>
+                            <TextBlock Text="{Binding HelpTips}" FontSize="22" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding HelpTipsDesc}" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondary}" Margin="16,0,0,0"/>
+
+                        <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto,12,Auto">
+                            <!-- Tip 1 -->
+                            <Border Grid.Column="0" Grid.Row="0" Classes="Card" Padding="0" ClipToBounds="True">
+                                <Grid ColumnDefinitions="4,*">
+                                    <Border Grid.Column="0" Background="#FF9800"/>
+                                    <StackPanel Grid.Column="1" Margin="16" Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="#1AFF9800">
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="#FF9800" Data="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
+                                            <TextBlock Text="{Binding HelpTip1Title}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HelpTip1Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Tip 2 -->
+                            <Border Grid.Column="2" Grid.Row="0" Classes="Card" Padding="0" ClipToBounds="True">
+                                <Grid ColumnDefinitions="4,*">
+                                    <Border Grid.Column="0" Background="#FF9800"/>
+                                    <StackPanel Grid.Column="1" Margin="16" Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="#1AFF9800">
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="#FF9800" Data="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
+                                            <TextBlock Text="{Binding HelpTip2Title}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HelpTip2Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Tip 3 -->
+                            <Border Grid.Column="0" Grid.Row="2" Classes="Card" Padding="0" ClipToBounds="True">
+                                <Grid ColumnDefinitions="4,*">
+                                    <Border Grid.Column="0" Background="#FF9800"/>
+                                    <StackPanel Grid.Column="1" Margin="16" Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="#1AFF9800">
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="#FF9800" Data="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
+                                            <TextBlock Text="{Binding HelpTip3Title}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HelpTip3Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Tip 4 -->
+                            <Border Grid.Column="2" Grid.Row="2" Classes="Card" Padding="0" ClipToBounds="True">
+                                <Grid ColumnDefinitions="4,*">
+                                    <Border Grid.Column="0" Background="#FF9800"/>
+                                    <StackPanel Grid.Column="1" Margin="16" Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="#1AFF9800">
+                                                <Viewbox Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="#FF9800" Data="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
+                                            <TextBlock Text="{Binding HelpTip4Title}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HelpTip4Desc}" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- ============ FAQ ============ -->
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="4" Height="24" CornerRadius="2" Background="#E91E63"/>
+                            <TextBlock Text="{Binding HelpFaq}" FontSize="22" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="10">
+                            <!-- FAQ 1 -->
+                            <Border Classes="Card" Padding="20">
                                 <StackPanel Spacing="8">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpComplete, StringFormat='● {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#4CAF50"/>
-                                        <TextBlock Text="{Binding HelpCompleteDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1AE91E63">
+                                            <TextBlock Text="Q" FontSize="13" FontWeight="Bold" Foreground="#E91E63"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpFaq1Q}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpDifferential, StringFormat='● {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#FF9800"/>
-                                        <TextBlock Text="{Binding HelpDifferentialDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding HelpFaq1A}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="38,0,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- FAQ 2 -->
+                            <Border Classes="Card" Padding="20">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1AE91E63">
+                                            <TextBlock Text="Q" FontSize="13" FontWeight="Bold" Foreground="#E91E63"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpFaq2Q}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
+                                    <TextBlock Text="{Binding HelpFaq2A}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="38,0,0,0"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <!-- Multiple Sources -->
-                        <Border Grid.Column="2" Grid.Row="0" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#225C6BC0">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#5C6BC0" Data="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpMultiSources}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
+                            <!-- FAQ 3 -->
+                            <Border Classes="Card" Padding="20">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1AE91E63">
+                                            <TextBlock Text="Q" FontSize="13" FontWeight="Bold" Foreground="#E91E63"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpFaq3Q}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpFaq3A}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="38,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding HelpMultiSourcesDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding HelpMultiSourcesTip}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <!-- Execution Order -->
-                        <Border Grid.Column="0" Grid.Row="2" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#222196F3">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#2196F3" Data="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpExecOrder}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
+                            <!-- FAQ 4 -->
+                            <Border Classes="Card" Padding="20">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1AE91E63">
+                                            <TextBlock Text="Q" FontSize="13" FontWeight="Bold" Foreground="#E91E63"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HelpFaq4Q}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding HelpFaq4A}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="38,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding HelpExecOrderDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding HelpExecOrderTip}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Opacity="0.7"/>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
 
-                        <!-- Search &amp; Filters -->
-                        <Border Grid.Column="2" Grid.Row="2" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#22FF9800">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#FF9800" Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpSearchFilters}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding HelpSearchFiltersDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding HelpSearchFiltersTip}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Opacity="0.7"/>
-                            </StackPanel>
-                        </Border>
+                    <!-- ============ FOOTER ============ -->
+                    <Border Classes="Card" Padding="28">
+                        <StackPanel HorizontalAlignment="Center" Spacing="10">
+                            <TextBlock Text="{Binding HelpNeedHelp}" FontSize="18" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding HelpNeedHelpDesc}" FontSize="13"
+                                       Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center"
+                                       TextWrapping="Wrap" TextAlignment="Center" MaxWidth="500"/>
 
-                        <!-- Settings -->
-                        <Border Grid.Column="0" Grid.Row="4" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#229C27B0">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#9C27B0" Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpSettings}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding HelpSettingsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                <StackPanel Spacing="4" Margin="8,0,0,0">
-                                    <TextBlock Text="{Binding HelpSettingsTheme, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsLanguage, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsLogFormat, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsLogPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsStatePath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsBlockedApps, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsCryptosoftPath, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding HelpSettingsEncryptedExtensions, StringFormat='• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Logs -->
-                        <Border Grid.Column="2" Grid.Row="4" Classes="Card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Width="40" Height="40" CornerRadius="10" Background="#22F44336">
-                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#F44336" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                                            </Canvas>
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Text="{Binding HelpLogs}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding HelpLogsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding HelpLogsTip}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap" Opacity="0.7"/>
-                            </StackPanel>
-                        </Border>
-
-                    </Grid>
-
-                    <!-- ──── Tips & Tricks ──── -->
-                    <Border Classes="Card" Padding="24">
-                        <StackPanel Spacing="14">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <Border Width="44" Height="44" CornerRadius="12" Background="#22FF9800">
-                                    <Viewbox Width="22" Height="22" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <!-- Email with copy button -->
+                            <Border Background="#0A2196F3" CornerRadius="10" Padding="16,10"
+                                    HorizontalAlignment="Center" Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Viewbox Width="18" Height="18" VerticalAlignment="Center">
                                         <Canvas Width="24" Height="24">
-                                            <Path Fill="#FF9800" Data="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 017 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                                            <Path Fill="#2196F3" Data="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                                         </Canvas>
                                     </Viewbox>
-                                </Border>
-                                <StackPanel Spacing="2" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding HelpTips}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-                                    <TextBlock Text="{Binding HelpTipsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="support@prosoft.com" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#2196F3" VerticalAlignment="Center"/>
+                                    <Border Background="#2196F3" CornerRadius="6" Padding="10,5"
+                                            Cursor="Hand" Tapped="CopyEmail_Tapped">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="White" Data="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding HelpCopyEmail}" FontSize="12"
+                                                       Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
-                            </StackPanel>
-                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,2"/>
-                            <Grid ColumnDefinitions="*,24,*">
-                                <StackPanel Grid.Column="0" Spacing="10">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpTip1Title, StringFormat='💡 {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="{Binding HelpTip1Desc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpTip2Title, StringFormat='💡 {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="{Binding HelpTip2Desc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2" Spacing="10">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpTip3Title, StringFormat='💡 {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="{Binding HelpTip3Desc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding HelpTip4Title, StringFormat='💡 {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="{Binding HelpTip4Desc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
+                            </Border>
+
+                            <Border Background="#1A2196F3" CornerRadius="8" Padding="14,6"
+                                    HorizontalAlignment="Center" Margin="0,6,0,0">
+                                <TextBlock Text="EasySave - ProSoft" FontSize="12"
+                                           Foreground="#2196F3" FontWeight="SemiBold"/>
+                            </Border>
                         </StackPanel>
                     </Border>
 
                     <!-- Bottom spacer -->
-                    <Border Height="80"/>
+                    <Border Height="40"/>
 
                 </StackPanel>
             </ScrollViewer>
@@ -2296,16 +2667,16 @@
 
                         <!-- Name Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Backup Name" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
+                            <TextBlock Text="{Binding TxtModalBackupName}" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <TextBox Classes="ModernTextBox"
                                      Text="{Binding ModalName}"
-                                     Watermark="Enter backup name"/>
+                                     Watermark="{Binding TxtModalBackupNamePlaceholder}"/>
                         </StackPanel>
 
                         <!-- Source Paths Field -->
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0" Text="Source Paths" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0" Text="{Binding TxtModalSourcePaths}" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1"
                                         Command="{Binding AddSourcePathCommand}"
                                         Background="#4CAF50"
@@ -2371,8 +2742,8 @@
                                                             Width="42"
                                                             Margin="8,0,0,0"
                                                             Click="BrowseSourcePath_Click"
-                                                            Tag="{Binding}"
-                                                            ToolTip.Tip="Browse...">
+                                                            DataContext="{Binding}"
+                                                            ToolTip.Tip="{Binding $parent[Window].DataContext.TxtTooltipBrowse}">
                                                         <Viewbox Width="18" Height="18">
                                                             <Canvas Width="24" Height="24">
                                                                 <Path Fill="White" Data="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
@@ -2381,9 +2752,8 @@
                                                     </Button>
                                                     <Border ClipToBounds="True">
                                                         <TextBox Classes="ModernTextBox"
-                                                                 Text="{Binding Path, Mode=TwoWay}"
-                                                                 Watermark="e.g., C:\Documents"
-                                                                 Name="SourcePathTextBox"/>
+                                                                 Text="{Binding Path=Path, Mode=TwoWay}"
+                                                                 Watermark="{Binding $parent[Window].DataContext.TxtModalSourcePlaceholder}"/>
                                                     </Border>
                                                 </DockPanel>
                                             </DataTemplate>
@@ -2395,19 +2765,18 @@
 
                         <!-- Target Path Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Destination Path" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
+                            <TextBlock Text="{Binding TxtModalDestPath}" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox Grid.Column="0"
                                          Classes="ModernTextBox"
                                          Text="{Binding ModalTargetPath}"
-                                         Watermark="e.g., D:\Backups\Documents"
-                                         Name="TargetPathTextBox"/>
+                                         Watermark="{Binding TxtModalDestPlaceholder}"/>
                                 <Button Grid.Column="1"
                                         Classes="BrowseButton"
                                         Width="42"
                                         Margin="8,0,0,0"
                                         Click="BrowseTargetPath_Click"
-                                        ToolTip.Tip="Browse...">
+                                        ToolTip.Tip="{Binding TxtTooltipBrowse}">
                                     <Viewbox Width="18" Height="18">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="White" Data="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
@@ -2419,12 +2788,12 @@
 
                         <!-- Backup Type Field -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Backup Type" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
+                            <TextBlock Text="{Binding TxtModalBackupType}" FontWeight="SemiBold" Foreground="{DynamicResource TextLabel}"/>
                             <ComboBox Classes="ModernComboBox"
                                       SelectedIndex="{Binding ModalBackupTypeIndex}"
                                       HorizontalAlignment="Stretch">
-                                <ComboBoxItem Content="Complete"/>
-                                <ComboBoxItem Content="Differential"/>
+                                <ComboBoxItem Content="{Binding TxtComplete}"/>
+                                <ComboBoxItem Content="{Binding TxtDifferential}"/>
                             </ComboBox>
                         </StackPanel>
 
@@ -2436,8 +2805,8 @@
                                 </Canvas>
                             </Viewbox>
                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Encrypt files after backup" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
-                                <TextBlock Text="Uses Cryptosoft for matching extensions" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding TxtModalEncryptTitle}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="{Binding TxtModalEncryptDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="2"
                                           IsChecked="{Binding ModalEncryptFiles}"
@@ -2484,14 +2853,14 @@
                         <!-- Modal Actions -->
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                             <Button Classes="SecondaryButton"
-                                    Content="Cancel"
+                                    Content="{Binding TxtBtnCancel}"
                                     Command="{Binding CancelModalCommand}"/>
                             <Button Classes="PrimaryButton"
-                                    Content="Execute"
+                                    Content="{Binding TxtBtnExecute}"
                                     Command="{Binding ExecuteEditingJobCommand}"
                                     IsVisible="{Binding IsEditMode}"/>
                             <Button Classes="PrimaryButton"
-                                    Content="Save"
+                                    Content="{Binding TxtBtnSave}"
                                     Command="{Binding SaveModalCommand}"/>
                         </StackPanel>
 
@@ -2524,7 +2893,7 @@
                                         <Path Fill="#2196F3" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="Backup in Progress"
+                                <TextBlock Text="{Binding TxtProgressTitle}"
                                            FontSize="20"
                                            FontWeight="Bold"
                                            Foreground="#2196F3"/>
@@ -2546,7 +2915,7 @@
                                         <Path Fill="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="Backup Complete"
+                                <TextBlock Text="{Binding TxtProgressComplete}"
                                            FontSize="20"
                                            FontWeight="Bold"
                                            Foreground="#4CAF50"/>
@@ -2560,7 +2929,7 @@
 
                         <!-- Job Name -->
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Job Name"
+                            <TextBlock Text="{Binding TxtProgressJobName}"
                                        FontSize="12"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextSecondary}"/>
@@ -2572,7 +2941,7 @@
 
                         <!-- Current File -->
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Current File"
+                            <TextBlock Text="{Binding TxtProgressCurrentFile}"
                                        FontSize="12"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextSecondary}"/>
@@ -2587,7 +2956,7 @@
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
-                                           Text="Progress"
+                                           Text="{Binding TxtProgressProgress}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"
@@ -2610,7 +2979,7 @@
                         <!-- Stats -->
                         <Grid ColumnDefinitions="*,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0">
-                                <TextBlock Text="Files"
+                                <TextBlock Text="{Binding TxtProgressFiles}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"/>
@@ -2621,7 +2990,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
-                                <TextBlock Text="Size"
+                                <TextBlock Text="{Binding TxtProgressSize}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"/>
@@ -2635,7 +3004,7 @@
                         <!-- Speed & Time -->
                         <Grid ColumnDefinitions="*,*,*">
                             <StackPanel Grid.Column="0" Spacing="4">
-                                <TextBlock Text="Elapsed"
+                                <TextBlock Text="{Binding TxtProgressElapsed}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"/>
@@ -2646,7 +3015,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="4" Margin="12,0">
-                                <TextBlock Text="Speed"
+                                <TextBlock Text="{Binding TxtProgressSpeed}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"/>
@@ -2657,7 +3026,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0">
-                                <TextBlock Text="Remaining"
+                                <TextBlock Text="{Binding TxtProgressRemaining}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextSecondary}"/>
@@ -2670,7 +3039,7 @@
 
                         <!-- Close Button -->
                         <Button Classes="PrimaryButton"
-                                Content="Close"
+                                Content="{Binding TxtBtnClose}"
                                 HorizontalAlignment="Stretch"
                                 Height="40"
                                 FontSize="15"
@@ -2700,7 +3069,7 @@
                         <StackPanel>
                             <!-- Blue accent line -->
                             <Border Height="4" CornerRadius="16,16,0,0" Background="#2196F3"/>
-                            <TextBlock Text="Execution Order"
+                            <TextBlock Text="{Binding TxtExecOrderTitle}"
                                        FontSize="20"
                                        FontWeight="Bold"
                                        Foreground="#2196F3"
@@ -2711,7 +3080,7 @@
                     </Border>
 
                     <StackPanel Margin="24,16" Spacing="12">
-                        <TextBlock Text="Hold and drag to reorder (1 = first executed)"
+                        <TextBlock Text="{Binding TxtExecOrderDesc}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextSecondary}"/>
 
@@ -2775,7 +3144,7 @@
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
                                                             Padding="6,4" Cursor="Hand" MinHeight="0" MinWidth="0"
-                                                            ToolTip.Tip="Move up">
+                                                            ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).TxtTooltipMoveUp}">
                                                         <Viewbox Width="22" Height="22">
                                                             <Canvas Width="24" Height="24">
                                                                 <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
@@ -2786,7 +3155,7 @@
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
                                                             Padding="6,4" Cursor="Hand" MinHeight="0" MinWidth="0"
-                                                            ToolTip.Tip="Move down">
+                                                            ToolTip.Tip="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).TxtTooltipMoveDown}">
                                                         <Viewbox Width="22" Height="22">
                                                             <Canvas Width="24" Height="24">
                                                                 <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
@@ -2804,7 +3173,7 @@
                         <!-- Buttons -->
                         <Grid ColumnDefinitions="*,12,*" Margin="0,16,0,8">
                             <Button Grid.Column="0"
-                                    Content="Cancel"
+                                    Content="{Binding TxtBtnCancel}"
                                     HorizontalAlignment="Stretch"
                                     Height="40"
                                     FontSize="14"
@@ -2818,7 +3187,7 @@
                                     Cursor="Hand"
                                     Command="{Binding CancelExecuteOrderCommand}"/>
                             <Button Grid.Column="2"
-                                    Content="▶  Execute"
+                                    Content="{Binding TxtBtnExecuteRun}"
                                     HorizontalAlignment="Stretch"
                                     Height="40"
                                     FontSize="14"
@@ -2858,7 +3227,7 @@
                                         <Path Fill="#F44336" Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="Confirm Deletion"
+                                <TextBlock Text="{Binding TxtDeleteConfirmTitle}"
                                            FontSize="20"
                                            FontWeight="Bold"
                                            Foreground="#F44336"
@@ -2876,7 +3245,7 @@
                                    HorizontalAlignment="Center"
                                    TextAlignment="Center"/>
 
-                        <TextBlock Text="This action cannot be undone."
+                        <TextBlock Text="{Binding TxtDeleteConfirmWarning}"
                                    FontSize="12"
                                    Foreground="{DynamicResource TextTertiary}"
                                    HorizontalAlignment="Center"/>
@@ -2884,7 +3253,7 @@
                         <!-- Buttons -->
                         <Grid ColumnDefinitions="*,12,*" Margin="0,4,0,0">
                             <Button Grid.Column="0"
-                                    Content="Cancel"
+                                    Content="{Binding TxtBtnCancel}"
                                     HorizontalAlignment="Stretch"
                                     Height="40"
                                     FontSize="14"
@@ -2897,7 +3266,7 @@
                                     Cursor="Hand"
                                     Command="{Binding CancelDeleteCommand}"/>
                             <Button Grid.Column="2"
-                                    Content="Delete"
+                                    Content="{Binding TxtBtnDelete}"
                                     HorizontalAlignment="Stretch"
                                     Height="40"
                                     FontSize="14"
@@ -2982,22 +3351,31 @@
 
         <!-- Toast Notification -->
         <Border IsVisible="{Binding IsToastVisible}"
-                Background="#4CAF50"
+                Background="{Binding ToastBackground}"
                 CornerRadius="12"
                 Padding="16,12"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Margin="0,0,32,24"
                 BoxShadow="0 4 16 0 #40000000"
-                MaxWidth="400">
+                MaxWidth="500">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center">
+                <!-- Success icon -->
+                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"
+                         IsVisible="{Binding !IsErrorToast}">
                     <Canvas Width="24" Height="24">
                         <Path Fill="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </Canvas>
                 </Viewbox>
+                <!-- Error icon -->
+                <Viewbox Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"
+                         IsVisible="{Binding IsErrorToast}">
+                    <Canvas Width="24" Height="24">
+                        <Path Fill="White" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </Canvas>
+                </Viewbox>
                 <TextBlock Grid.Column="1" Text="{Binding ToastMessage}" Foreground="White" FontWeight="SemiBold"
-                           FontSize="14" VerticalAlignment="Center"/>
+                           FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 <Button Grid.Column="2" Command="{Binding DismissToastCommand}" Background="Transparent"
                         BorderThickness="0" Padding="4" Margin="10,0,0,0" Cursor="Hand">
                     <Viewbox Width="14" Height="14">
@@ -3011,3 +3389,5 @@
 
     </Grid>
 </Window>
+
+
