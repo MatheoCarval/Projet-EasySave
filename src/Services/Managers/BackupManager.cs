@@ -42,9 +42,8 @@ public class BackupManager
     /// Service responsible for persisting and managing backup job state information.
     /// </summary>
     private readonly StateWriter _stateWriter;
+    private readonly string _jobsFilePath;
     private List<string> _blockedApplications;
-
-    const string JobsFilePath = "./Datas/jobs.json";
 
     /// <summary>
     /// Event raised when a file transfer completes during backup execution
@@ -54,7 +53,7 @@ public class BackupManager
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
@@ -63,6 +62,9 @@ public class BackupManager
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
         _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+        _jobsFilePath = string.IsNullOrWhiteSpace(jobsFilePath) ? GetDefaultJobsFilePath() : jobsFilePath;
+
+        MigrateLegacyJobsFileIfNeeded();
 
         // Subscribe to file transfer progress
         _fileTransferService.FileTransferred += OnFileTransferredFromService;
@@ -342,8 +344,7 @@ public class BackupManager
 
         try
         {
-            string path = JobsFilePath;
-            var jobs = LoadJobsFromFile(path);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
 
             // Find and remove existing job (search by ID)
             var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
@@ -356,7 +357,7 @@ public class BackupManager
                 jobs.Add(job); // New job
             }
 
-            SaveJobsToFile(path, jobs);
+            SaveJobsToFile(_jobsFilePath, jobs);
 
             // Reload jobs to sync _jobs list
             LoadJobs();
@@ -374,8 +375,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = JobsFilePath;
-            var jobs = LoadJobsFromFile(jobsFilePath);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
             _jobs.Clear();
             _jobs.AddRange(jobs);
         }
@@ -443,7 +443,31 @@ public class BackupManager
             WriteIndented = true
         };
 
-        return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+        try
+        {
+            return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+        }
+        catch (JsonException)
+        {
+            try
+            {
+                var singleJob = JsonSerializer.Deserialize<BackupJob>(jsonContent, options);
+                if (singleJob != null &&
+                    !string.IsNullOrWhiteSpace(singleJob.Name) &&
+                    !string.IsNullOrWhiteSpace(singleJob.TargetPath) &&
+                    singleJob.SourcePath != null &&
+                    singleJob.SourcePath.Count > 0)
+                {
+                    return new List<BackupJob> { singleJob };
+                }
+            }
+            catch (JsonException)
+            {
+                // Ignore and fallback to empty list.
+            }
+
+            return new List<BackupJob>();
+        }
     }
 
     /// <summary>
@@ -451,7 +475,7 @@ public class BackupManager
     /// </summary>
     private void SaveJobsToFile(string filePath, List<BackupJob> jobs)
     {
-        string directory = Path.GetDirectoryName(filePath) ?? "./Datas";
+        string directory = Path.GetDirectoryName(filePath) ?? GetDefaultJobsDirectory();
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
@@ -480,17 +504,50 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = JobsFilePath;
-            var jobs = LoadJobsFromFile(jobsFilePath);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
 
             jobs.RemoveAll(j => j.Id == jobId);
 
-            SaveJobsToFile(jobsFilePath, jobs);
+            SaveJobsToFile(_jobsFilePath, jobs);
         }
         catch (Exception ex)
         {
             throw new IOException($"Error deleting job '{jobId}' from jobs.json.", ex);
         }
+    }
+
+    private static string GetDefaultJobsFilePath()
+    {
+        return Path.Combine(GetDefaultJobsDirectory(), "jobs.json");
+    }
+
+    private static string GetDefaultJobsDirectory()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave");
+    }
+
+    private void MigrateLegacyJobsFileIfNeeded()
+    {
+        if (!string.Equals(_jobsFilePath, GetDefaultJobsFilePath(), StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        string legacyPath = Path.Combine(AppContext.BaseDirectory, "Datas", "jobs.json");
+        if (!File.Exists(legacyPath) || File.Exists(_jobsFilePath))
+        {
+            return;
+        }
+
+        string? targetDirectory = Path.GetDirectoryName(_jobsFilePath);
+        if (!string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            Directory.CreateDirectory(targetDirectory);
+        }
+
+        File.Copy(legacyPath, _jobsFilePath);
     }
 
     /// <summary>
