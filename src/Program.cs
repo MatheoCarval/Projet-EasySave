@@ -162,7 +162,7 @@ public class Program
 
         ILogger logger = config.GetLogFormat() == LogFormat.XML
             ? new DailyXmlLogger(logPath)
-            : new DailyXmlLogger(logPath);
+            : new DailyJsonLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
         var cryptageManager = new CryptageManager(
