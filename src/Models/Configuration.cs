@@ -13,25 +13,37 @@ namespace EasySave.Models
     {
         private string Language { get; set; }
         private LogFormat LogFormat { get; set; }
-        private int MaxBackupJobs { get; set; }
+        private List<string> BlockedApplications { get; set; }
         private string LogFilePath { get; set; }
         private string StateFilePath { get; set; }
+        private string CryptosoftPath { get; set; }
+        private string CryptosoftPublicKey { get; set; }
+        private List<string> EncryptedExtensions { get; set; }
+        private bool DarkMode { get; set; }
 
         public Configuration()
         {
             Language = "fr-FR";
             LogFormat = LogFormat.JSON;
-            MaxBackupJobs = 5;
+            BlockedApplications = new List<string>();
             LogFilePath = string.Empty;
             StateFilePath = string.Empty;
+            CryptosoftPath = string.Empty;
+            CryptosoftPublicKey = string.Empty;
+            EncryptedExtensions = new List<string>();
+            DarkMode = false;
         }
 
         // Getters
         public string GetLanguage() => Language;
         public LogFormat GetLogFormat() => LogFormat;
-        public int GetMaxBackupJobs() => MaxBackupJobs;
+        public List<string> GetBlockedApplications() => new List<string>(BlockedApplications);
         public string GetLogFilePath() => LogFilePath;
         public string GetStateFilePath() => StateFilePath;
+        public string GetCryptosoftPath() => CryptosoftPath;
+        public string GetCryptosoftPublicKey() => CryptosoftPublicKey;
+        public List<string> GetEncryptedExtensions() => new List<string>(EncryptedExtensions);
+        public bool GetDarkMode() => DarkMode;
 
         // Setters
         public void SetLanguage(string language)
@@ -46,11 +58,18 @@ namespace EasySave.Models
             LogFormat = logFormat;
         }
 
-        public void SetMaxBackupJobs(int maxJobs)
+        public void SetBlockedApplications(IEnumerable<string> blockedApplications)
         {
-            if (maxJobs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxJobs), "MaxBackupJobs must be greater than 0");
-            MaxBackupJobs = maxJobs;
+            if (blockedApplications == null)
+            {
+                BlockedApplications = new List<string>();
+                return;
+            }
+
+            BlockedApplications = blockedApplications
+                .Where(app => !string.IsNullOrWhiteSpace(app))
+                .Select(app => app.Trim())
+                .ToList();
         }
 
         public void SetLogFilePath(string path)
@@ -67,47 +86,65 @@ namespace EasySave.Models
             StateFilePath = path;
         }
 
-
-        /// <summary>
-        ///  Selon LogFormat récupérer le chemin du fichier log avec .json ou .xml
-        ///  Si inexistant, il le crée
-        /// </summary>
-        /// <returns></returns>
-        public string GetDefaultLogPath()
+        public void SetCryptosoftPath(string path)
         {
-            // Détermine le nom du fichier selon le format de log
-            string logFileName = LogFormat switch
+            CryptosoftPath = string.IsNullOrWhiteSpace(path) ? string.Empty : path.Trim();
+        }
+
+        public void SetCryptosoftPublicKey(string path)
+        {
+            CryptosoftPublicKey = string.IsNullOrWhiteSpace(path) ? string.Empty : path.Trim();
+        }
+
+        public void SetEncryptedExtensions(IEnumerable<string> extensions)
+        {
+            if (extensions == null)
             {
-                LogFormat.JSON => "jobs.json",
-                LogFormat.XML => "jobs.xml",
-                _ => "jobs.log"
-            };
-
-            // Concatène le chemin du dossier AppData/Roaming/EasySave avec le nom du fichier log
-            string logFilePath = Path.Combine(GetAppDataPath(), logFileName);
-
-            // Si le fichier n'existe pas, le créer (fichier vide)
-            if (!File.Exists(logFilePath))
-            {
-                // Construit le contenu par défaut du fichier log selon le format de log
-                string logFileDefaultContent = LogFormat switch
-                {
-                    LogFormat.JSON => "{}",
-                    LogFormat.XML => "<logs></logs>",
-                    _ => ""
-                };
-
-                // Si le dossier AppData/Roaming/EasySave n'existe pas, le créer
-                if (!Directory.Exists(GetAppDataPath()))
-                {
-                    Directory.CreateDirectory(GetAppDataPath());
-                }
-
-                // Écrit le contenu par défault dans le fichier log
-                File.WriteAllText(logFilePath, logFileDefaultContent);
+                EncryptedExtensions = new List<string>();
+                return;
             }
 
-            return logFilePath;
+            EncryptedExtensions = extensions
+                .Where(ext => !string.IsNullOrWhiteSpace(ext))
+                .Select(NormalizeExtension)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        public void SetDarkMode(bool darkMode)
+        {
+            DarkMode = darkMode;
+        }
+
+        private static string NormalizeExtension(string extension)
+        {
+            string trimmed = extension.Trim();
+            if (!trimmed.StartsWith("."))
+            {
+                trimmed = "." + trimmed;
+            }
+
+            return trimmed.ToLowerInvariant();
+        }
+
+
+        /// <summary>
+        /// Retourne le chemin du dossier de logs par défaut.
+        /// Le dossier est créé s'il n'existe pas.
+        /// </summary>
+        /// <returns>Chemin du dossier logs (ex: AppData/EasySave/logs)</returns>
+        public string GetDefaultLogPath()
+        {
+            // Crée le chemin vers le sous-dossier logs
+            string logsDirectory = Path.Combine(GetAppDataPath(), "logs");
+
+            // Si le dossier logs n'existe pas, le créer
+            if (!Directory.Exists(logsDirectory))
+            {
+                Directory.CreateDirectory(logsDirectory);
+            }
+
+            return logsDirectory;
         }
 
         /// <summary>
@@ -147,7 +184,6 @@ namespace EasySave.Models
                     if (config is not null &&
                         !string.IsNullOrWhiteSpace(config.Language) &&
                         Enum.TryParse<LogFormat>(config.LogFormat, out _) &&
-                        config.MaxBackupJobs > 0 &&
                         !string.IsNullOrWhiteSpace(config.LogFilePath) &&
                         !string.IsNullOrWhiteSpace(config.StateFilePath))
                     {
@@ -187,13 +223,18 @@ namespace EasySave.Models
             string logPath = GetDefaultLogPath();
 
             // Construit un objet de configuration par défaut avec des valeurs prédéfinies
+            string statePath = Path.Combine(GetAppDataPath(), "state.json");
             var configurationTemplate = new ConfigurationTemplate()
             {
                 Language = "fr-FR",
                 LogFormat = LogFormat == LogFormat.JSON ? "JSON" : "XML",
-                MaxBackupJobs = 5,
+                BlockedApplications = new List<string>(),
                 LogFilePath = logPath,
-                StateFilePath = configPath
+                StateFilePath = statePath,
+                CryptosoftPath = string.Empty,
+                CryptosoftPublicKey = string.Empty,
+                EncryptedExtensions = new List<string>(),
+                DarkMode = false
             };
 
             // Retourne la sérialisation de la configuration par défaut au format JSON
@@ -228,9 +269,13 @@ namespace EasySave.Models
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
-            public int MaxBackupJobs { get; set; }
+            public List<string> BlockedApplications { get; set; } = new();
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public string CryptosoftPath { get; set; } = string.Empty;
+            public string CryptosoftPublicKey { get; set; } = string.Empty;
+            public List<string> EncryptedExtensions { get; set; } = new();
+            public bool DarkMode { get; set; }
         }
     }
 

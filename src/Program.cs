@@ -7,6 +7,7 @@ using EasyLog.Loggers;
 using EasyLog.Enums;
 using Services.Writers;
 using Models.Enums;
+using System.Runtime.InteropServices;
 
 namespace EasySave;
 
@@ -15,6 +16,10 @@ namespace EasySave;
 /// </summary>
 public class Program
 {
+    // Native library resolution for Windows
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool SetDllDirectory(string lpPathName);
+
     /// <summary>
     /// Provides localization support for the application.
     /// </summary>
@@ -33,26 +38,91 @@ public class Program
     /// </summary>
     private static void Main(string[] args)
     {
+        Console.WriteLine("Starting EasySave...");
+        // Setup native library path on Windows for SkiaSharp/HarfBuzz
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var runtimesDir = Path.Combine(baseDir, "runtimes", "win-x64", "native");
+
+            if (Directory.Exists(runtimesDir))
+            {
+                // Add native library directory to DLL search path
+                SetDllDirectory(runtimesDir);
+                Environment.SetEnvironmentVariable("PATH", runtimesDir + ";" + Environment.GetEnvironmentVariable("PATH"));
+            }
+        }
+
         try
         {
+            // Set up global exception handler to log crashes
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                try
+                {
+                    var ex = e.ExceptionObject as Exception;
+                    var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                    Directory.CreateDirectory(logDir);
+                    var logPath = Path.Combine(logDir, "crash.log");
+
+                    var details = $"[{DateTime.Now}] {ex?.GetType().Name}: {ex?.Message}\n{ex?.StackTrace}\n";
+                    if (ex?.InnerException != null)
+                    {
+                        details += $"Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}\n";
+                    }
+                    details += $"BaseDirectory: {AppContext.BaseDirectory}\n";
+                    details += $"ProcessPath: {Environment.ProcessPath}\n\n";
+
+                    File.AppendAllText(logPath, details);
+                }
+                catch { }
+            };
+
             // Initialize services
             InitializeServices();
 
-            // If no arguments, launch UI
-            if (args.Length == 0)
+            // Check for theme argument (CLI overrides config)
+            bool? darkModeOverride = null;
+            var remainingArgs = new System.Collections.Generic.List<string>();
+            foreach (var arg in args)
             {
-                LaunchUI();
+                if (arg.Equals("--light", StringComparison.OrdinalIgnoreCase))
+                    darkModeOverride = false;
+                else if (arg.Equals("--dark", StringComparison.OrdinalIgnoreCase))
+                    darkModeOverride = true;
+                else
+                    remainingArgs.Add(arg);
+            }
+
+            // Use CLI override if provided, otherwise load from saved config
+            bool darkMode = darkModeOverride ?? _configurationManager!.LoadConfiguration().GetDarkMode();
+
+            // If no remaining arguments, launch UI
+            if (remainingArgs.Count == 0)
+            {
+                LaunchUI(darkMode);
                 return;
             }
 
             // Parse and execute jobs by index
-            var indices = ParseJobIndices(args[0]);
+            var indices = ParseJobIndices(remainingArgs[0]);
             ExecuteJobsByIndices(indices);
         }
         catch (Exception ex)
         {
+            // Log to file for WinExe scenarios where console isn't visible
+            try
+            {
+                var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+                Directory.CreateDirectory(logDir);
+                File.AppendAllText(Path.Combine(logDir, "error.log"),
+                    $"[{DateTime.Now}] {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n\n");
+            }
+            catch { }
+
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"{T("error")}: {ex.Message}");
+            var errorLabel = _localizationService != null ? T("error") : "Error";
+            Console.WriteLine($"{errorLabel}: {ex.Message}");
             Console.ResetColor();
             Environment.Exit(1);
         }
@@ -79,7 +149,7 @@ public class Program
         string logPath = config.GetLogFilePath();
         if (string.IsNullOrWhiteSpace(logPath))
         {
-            logPath = Path.Combine(appData, "logs.json");
+            logPath = config.GetDefaultLogPath();
         }
 
         string statePath = config.GetStateFilePath();
@@ -93,13 +163,18 @@ public class Program
         EnsureDirectoryForFile(statePath);
 
         ILogger logger = config.GetLogFormat() == LogFormat.XML
-            ? new XmlLogger(logPath)
-            : new JsonLogger(logPath);
+            ? new DailyXmlLogger(logPath)
+            : new DailyJsonLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
-        var fileTransferService = new FileTransferService(logger, stateWriter);
+        var cryptageManager = new CryptageManager(
+            config.GetCryptosoftPath(),
+            config.GetCryptosoftPublicKey(),
+            config.GetEncryptedExtensions()
+        );
+        var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter, maxJobs: config.GetMaxBackupJobs());
+        _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications());
     }
 
     /// <summary>
@@ -253,12 +328,14 @@ public class Program
     }
 
     /// <summary>
-    /// Launches the interactive console UI for managing backups.
+    /// Launches the interactive GUI for managing backups.
     /// </summary>
-    private static void LaunchUI()
+    /// <param name="darkMode">True for dark theme, false for light theme</param>
+    private static void LaunchUI(bool darkMode = true)
     {
-        var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
-        consoleUI.Start();
+        //var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
+        //consoleUI.Start();
+        EasySave.View.GUI.GUILauncher.Launch(_localizationService!, _backupManager!, darkMode);
     }
 
     /// <summary>

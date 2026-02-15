@@ -5,8 +5,25 @@ using Services.Writers;
 using Utilities;
 using System.Text.Json;
 using System.Runtime.ConstrainedExecution;
+using System.Diagnostics;
 
 namespace Services.Managers;
+
+/// <summary>
+/// Event arguments for file transfer progress
+/// </summary>
+public class FileProgressEventArgs : EventArgs
+{
+    public string JobId { get; set; } = string.Empty;
+    public string JobName { get; set; } = string.Empty;
+    public string CurrentFile { get; set; } = string.Empty;
+    public int TotalFiles { get; set; }
+    public int RemainingFiles { get; set; }
+    public int FilesProcessed => TotalFiles - RemainingFiles;
+    public long TotalSize { get; set; }
+    public long RemainingSize { get; set; }
+    public int ProgressPercentage { get; set; }
+}
 
 /// <summary>
 /// Manages backup job creation, execution, modification, and persistence with support for concurrent job handling and state tracking.
@@ -18,10 +35,6 @@ public class BackupManager
     /// </summary>
     private readonly List<BackupJob> _jobs;
     /// <summary>
-    /// Maximum number of backup jobs allowed in the system.
-    /// </summary>
-    private readonly int _maxJobs;
-    /// <summary>
     /// Service responsible for transferring files and directories between source and target locations.
     /// </summary>
     private readonly FileTransferService _fileTransferService;
@@ -29,24 +42,42 @@ public class BackupManager
     /// Service responsible for persisting and managing backup job state information.
     /// </summary>
     private readonly StateWriter _stateWriter;
+    private readonly string _jobsFilePath;
+    private List<string> _blockedApplications;
 
-    const string JobsFilePath = "./Datas/jobs.json";
+    /// <summary>
+    /// Event raised when a file transfer completes during backup execution
+    /// </summary>
+    public event EventHandler<FileProgressEventArgs>? FileTransferred;
 
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, int maxJobs = 5)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxJobs);
 
         _jobs = new List<BackupJob>();
-        _maxJobs = maxJobs;
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
+        _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+        _jobsFilePath = string.IsNullOrWhiteSpace(jobsFilePath) ? GetDefaultJobsFilePath() : jobsFilePath;
+
+        MigrateLegacyJobsFileIfNeeded();
+
+        // Subscribe to file transfer progress
+        _fileTransferService.FileTransferred += OnFileTransferredFromService;
 
         LoadJobs();
+    }
+
+    /// <summary>
+    /// Handles file transfer events from FileTransferService and raises FileTransferred event
+    /// </summary>
+    private void OnFileTransferredFromService(object? sender, FileProgressEventArgs e)
+    {
+        FileTransferred?.Invoke(this, e);
     }
 
     /// <summary>
@@ -54,11 +85,6 @@ public class BackupManager
     /// </summary>
     public BackupJob CreateJob(string name, List<string> sourcesPaths, string targetPath, BackupType backupType)
     {
-        if (_jobs.Count >= _maxJobs)
-        {
-            throw new InvalidOperationException($"Maximum number of jobs ({_maxJobs}) has been reached.");
-        }
-
         if (_jobs.Any(j => j.Name == name))
         {
             throw new ArgumentException($"A job with name '{name}' already exists.", nameof(name));
@@ -126,6 +152,8 @@ public class BackupManager
 
     public void ExecuteJob(string jobId)
     {
+        EnsureNoBlockedApplicationsRunning();
+
         var job = GetJob(jobId);
         if (job == null)
         {
@@ -179,11 +207,13 @@ public class BackupManager
             }
 
             job.MarkAsCompleted();
+            job.ErrorReason = null;
             _stateWriter.UpdateJobState(job);
         }
         catch (Exception ex)
         {
             job.MarkAsError();
+            job.ErrorReason = GetUserFriendlyError(ex);
             _stateWriter.UpdateJobState(job);
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
@@ -194,6 +224,7 @@ public class BackupManager
     /// </summary>
     public void ExecuteAll()
     {
+        EnsureNoBlockedApplicationsRunning();
         var exceptions = new List<Exception>();
 
         foreach (var job in _jobs)
@@ -219,10 +250,89 @@ public class BackupManager
     /// </summary>
     public void ExecuteSequence()
     {
+        EnsureNoBlockedApplicationsRunning();
         foreach (var job in _jobs)
         {
             ExecuteJob(job.Id);
         }
+    }
+
+    private void EnsureNoBlockedApplicationsRunning()
+    {
+        if (_blockedApplications.Count == 0)
+        {
+            return;
+        }
+
+        var runningProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var process in Process.GetProcesses())
+        {
+            try
+            {
+                var name = process.ProcessName;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    runningProcesses.Add(name);
+                }
+            }
+            catch
+            {
+                // Ignore processes that cannot be accessed.
+            }
+        }
+
+        var blockedRunning = _blockedApplications
+            .Where(app => runningProcesses.Contains(app))
+            .ToList();
+
+        if (blockedRunning.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Backup blocked because these applications are running: {string.Join(", ", blockedRunning)}");
+        }
+    }
+
+    private static List<string> NormalizeBlockedApplications(IEnumerable<string>? blockedApplications)
+    {
+        if (blockedApplications == null)
+        {
+            return new List<string>();
+        }
+
+        return blockedApplications
+            .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Select(app => NormalizeProcessName(app))
+            .Where(app => !string.IsNullOrWhiteSpace(app))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Updates the list of blocked applications at runtime (e.g. after settings change).
+    /// </summary>
+    public void UpdateBlockedApplications(IEnumerable<string>? blockedApplications)
+    {
+        _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+    }
+
+    /// <summary>
+    /// Updates the logger instance used for recording backup operations.
+    /// This allows changing the log format (JSON/XML) without restarting the application.
+    /// </summary>
+    public void UpdateLogger(EasyLog.Abstractions.ILogger logger)
+    {
+        _fileTransferService.UpdateLogger(logger);
+    }
+
+    private static string NormalizeProcessName(string name)
+    {
+        var trimmed = name.Trim();
+        if (trimmed.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[..^4];
+        }
+
+        return trimmed;
     }
 
     /// <summary>
@@ -234,8 +344,7 @@ public class BackupManager
 
         try
         {
-            string path = JobsFilePath;
-            var jobs = LoadJobsFromFile(path);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
 
             // Find and remove existing job (search by ID)
             var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
@@ -248,7 +357,7 @@ public class BackupManager
                 jobs.Add(job); // New job
             }
 
-            SaveJobsToFile(path, jobs);
+            SaveJobsToFile(_jobsFilePath, jobs);
 
             // Reload jobs to sync _jobs list
             LoadJobs();
@@ -266,8 +375,7 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = JobsFilePath;
-            var jobs = LoadJobsFromFile(jobsFilePath);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
             _jobs.Clear();
             _jobs.AddRange(jobs);
         }
@@ -286,6 +394,12 @@ public class BackupManager
         if (job == null)
         {
             throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
+        }
+
+        // Check for duplicate name (exclude current job)
+        if (!string.IsNullOrWhiteSpace(newName) && newName != job.Name && _jobs.Any(j => j.Id != jobId && j.Name == newName))
+        {
+            throw new ArgumentException($"A job with name '{newName}' already exists.", nameof(newName));
         }
 
         try
@@ -329,7 +443,31 @@ public class BackupManager
             WriteIndented = true
         };
 
-        return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+        try
+        {
+            return JsonSerializer.Deserialize<List<BackupJob>>(jsonContent, options) ?? new List<BackupJob>();
+        }
+        catch (JsonException)
+        {
+            try
+            {
+                var singleJob = JsonSerializer.Deserialize<BackupJob>(jsonContent, options);
+                if (singleJob != null &&
+                    !string.IsNullOrWhiteSpace(singleJob.Name) &&
+                    !string.IsNullOrWhiteSpace(singleJob.TargetPath) &&
+                    singleJob.SourcePath != null &&
+                    singleJob.SourcePath.Count > 0)
+                {
+                    return new List<BackupJob> { singleJob };
+                }
+            }
+            catch (JsonException)
+            {
+                // Ignore and fallback to empty list.
+            }
+
+            return new List<BackupJob>();
+        }
     }
 
     /// <summary>
@@ -337,7 +475,7 @@ public class BackupManager
     /// </summary>
     private void SaveJobsToFile(string filePath, List<BackupJob> jobs)
     {
-        string directory = Path.GetDirectoryName(filePath) ?? "./Datas";
+        string directory = Path.GetDirectoryName(filePath) ?? GetDefaultJobsDirectory();
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
@@ -366,16 +504,66 @@ public class BackupManager
     {
         try
         {
-            string jobsFilePath = JobsFilePath;
-            var jobs = LoadJobsFromFile(jobsFilePath);
+            var jobs = LoadJobsFromFile(_jobsFilePath);
 
             jobs.RemoveAll(j => j.Id == jobId);
 
-            SaveJobsToFile(jobsFilePath, jobs);
+            SaveJobsToFile(_jobsFilePath, jobs);
         }
         catch (Exception ex)
         {
             throw new IOException($"Error deleting job '{jobId}' from jobs.json.", ex);
         }
+    }
+
+    private static string GetDefaultJobsFilePath()
+    {
+        return Path.Combine(GetDefaultJobsDirectory(), "jobs.json");
+    }
+
+    private static string GetDefaultJobsDirectory()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "EasySave");
+    }
+
+    private void MigrateLegacyJobsFileIfNeeded()
+    {
+        if (!string.Equals(_jobsFilePath, GetDefaultJobsFilePath(), StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        string legacyPath = Path.Combine(AppContext.BaseDirectory, "Datas", "jobs.json");
+        if (!File.Exists(legacyPath) || File.Exists(_jobsFilePath))
+        {
+            return;
+        }
+
+        string? targetDirectory = Path.GetDirectoryName(_jobsFilePath);
+        if (!string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            Directory.CreateDirectory(targetDirectory);
+        }
+
+        File.Copy(legacyPath, _jobsFilePath);
+    }
+
+    /// <summary>
+    /// Maps an exception to a short error key for display on the job card.
+    /// </summary>
+    private static string GetUserFriendlyError(Exception ex)
+    {
+        var inner = ex is InvalidOperationException ? (ex.InnerException ?? ex) : ex;
+
+        if (inner is DirectoryNotFoundException)
+            return "error_path_not_found";
+        if (inner is UnauthorizedAccessException)
+            return "error_access_denied";
+        if (inner is IOException)
+            return "error_io";
+
+        return "error_generic";
     }
 }

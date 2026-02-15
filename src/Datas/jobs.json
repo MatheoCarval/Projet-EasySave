@@ -1,0 +1,244 @@
+[
+  {
+    "Id": "0a955bec-95ea-4b6e-8845-5b140320bbd3",
+    "Name": "Mes Documents Important",
+    "SourcePath": [
+      "C:\\Users\\allan\\OneDrive\\Bureau"
+    ],
+    "TargetPath": "C:\\Users\\allan\\Music",
+    "BackupType": 0,
+    "BackupState": 2,
+    "LastExecution": "2026-02-11T00:07:26.5622307+01:00",
+    "TotalFiles": 1,
+    "TotalSize": 2333,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\Projet-EasySave\\.github\\workflows\\dotnet.yml",
+    "CurrentTargetFile": "\\\\localhost\\C$\\Users\\allan\\Music\\workflows\\dotnet.yml",
+    "Progress": 100,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "68157a36-c248-40b2-a502-937bedcd60c2",
+    "Name": "Photos Vacances 2024",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "f594ffa4-cb92-47c4-94d0-97f9dc8e0f48",
+    "Name": "PALMARES DE PHILIPPE",
+    "SourcePath": [
+      "BEAUCOUP TROP DE MYRIAM"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "91b98f29-2625-4309-beab-274cf1d5c263",
+    "Name": "M\u00E9moire_Fin_Etudes_FINAL",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "209289b0-4d19-404d-bf0d-fab262462525",
+    "Name": "Dossier_Administratif_Impots",
+    "SourcePath": [
+      "Humam Sakhnini"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "992d37c3-9004-42ea-b81f-01e15f4d62a6",
+    "Name": "Recettes de cuisine",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "0b2a4eda-c37a-49f3-8441-ec51f65c3cd4",
+    "Name": "Musique_MP3_Annees80",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "0fa032f3-ebd0-46b3-8819-53e4d67930db",
+    "Name": "Jeux_Sauvegardes_Steam",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "f2bd83eb-f59c-40b3-a02e-742661887aa6",
+    "Name": "A_TRIER_URGENT",
+    "SourcePath": [
+      "--dark"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "2a4c0eb6-5ac3-4b30-9c99-6c11b80affa1",
+    "Name": "Camescope_Mariage_Julie",
+    "SourcePath": [
+      "--dark",
+      "znbrtbn hzrtagtzrnrygt(\u0022z(\u0027\u0022t(grrtg",
+      "rsynrqstbhaetb"
+    ],
+    "TargetPath": "--dark",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "7ccf8036-9efa-4fab-9c47-2134423104f3",
+    "Name": "Sauvegarde iPhone Maman",
+    "SourcePath": [
+      "DCD"
+    ],
+    "TargetPath": "DVV",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "b121bb33-c51d-4bdc-b1da-dbbe6c98d013",
+    "Name": "test",
+    "SourcePath": [
+      "C:\\Users\\Maxime\\Documents\\test"
+    ],
+    "TargetPath": "C:\\Users\\Maxime\\Documents\\Debian",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  }
+]

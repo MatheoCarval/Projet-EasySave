@@ -65,6 +65,18 @@ namespace Models
         /// Progress percentage of the backup operation from 0 to 100.
         /// </summary>
         public float Progress { get; set; }
+        /// <summary>
+        /// Indicates whether files should be encrypted after being saved.
+        /// </summary>
+        public bool EncryptFiles { get; set; }
+        /// <summary>
+        /// The reason for the last error, if any.
+        /// </summary>
+        public string? ErrorReason { get; set; }
+        /// <summary>
+        /// List of file extensions specific to this backup job that should be encrypted (in addition to global settings).
+        /// </summary>
+        public List<string> EncryptedExtensions { get; set; }
 
         /// <summary>
         /// Initializes a new instance of BackupJob with default values; required for JSON deserialization.
@@ -84,6 +96,8 @@ namespace Models
             CurrentSourceFile = null;
             CurrentTargetFile = null;
             Progress = 0;
+            EncryptFiles = false;
+            EncryptedExtensions = new List<string>();
         }
 
         /// <summary>
@@ -104,6 +118,8 @@ namespace Models
             CurrentSourceFile = null;
             CurrentTargetFile = null;
             Progress = 0;
+            EncryptFiles = false;
+            EncryptedExtensions = new List<string>();
         }
 
         /// <summary>
@@ -143,6 +159,7 @@ namespace Models
         /// </summary>
         public void MarkAsError()
         {
+            LastExecution = DateTime.Now;
             Progress = 0;
             CurrentSourceFile = null;
             CurrentTargetFile = null;

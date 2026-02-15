@@ -10,6 +10,7 @@ using Models;
 using EasyLog.Abstractions;
 using Utilities;
 using Services.Writers;
+using Services.Managers;
 
 namespace EasySave.Services
 {
@@ -21,21 +22,41 @@ namespace EasySave.Services
         /// <summary>
         /// Logger instance for recording file transfer operations and backup events.
         /// </summary>
-        private readonly ILogger _logger;
+        private ILogger _logger;
         /// <summary>
         /// State writer instance for persisting backup job state during file transfer operations.
         /// </summary>
         private readonly StateWriter _stateWriter;
+        /// <summary>
+        /// Manager responsible for encryption of files after transfer.
+        /// </summary>
+        private readonly CryptageManager _cryptageManager;
+
+        /// <summary>
+        /// Event raised when a file transfer completes
+        /// </summary>
+        public event EventHandler<FileProgressEventArgs>? FileTransferred;
 
         /// <summary>
         /// Initializes FileTransferService with required dependencies for logging and state persistence.
         /// </summary>
         public FileTransferService(
             ILogger logger,
-            StateWriter stateWriter)
+            StateWriter stateWriter,
+            CryptageManager? cryptageManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateWriter = stateWriter ?? throw new ArgumentNullException(nameof(stateWriter));
+            _cryptageManager = cryptageManager ?? new CryptageManager(string.Empty, string.Empty, Array.Empty<string>());
+        }
+
+        /// <summary>
+        /// Updates the logger instance used for recording file transfer operations.
+        /// This allows changing the log format (JSON/XML) without restarting the application.
+        /// </summary>
+        public void UpdateLogger(ILogger logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -96,6 +117,7 @@ namespace EasySave.Services
             {
                 CopyFile(sourceFile, targetFile);
                 stopwatch.Stop();
+                long encryptionTime = _cryptageManager.EncryptIfNeeded(targetFile, job);
 
                 var logEntry = new BackupLogEntry
                 {
@@ -104,7 +126,8 @@ namespace EasySave.Services
                     SourcePath = PathValidator.ToUncPath(sourceFile),
                     TargetPath = PathValidator.ToUncPath(targetFile),
                     FileSize = fileSize,
-                    TransferTime = stopwatch.ElapsedMilliseconds
+                    TransferTime = stopwatch.ElapsedMilliseconds,
+                    EncryptionTime = encryptionTime
                 };
 
                 _logger.Log(logEntry);
@@ -113,6 +136,19 @@ namespace EasySave.Services
                 job.RemainingSize -= fileSize;
                 job.UpdateProgress();
                 _stateWriter.UpdateJobState(job);
+
+                // Raise file transferred event
+                FileTransferred?.Invoke(this, new FileProgressEventArgs
+                {
+                    JobId = job.Id,
+                    JobName = job.Name,
+                    CurrentFile = Path.GetFileName(sourceFile),
+                    TotalFiles = (int)job.TotalFiles,
+                    RemainingFiles = (int)job.RemainingFiles,
+                    TotalSize = job.TotalSize,
+                    RemainingSize = job.RemainingSize,
+                    ProgressPercentage = (int)job.Progress
+                });
             }
             catch (Exception ex)
             {
@@ -125,7 +161,8 @@ namespace EasySave.Services
                     SourcePath = PathValidator.ToUncPath(sourceFile),
                     TargetPath = PathValidator.ToUncPath(targetFile),
                     FileSize = fileSize,
-                    TransferTime = -1
+                    TransferTime = -1,
+                    EncryptionTime = 0
                 };
 
                 _logger.Log(logEntry);

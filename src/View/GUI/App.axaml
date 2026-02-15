@@ -1,0 +1,303 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="EasySave.View.GUI.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <!-- ===== LIGHT THEME ===== -->
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AppBackground" Color="#F5F5F5"/>
+                    <SolidColorBrush x:Key="CardBackground" Color="White"/>
+                    <SolidColorBrush x:Key="SidebarBackground" Color="#E8EAF0"/>
+                    <SolidColorBrush x:Key="SidebarShadow" Color="#20000000"/>
+                    <SolidColorBrush x:Key="SidebarHover" Color="#D8DCE6"/>
+                    <SolidColorBrush x:Key="SidebarPressed" Color="#CDD1DB"/>
+                    <SolidColorBrush x:Key="SidebarIcon" Color="#5C6370"/>
+                    <SolidColorBrush x:Key="SidebarIconHover" Color="#2196F3"/>
+                    <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="TextSecondary" Color="#555555"/>
+                    <SolidColorBrush x:Key="TextTertiary" Color="#7A7A7A"/>
+                    <SolidColorBrush x:Key="TextLabel" Color="#616161"/>
+                    <SolidColorBrush x:Key="AccentBlue" Color="#2196F3"/>
+                    <SolidColorBrush x:Key="AccentBlueHover" Color="#1976D2"/>
+                    <SolidColorBrush x:Key="AccentBlueLight" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="SecondaryBtnHover" Color="#E3F2FD"/>
+                    <SolidColorBrush x:Key="BorderSubtle" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="InputBackground" Color="White"/>
+                    <SolidColorBrush x:Key="InputBorder" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="InputText" Color="#212121"/>
+                    <SolidColorBrush x:Key="ClickableCardBorder" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="ClickableCardHoverBorder" Color="#2196F3"/>
+                    <SolidColorBrush x:Key="ClickableCardHoverBg" Color="#F5F9FF"/>
+                    <SolidColorBrush x:Key="ChevronFill" Color="#BDBDBD"/>
+                    <SolidColorBrush x:Key="EmptyStateIcon" Color="#9E9E9E"/>
+                    <SolidColorBrush x:Key="EmptyStateText" Color="#BDBDBD"/>
+                    <SolidColorBrush x:Key="ProgressBarBg" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="PopupBackground" Color="White"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#3F51B5"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#303F9F"/>
+                    <SolidColorBrush x:Key="ListItemHover" Color="#F0F0F0"/>
+                    <SolidColorBrush x:Key="ListItemSelected" Color="#E3F2FD"/>
+                    <SolidColorBrush x:Key="SearchHighlight" Color="#FFFDE7"/>
+                    <SolidColorBrush x:Key="SearchHighlightText" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="SearchErrorText" Color="#D32F2F"/>
+                </ResourceDictionary>
+
+                <!-- ===== DARK THEME ===== -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppBackground" Color="#141414"/>
+                    <SolidColorBrush x:Key="CardBackground" Color="#1E1E1E"/>
+                    <SolidColorBrush x:Key="SidebarBackground" Color="#121212"/>
+                    <SolidColorBrush x:Key="SidebarShadow" Color="#60000000"/>
+                    <SolidColorBrush x:Key="SidebarHover" Color="#333333"/>
+                    <SolidColorBrush x:Key="SidebarPressed" Color="#404040"/>
+                    <SolidColorBrush x:Key="SidebarIcon" Color="#B0B0B0"/>
+                    <SolidColorBrush x:Key="SidebarIconHover" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="TextPrimary" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="TextSecondary" Color="#9E9E9E"/>
+                    <SolidColorBrush x:Key="TextTertiary" Color="#757575"/>
+                    <SolidColorBrush x:Key="TextLabel" Color="#9E9E9E"/>
+                    <SolidColorBrush x:Key="AccentBlue" Color="#2196F3"/>
+                    <SolidColorBrush x:Key="AccentBlueHover" Color="#1E88E5"/>
+                    <SolidColorBrush x:Key="AccentBlueLight" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="SecondaryBtnHover" Color="#1A237E20"/>
+                    <SolidColorBrush x:Key="BorderSubtle" Color="#3A3A3A"/>
+                    <SolidColorBrush x:Key="InputBackground" Color="#2A2A2A"/>
+                    <SolidColorBrush x:Key="InputBorder" Color="#3A3A3A"/>
+                    <SolidColorBrush x:Key="InputText" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="ClickableCardBorder" Color="#333333"/>
+                    <SolidColorBrush x:Key="ClickableCardHoverBorder" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="ClickableCardHoverBg" Color="#252530"/>
+                    <SolidColorBrush x:Key="ChevronFill" Color="#555555"/>
+                    <SolidColorBrush x:Key="EmptyStateIcon" Color="#555555"/>
+                    <SolidColorBrush x:Key="EmptyStateText" Color="#616161"/>
+                    <SolidColorBrush x:Key="ProgressBarBg" Color="#333333"/>
+                    <SolidColorBrush x:Key="PopupBackground" Color="#1E1E1E"/>
+                    <SolidColorBrush x:Key="BrowseBtnBg" Color="#5C6BC0"/>
+                    <SolidColorBrush x:Key="BrowseBtnHover" Color="#7986CB"/>
+                    <SolidColorBrush x:Key="BrowseBtnPressed" Color="#3F51B5"/>
+                    <SolidColorBrush x:Key="ListItemHover" Color="#333333"/>
+                    <SolidColorBrush x:Key="ListItemSelected" Color="#404040"/>
+                    <SolidColorBrush x:Key="SearchHighlight" Color="#F9A825"/>
+                    <SolidColorBrush x:Key="SearchHighlightText" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="SearchErrorText" Color="#EF5350"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- Thin scrollbars -->
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="MinWidth" Value="12"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical /template/ Thumb">
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Width" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="MinHeight" Value="12"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal /template/ Thumb">
+            <Setter Property="MinHeight" Value="10"/>
+            <Setter Property="Height" Value="10"/>
+        </Style>
+
+        <!-- Custom Styles -->
+        <Style Selector="Button.SidebarButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SidebarHover}"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pressed">
+            <Setter Property="Background" Value="{DynamicResource SidebarPressed}"/>
+        </Style>
+
+        <Style Selector="Button.SidebarButton Path">
+            <Setter Property="Fill" Value="{DynamicResource SidebarIcon}"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <BrushTransition Property="Fill" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.SidebarButton:pointerover Path">
+            <Setter Property="Fill" Value="{DynamicResource SidebarIconHover}"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentBlueHover}"/>
+        </Style>
+
+        <Style Selector="Button.PrimaryButton:pressed">
+            <Setter Property="Background" Value="#1565C0"/>
+        </Style>
+
+        <Style Selector="Button.SecondaryButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlueLight}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLight}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.SecondaryButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SecondaryBtnHover}"/>
+        </Style>
+
+        <Style Selector="Button.AddButton">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.AddButton:pointerover">
+            <Setter Property="Background" Value="#45A049"/>
+        </Style>
+
+        <Style Selector="Button.AddButton:pressed">
+            <Setter Property="Background" Value="#388E3C"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem">
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ListItemHover}"/>
+        </Style>
+
+        <Style Selector="ListBoxItem.BackupItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ListItemSelected}"/>
+        </Style>
+
+        <Style Selector="TextBox.ModernTextBox">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InputText}"/>
+        </Style>
+
+        <Style Selector="TextBox.ModernTextBox:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLight}"/>
+        </Style>
+
+        <Style Selector="ComboBox.ModernComboBox">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style Selector="ComboBox.ModernComboBox:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLight}"/>
+        </Style>
+
+        <Style Selector="Border.Card">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #20000000"/>
+        </Style>
+
+        <Style Selector="Border.ClickableCard">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #20000000"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Border.ClickableCard:pointerover">
+            <Setter Property="BoxShadow" Value="0 6 20 0 #35000000"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardHoverBorder}"/>
+            <Setter Property="Background" Value="{DynamicResource ClickableCardHoverBg}"/>
+            <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+        </Style>
+
+        <Style Selector="Border.Sidebar">
+            <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+            <Setter Property="BoxShadow" Value="2 0 8 0 #40000000"/>
+        </Style>
+
+        <Style Selector="Button.BrowseButton">
+            <Setter Property="Background" Value="{DynamicResource BrowseBtnBg}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.BrowseButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource BrowseBtnHover}"/>
+        </Style>
+
+        <Style Selector="Button.BrowseButton:pressed">
+            <Setter Property="Background" Value="{DynamicResource BrowseBtnPressed}"/>
+        </Style>
+
+    </Application.Styles>
+</Application>
