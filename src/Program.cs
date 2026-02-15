@@ -162,11 +162,12 @@ public class Program
 
         ILogger logger = config.GetLogFormat() == LogFormat.XML
             ? new DailyXmlLogger(logPath)
-            : new DailyJsonLogger(logPath);
+            : new DailyXmlLogger(logPath);
 
         var stateWriter = new StateWriter(statePath);
         var cryptageManager = new CryptageManager(
             config.GetCryptosoftPath(),
+            config.GetCryptosoftPublicKey(),
             config.GetEncryptedExtensions()
         );
         var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);

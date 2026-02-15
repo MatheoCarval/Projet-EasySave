@@ -1,6 +1,7 @@
 using Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -12,11 +13,13 @@ namespace Services.Managers
     public class CryptageManager
     {
         private readonly string _cryptosoftPath;
+        private readonly string _publicKeyPath;
         private readonly HashSet<string> _encryptedExtensions;
 
-        public CryptageManager(string cryptosoftPath, IEnumerable<string> encryptedExtensions)
+        public CryptageManager(string cryptosoftPath, string publicKeyPath, IEnumerable<string> encryptedExtensions)
         {
             _cryptosoftPath = string.IsNullOrWhiteSpace(cryptosoftPath) ? string.Empty : cryptosoftPath.Trim();
+            _publicKeyPath = string.IsNullOrWhiteSpace(publicKeyPath) ? string.Empty : publicKeyPath.Trim();
             _encryptedExtensions = new HashSet<string>(
                 NormalizeExtensions(encryptedExtensions),
                 StringComparer.OrdinalIgnoreCase
@@ -44,8 +47,93 @@ namespace Services.Managers
                 return 0;
             }
 
-            // TODO: Invoke Cryptosoft executable and measure elapsed time.
-            return 0;
+            if (string.IsNullOrWhiteSpace(_publicKeyPath))
+            {
+                return 0;
+            }
+
+            return EncryptFile(filePath);
+        }
+
+        /// <summary>
+        /// Encrypts a file using CryptoSoft and returns the encryption time in milliseconds.
+        /// Replaces the original file with the encrypted version (.enc).
+        /// </summary>
+        private long EncryptFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return 0;
+            }
+
+            if (!File.Exists(_cryptosoftPath))
+            {
+                throw new FileNotFoundException($"CryptoSoft executable not found: {_cryptosoftPath}");
+            }
+
+            if (!File.Exists(_publicKeyPath))
+            {
+                throw new FileNotFoundException($"Public key not found: {_publicKeyPath}");
+            }
+
+            string encryptedPath = filePath + ".enc";
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = _cryptosoftPath,
+                    Arguments = $"encrypt --input \"{filePath}\" --output \"{encryptedPath}\" --pubkey \"{_publicKeyPath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (var process = Process.Start(processInfo))
+                {
+                    if (process == null)
+                    {
+                        throw new InvalidOperationException("Failed to start CryptoSoft process");
+                    }
+
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        throw new InvalidOperationException($"CryptoSoft encryption failed with exit code {process.ExitCode}: {error}");
+                    }
+                }
+
+                stopwatch.Stop();
+
+                // Replace the original file with the encrypted version
+                if (File.Exists(encryptedPath))
+                {
+                    File.Delete(filePath);
+                    File.Move(encryptedPath, filePath);
+                }
+                else
+                {
+                    throw new FileNotFoundException($"Encrypted file not created: {encryptedPath}");
+                }
+
+                return stopwatch.ElapsedMilliseconds;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+
+                // Cleanup encrypted file if it exists
+                if (File.Exists(encryptedPath))
+                {
+                    try { File.Delete(encryptedPath); } catch { }
+                }
+
+                throw new InvalidOperationException($"Encryption failed for file: {filePath}", ex);
+            }
         }
 
         private bool ShouldEncrypt(string filePath)
