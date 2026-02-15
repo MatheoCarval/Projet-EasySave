@@ -47,7 +47,7 @@ namespace EasySave.Services
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateWriter = stateWriter ?? throw new ArgumentNullException(nameof(stateWriter));
-            _cryptageManager = cryptageManager ?? new CryptageManager(string.Empty, Array.Empty<string>());
+            _cryptageManager = cryptageManager ?? new CryptageManager(string.Empty, string.Empty, Array.Empty<string>());
         }
 
         /// <summary>

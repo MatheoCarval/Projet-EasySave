@@ -17,6 +17,7 @@ namespace EasySave.Models
         private string LogFilePath { get; set; }
         private string StateFilePath { get; set; }
         private string CryptosoftPath { get; set; }
+        private string CryptosoftPublicKey { get; set; }
         private List<string> EncryptedExtensions { get; set; }
         private bool DarkMode { get; set; }
 
@@ -28,6 +29,7 @@ namespace EasySave.Models
             LogFilePath = string.Empty;
             StateFilePath = string.Empty;
             CryptosoftPath = string.Empty;
+            CryptosoftPublicKey = string.Empty;
             EncryptedExtensions = new List<string>();
             DarkMode = false;
         }
@@ -39,6 +41,7 @@ namespace EasySave.Models
         public string GetLogFilePath() => LogFilePath;
         public string GetStateFilePath() => StateFilePath;
         public string GetCryptosoftPath() => CryptosoftPath;
+        public string GetCryptosoftPublicKey() => CryptosoftPublicKey;
         public List<string> GetEncryptedExtensions() => new List<string>(EncryptedExtensions);
         public bool GetDarkMode() => DarkMode;
 
@@ -86,6 +89,11 @@ namespace EasySave.Models
         public void SetCryptosoftPath(string path)
         {
             CryptosoftPath = string.IsNullOrWhiteSpace(path) ? string.Empty : path.Trim();
+        }
+
+        public void SetCryptosoftPublicKey(string path)
+        {
+            CryptosoftPublicKey = string.IsNullOrWhiteSpace(path) ? string.Empty : path.Trim();
         }
 
         public void SetEncryptedExtensions(IEnumerable<string> extensions)
@@ -224,6 +232,7 @@ namespace EasySave.Models
                 LogFilePath = logPath,
                 StateFilePath = statePath,
                 CryptosoftPath = string.Empty,
+                CryptosoftPublicKey = string.Empty,
                 EncryptedExtensions = new List<string>(),
                 DarkMode = false
             };
@@ -264,6 +273,7 @@ namespace EasySave.Models
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
             public string CryptosoftPath { get; set; } = string.Empty;
+            public string CryptosoftPublicKey { get; set; } = string.Empty;
             public List<string> EncryptedExtensions { get; set; } = new();
             public bool DarkMode { get; set; }
         }

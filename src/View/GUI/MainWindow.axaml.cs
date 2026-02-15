@@ -243,6 +243,35 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Handles the Browse button click for Cryptosoft public key path (Settings)
+    /// </summary>
+    private async void BrowseCryptosoftPublicKey_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            var fileTypes = new System.Collections.Generic.List<FilePickerFileType>
+            {
+                new FilePickerFileType("Key files") { Patterns = new[] { "*.key", "*.pem" } },
+                new FilePickerFileType("All files") { Patterns = new[] { "*" } }
+            };
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Select RSA public key file (.key or .pem)",
+                AllowMultiple = false,
+                FileTypeFilter = fileTypes
+            };
+
+            var result = await StorageProvider.OpenFilePickerAsync(options);
+
+            if (result.Count > 0)
+            {
+                mainVm.SettingsVM.CryptosoftPublicKey = result[0].Path.LocalPath;
+            }
+        }
+    }
+
+    /// <summary>
     /// Handles the Browse button click to add a process name from an executable file.
     /// Cross-platform: .exe on Windows, .app bundles or any file on macOS, any file on Linux.
     /// </summary>

@@ -73,6 +73,7 @@ namespace EasySave.Services.Managers
                 LogFilePath = config.GetLogFilePath(),
                 StateFilePath = config.GetStateFilePath(),
                 CryptosoftPath = config.GetCryptosoftPath(),
+                CryptosoftPublicKey = config.GetCryptosoftPublicKey(),
                 EncryptedExtensions = config.GetEncryptedExtensions(),
                 DarkMode = config.GetDarkMode()
             };
@@ -118,6 +119,7 @@ namespace EasySave.Services.Managers
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
             config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
+            config.SetCryptosoftPublicKey(template.CryptosoftPublicKey ?? string.Empty);
             config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
 
@@ -145,6 +147,7 @@ namespace EasySave.Services.Managers
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
             public string? CryptosoftPath { get; set; }
+            public string? CryptosoftPublicKey { get; set; }
             public List<string>? EncryptedExtensions { get; set; }
             public bool DarkMode { get; set; }
         }
