@@ -15,7 +15,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": "\\\\localhost\\C$\\Users\\allan\\OneDrive\\Bureau\\SW\\Projet-EasySave\\.github\\workflows\\dotnet.yml",
     "CurrentTargetFile": "\\\\localhost\\C$\\Users\\allan\\Music\\workflows\\dotnet.yml",
-    "Progress": 100
+    "Progress": 100,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "68157a36-c248-40b2-a502-937bedcd60c2",
@@ -33,7 +35,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "f594ffa4-cb92-47c4-94d0-97f9dc8e0f48",
@@ -51,7 +55,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "91b98f29-2625-4309-beab-274cf1d5c263",
@@ -69,7 +75,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "209289b0-4d19-404d-bf0d-fab262462525",
@@ -87,7 +95,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "992d37c3-9004-42ea-b81f-01e15f4d62a6",
@@ -105,7 +115,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "0b2a4eda-c37a-49f3-8441-ec51f65c3cd4",
@@ -123,7 +135,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "0fa032f3-ebd0-46b3-8819-53e4d67930db",
@@ -141,7 +155,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "f2bd83eb-f59c-40b3-a02e-742661887aa6",
@@ -159,7 +175,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "2a4c0eb6-5ac3-4b30-9c99-6c11b80affa1",
@@ -179,7 +197,9 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   },
   {
     "Id": "7ccf8036-9efa-4fab-9c47-2134423104f3",
@@ -197,6 +217,28 @@
     "RemainingSize": 0,
     "CurrentSourceFile": null,
     "CurrentTargetFile": null,
-    "Progress": 0
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
+  },
+  {
+    "Id": "b121bb33-c51d-4bdc-b1da-dbbe6c98d013",
+    "Name": "test",
+    "SourcePath": [
+      "C:\\Users\\Maxime\\Documents\\test"
+    ],
+    "TargetPath": "C:\\Users\\Maxime\\Documents\\Debian",
+    "BackupType": 0,
+    "BackupState": 4,
+    "LastExecution": "0001-01-01T00:00:00",
+    "TotalFiles": 0,
+    "TotalSize": 0,
+    "RemainingFiles": 0,
+    "RemainingSize": 0,
+    "CurrentSourceFile": null,
+    "CurrentTargetFile": null,
+    "Progress": 0,
+    "EncryptFiles": false,
+    "EncryptedExtensions": []
   }
 ]

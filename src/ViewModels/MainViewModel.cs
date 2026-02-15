@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Models;
 using Models.Enums;
+using Models.Entries;
 using Services.Managers;
+using EasySave.Services.Managers;
+using EasyLog.Abstractions;
+using EasyLog.Enums;
+using EasyLog.Loggers;
 using Avalonia.Threading;
 
 namespace EasySave.ViewModels;
@@ -21,19 +26,32 @@ public class MainViewModel : ViewModelBase
     private bool _isAddEditModalOpen;
     private BackupJobViewModel? _editingBackupJob;
     private string _modalTitle = "Add Backup Task";
+    private bool _modalEncryptFiles;
+    private string _modalEncryptedExtensions = string.Empty;
     private bool _isProgressPopupOpen;
     private bool _isExecuteOrderOpen;
     private bool _isDeleteConfirmOpen;
     private string _deleteConfirmMessage = string.Empty;
+    private bool _isBlockedPopupOpen;
+    private string _blockedPopupMessage = string.Empty;
+    private bool _isErrorToast;
     private bool _isSettingsOpen;
     private bool _isHelpOpen;
     private bool _isLogsOpen;
+    private string _logsMessage = string.Empty;
     private string _toastMessage = string.Empty;
     private bool _isToastVisible;
     private DispatcherTimer? _toastTimer;
 
     public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
+    public ObservableCollection<BackupLogEntry> LogEntries { get; } = new();
     public SettingsViewModel SettingsVM { get; }
+
+    /// <summary>
+    /// Callback to open a folder picker dialog. Set by the View (MainWindow) to decouple ViewModel from UI.
+    /// Returns the selected folder path or null if cancelled.
+    /// </summary>
+    public Func<Task<string?>>? BrowseFolderCallback { get; set; } // kept for potential future use
 
     // Modal form fields
     private string _modalName = string.Empty;
@@ -44,6 +62,9 @@ public class MainViewModel : ViewModelBase
     private bool _isFilterOpen;
     private readonly HashSet<string> _selectedTypes = new(StringComparer.OrdinalIgnoreCase) { "COMPLETE", "DIFFERENTIAL" };
     private readonly HashSet<string> _selectedStates = new(StringComparer.OrdinalIgnoreCase) { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
+    private int _currentPage = 1;
+    private int _filteredCount;
+    private const int PageSize = 5;
 
     private static readonly string[] AllTypes = { "COMPLETE", "DIFFERENTIAL" };
     private static readonly string[] AllStates = { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
@@ -61,6 +82,9 @@ public class MainViewModel : ViewModelBase
         _progressViewModel = new ProgressViewModel();
         SettingsVM = new SettingsViewModel();
 
+        // When settings are saved, update blocked applications immediately
+        SettingsVM.SettingsSaved += OnSettingsSaved;
+
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
 
@@ -72,6 +96,7 @@ public class MainViewModel : ViewModelBase
         SaveModalCommand = new RelayCommand(SaveModal);
         CancelModalCommand = new RelayCommand(CloseModal);
         ViewLogsCommand = new RelayCommand(ViewLogs);
+        CloseLogsCommand = new RelayCommand(() => IsLogsOpen = false);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         OpenHelpCommand = new RelayCommand(OpenHelp);
         GoHomeCommand = new RelayCommand(GoHome);
@@ -79,6 +104,8 @@ public class MainViewModel : ViewModelBase
         ExecuteSelectedCommand = new RelayCommand(ExecuteSelected, () => BackupJobs.Any(j => j.IsSelected));
         AddSourcePathCommand = new RelayCommand(AddSourcePath);
         RemoveSourcePathCommand = new RelayCommand<SourcePathViewModel>(RemoveSourcePath);
+        BrowseSourcePathCommand = new RelayCommand<SourcePathViewModel>(BrowseSourcePath);
+        BrowseTargetPathCommand = new RelayCommand(BrowseTargetPath);
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
         ExecuteEditingJobCommand = new RelayCommand(ExecuteEditingJob, () => _editingBackupJob != null);
         CloseProgressCommand = new RelayCommand(CloseProgress);
@@ -90,6 +117,11 @@ public class MainViewModel : ViewModelBase
         ShowDeleteConfirmCommand = new RelayCommand(ShowDeleteConfirm, () => BackupJobs.Any(j => j.IsSelected));
         CancelDeleteCommand = new RelayCommand(() => IsDeleteConfirmOpen = false);
         ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
+        CloseBlockedPopupCommand = new RelayCommand(CloseBlockedPopup);
+        FilterErrorJobsCommand = new RelayCommand(FilterErrorJobs);
+        FilterAllJobsCommand = new RelayCommand(FilterAllJobs);
+        FilterActiveJobsCommand = new RelayCommand(FilterActiveJobs);
+        FilterCompletedJobsCommand = new RelayCommand(FilterCompletedJobs);
         DeselectAllCommand = new RelayCommand(DeselectAll);
         SelectAllCommand = new RelayCommand(ToggleSelectAll);
         ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
@@ -100,6 +132,8 @@ public class MainViewModel : ViewModelBase
         ToggleAllStatesCommand = new RelayCommand(ToggleAllStates);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
         DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
+        PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
+        NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -118,7 +152,7 @@ public class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _searchText, value))
             {
-                ApplyFilter();
+                ApplyFilter(resetPage: true);
             }
         }
     }
@@ -175,6 +209,18 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _modalValidationError, value);
     }
 
+    public bool ModalEncryptFiles
+    {
+        get => _modalEncryptFiles;
+        set => SetProperty(ref _modalEncryptFiles, value);
+    }
+
+    public string ModalEncryptedExtensions
+    {
+        get => _modalEncryptedExtensions;
+        set => SetProperty(ref _modalEncryptedExtensions, value);
+    }
+
     public bool IsEditMode => _editingBackupJob != null;
 
     public bool HasSelectedJobs => BackupJobs.Any(j => j.IsSelected);
@@ -186,6 +232,40 @@ public class MainViewModel : ViewModelBase
     public bool HasNoJobs => BackupJobs.Count == 0;
 
     public bool HasNoFilteredJobs => FilteredBackupJobs.Count == 0 && !HasNoJobs;
+
+    public int CurrentPage
+    {
+        get => _currentPage;
+        set
+        {
+            if (SetProperty(ref _currentPage, value))
+            {
+                ApplyFilter(resetPage: false);
+                OnPropertyChanged(nameof(CanGoToPreviousPage));
+                OnPropertyChanged(nameof(CanGoToNextPage));
+                ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_filteredCount / PageSize));
+
+    public bool CanGoToPreviousPage => CurrentPage > 1;
+
+    public bool CanGoToNextPage => CurrentPage < TotalPages;
+
+    public int PageItemCount
+    {
+        get
+        {
+            if (_filteredCount == 0)
+                return 0;
+            int start = (CurrentPage - 1) * PageSize + 1;
+            int end = Math.Min(CurrentPage * PageSize, _filteredCount);
+            return end - start + 1;
+        }
+    }
 
     public bool IsFilterOpen
     {
@@ -215,6 +295,132 @@ public class MainViewModel : ViewModelBase
     }
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
+
+    public bool IsBlockedPopupOpen
+    {
+        get => _isBlockedPopupOpen;
+        set => SetProperty(ref _isBlockedPopupOpen, value);
+    }
+
+    public string BlockedPopupMessage
+    {
+        get => _blockedPopupMessage;
+        set => SetProperty(ref _blockedPopupMessage, value);
+    }
+
+    public string TxtBlockedPopupTitle => T("gui_blocked_popup_title");
+    public string TxtBlockedPopupClose => T("gui_blocked_popup_close");
+
+    // Error toast color flag
+    public bool IsErrorToast
+    {
+        get => _isErrorToast;
+        set
+        {
+            if (SetProperty(ref _isErrorToast, value))
+                OnPropertyChanged(nameof(ToastBackground));
+        }
+    }
+
+    public string ToastBackground => _isErrorToast ? "#F44336" : "#4CAF50";
+
+    public string TxtErrorReasonLabel => T("gui_error_popup_reason");
+    public string TxtLastExecution => T("gui_last_execution");
+    public string TxtProgress => T("gui_progress");
+    public string TxtBackupTasks => T("gui_backup_tasks");
+    public string TxtManageSubtitle => T("gui_manage_subtitle");
+    public string TxtTotal => T("gui_total");
+    public string TxtActive => T("gui_active");
+    public string TxtDone => T("gui_done");
+    public string TxtErrors => T("gui_errors");
+    public string TxtSelectAll => T("gui_select_all");
+    public string TxtSearchByName => T("gui_search_by_name");
+    public string TxtNoTasksFound => T("gui_no_tasks_found");
+    public string TxtPaginationPage => T("gui_pagination_page");
+    public string TxtPaginationPageOf => T("gui_pagination_page_of");
+    public string TxtPaginationPrevious => T("gui_pagination_previous");
+    public string TxtPaginationNext => T("gui_pagination_next");
+
+    // Sidebar tooltips
+    public string TxtTooltipHome => T("gui_tooltip_home");
+    public string TxtTooltipAddBackup => T("gui_tooltip_add_backup");
+    public string TxtTooltipLogs => T("gui_tooltip_logs");
+    public string TxtTooltipSettings => T("gui_tooltip_settings");
+    public string TxtTooltipHelp => T("gui_tooltip_help");
+
+    // Filter panel
+    public string TxtFilters => T("gui_filters");
+    public string TxtClearAll => T("gui_clear_all");
+    public string TxtFilterBackupType => T("gui_filter_backup_type");
+    public string TxtFilterAll => T("gui_filter_all");
+    public string TxtFilterComplete => T("gui_filter_complete");
+    public string TxtFilterDifferential => T("gui_filter_differential");
+    public string TxtFilterStatus => T("gui_filter_status");
+    public string TxtFilterPending => T("gui_filter_pending");
+    public string TxtFilterActive => T("gui_filter_active");
+    public string TxtFilterCompleted => T("gui_filter_completed");
+    public string TxtFilterPaused => T("gui_filter_paused");
+    public string TxtFilterError => T("gui_filter_error");
+
+    // Empty state
+    public string TxtEmptyTitle => T("gui_empty_title");
+    public string TxtEmptyDesc => T("gui_empty_desc");
+
+    // Floating bar tooltips
+    public string TxtTooltipDeselect => T("gui_tooltip_deselect");
+    public string TxtTooltipExecute => T("gui_tooltip_execute");
+    public string TxtTooltipDelete => T("gui_tooltip_delete");
+    public string TxtTooltipBrowse => T("gui_tooltip_browse");
+    public string TxtTooltipMoveUp => T("gui_tooltip_move_up");
+    public string TxtTooltipMoveDown => T("gui_tooltip_move_down");
+
+    // About section
+    public string TxtAboutSoftware => T("gui_about_software");
+    public string TxtAboutCompany => T("gui_about_company");
+    public string TxtAboutLicense => T("gui_about_license");
+    public string TxtAboutLicenseValue => T("gui_about_license_value");
+    public string TxtAboutArchitecture => T("gui_about_architecture");
+
+    // Modal
+    public string TxtModalAddTitle => T("gui_modal_add_title");
+    public string TxtModalEditTitle => T("gui_modal_edit_title");
+    public string TxtModalBackupName => T("gui_modal_backup_name");
+    public string TxtModalBackupNamePlaceholder => T("gui_modal_backup_name_placeholder");
+    public string TxtModalSourcePaths => T("gui_modal_source_paths");
+    public string TxtModalSourcePlaceholder => T("gui_modal_source_placeholder");
+    public string TxtModalDestPath => T("gui_modal_dest_path");
+    public string TxtModalDestPlaceholder => T("gui_modal_dest_placeholder");
+    public string TxtModalBackupType => T("gui_modal_backup_type");
+    public string TxtModalEncryptTitle => T("gui_modal_encrypt_title");
+    public string TxtModalEncryptDesc => T("gui_modal_encrypt_desc");
+    public string TxtBtnCancel => T("gui_btn_cancel");
+    public string TxtBtnExecute => T("gui_btn_execute");
+    public string TxtBtnSave => T("gui_btn_save");
+    public string TxtBtnClose => T("gui_btn_close");
+    public string TxtBtnDelete => T("gui_btn_delete");
+    public string TxtBtnExecuteRun => T("gui_btn_execute_run");
+    public string TxtComplete => T("gui_complete");
+    public string TxtDifferential => T("gui_differential");
+
+    // Progress popup
+    public string TxtProgressTitle => T("gui_progress_title");
+    public string TxtProgressComplete => T("gui_progress_complete");
+    public string TxtProgressJobName => T("gui_progress_job_name");
+    public string TxtProgressCurrentFile => T("gui_progress_current_file");
+    public string TxtProgressProgress => T("gui_progress_progress");
+    public string TxtProgressFiles => T("gui_progress_files");
+    public string TxtProgressSize => T("gui_progress_size");
+    public string TxtProgressElapsed => T("gui_progress_elapsed");
+    public string TxtProgressSpeed => T("gui_progress_speed");
+    public string TxtProgressRemaining => T("gui_progress_remaining");
+
+    // Execute order popup
+    public string TxtExecOrderTitle => T("gui_exec_order_title");
+    public string TxtExecOrderDesc => T("gui_exec_order_desc");
+
+    // Delete confirm popup
+    public string TxtDeleteConfirmTitle => T("gui_delete_confirm_title");
+    public string TxtDeleteConfirmWarning => T("gui_delete_confirm_warning");
 
     public bool IsExecuteOrderOpen
     {
@@ -255,13 +461,13 @@ public class MainViewModel : ViewModelBase
     public bool IsLogsOpen
     {
         get => _isLogsOpen;
-        set
-        {
-            if (SetProperty(ref _isLogsOpen, value))
-            {
-                OnPropertyChanged(nameof(IsHomeActive));
-            }
-        }
+        set => SetProperty(ref _isLogsOpen, value);
+    }
+
+    public string LogsMessage
+    {
+        get => _logsMessage;
+        set => SetProperty(ref _logsMessage, value);
     }
 
     public string DeleteConfirmMessage
@@ -303,6 +509,7 @@ public class MainViewModel : ViewModelBase
     public ICommand SaveModalCommand { get; }
     public ICommand CancelModalCommand { get; }
     public ICommand ViewLogsCommand { get; }
+    public ICommand CloseLogsCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand OpenHelpCommand { get; }
     public ICommand GoHomeCommand { get; }
@@ -310,6 +517,8 @@ public class MainViewModel : ViewModelBase
     public ICommand ExecuteSelectedCommand { get; }
     public ICommand AddSourcePathCommand { get; }
     public ICommand RemoveSourcePathCommand { get; }
+    public ICommand BrowseSourcePathCommand { get; }
+    public ICommand BrowseTargetPathCommand { get; }
     public ICommand OpenEditModalForJobCommand { get; }
     public ICommand ExecuteEditingJobCommand { get; }
     public ICommand CloseProgressCommand { get; }
@@ -331,6 +540,13 @@ public class MainViewModel : ViewModelBase
     public ICommand ToggleAllStatesCommand { get; }
     public ICommand ClearFiltersCommand { get; }
     public ICommand DismissToastCommand { get; }
+    public ICommand CloseBlockedPopupCommand { get; }
+    public ICommand FilterErrorJobsCommand { get; }
+    public ICommand FilterAllJobsCommand { get; }
+    public ICommand FilterActiveJobsCommand { get; }
+    public ICommand FilterCompletedJobsCommand { get; }
+    public ICommand PreviousPageCommand { get; }
+    public ICommand NextPageCommand { get; }
 
     #endregion
 
@@ -338,13 +554,15 @@ public class MainViewModel : ViewModelBase
 
     private void OpenAddModal()
     {
-        ModalTitle = "Add Backup Task";
+        ModalTitle = TxtModalAddTitle;
         _editingBackupJob = null;
         ModalName = string.Empty;
         ModalSourcePaths.Clear();
         ModalSourcePaths.Add(new SourcePathViewModel());
         ModalTargetPath = string.Empty;
         ModalBackupTypeIndex = 0;
+        ModalEncryptFiles = false;
+        ModalEncryptedExtensions = string.Empty;
         ModalValidationError = string.Empty;
         IsAddEditModalOpen = true;
         OnPropertyChanged(nameof(IsEditMode));
@@ -361,7 +579,7 @@ public class MainViewModel : ViewModelBase
     {
         if (job == null) return;
 
-        ModalTitle = "Edit Backup Task";
+        ModalTitle = TxtModalEditTitle;
         _editingBackupJob = job;
         ModalName = job.Name;
         ModalValidationError = string.Empty;
@@ -372,6 +590,8 @@ public class MainViewModel : ViewModelBase
         }
         ModalTargetPath = job.TargetPath;
         ModalBackupTypeIndex = job.BackupType == BackupType.COMPLETE ? 0 : 1;
+        ModalEncryptFiles = job.GetBackupJob().EncryptFiles;
+        ModalEncryptedExtensions = string.Join(", ", job.GetBackupJob().EncryptedExtensions);
         IsAddEditModalOpen = true;
         OnPropertyChanged(nameof(IsEditMode));
         ((RelayCommand)ExecuteEditingJobCommand).RaiseCanExecuteChanged();
@@ -388,6 +608,7 @@ public class MainViewModel : ViewModelBase
 
         var backupType = ModalBackupTypeIndex == 0 ? BackupType.COMPLETE : BackupType.DIFFERENTIAL;
         var sourcePaths = ModalSourcePaths.Where(s => !string.IsNullOrWhiteSpace(s.Path)).Select(s => s.Path).ToList();
+        var encryptedExtensions = ParseEncryptedExtensions(ModalEncryptedExtensions);
 
         try
         {
@@ -395,6 +616,8 @@ public class MainViewModel : ViewModelBase
             {
                 // Edit existing
                 var job = _editingBackupJob.GetBackupJob();
+                job.EncryptFiles = ModalEncryptFiles;
+                job.EncryptedExtensions = encryptedExtensions;
                 _backupManager.ModifyJob(job.Id, ModalName, sourcePaths, ModalTargetPath, backupType);
 
                 // Reload the list to reflect changes
@@ -404,18 +627,21 @@ public class MainViewModel : ViewModelBase
             {
                 // Add new
                 var backupJob = _backupManager.CreateJob(ModalName, sourcePaths, ModalTargetPath, backupType);
+                backupJob.EncryptFiles = ModalEncryptFiles;
+                backupJob.EncryptedExtensions = encryptedExtensions;
+                _backupManager.SaveJob(backupJob);
 
                 // Reload the list to include the new job
                 ReloadBackupJobs();
             }
 
             CloseModal();
-            ShowToast("Backup task saved!");
+            ShowToast(T("gui_toast_saved"));
         }
         catch (ArgumentException)
         {
             // Duplicate name — just keep the modal open so the user can fix it
-            ModalValidationError = "A job with this name already exists.";
+            ModalValidationError = T("gui_error_duplicate_name");
         }
         catch (InvalidOperationException)
         {
@@ -457,8 +683,8 @@ public class MainViewModel : ViewModelBase
         var selected = BackupJobs.Where(j => j.IsSelected).ToList();
         if (selected.Count == 0) return;
         DeleteConfirmMessage = selected.Count == 1
-            ? $"Are you sure you want to delete \"{selected[0].Name}\"?"
-            : $"Are you sure you want to delete {selected.Count} backup jobs?";
+            ? $"{T("gui_delete_confirm_single")} \"{selected[0].Name}\" ?"
+            : $"{T("gui_delete_confirm_multi")} {selected.Count} {T("gui_delete_confirm_jobs")} ?";
         IsDeleteConfirmOpen = true;
     }
 
@@ -466,7 +692,7 @@ public class MainViewModel : ViewModelBase
     {
         IsDeleteConfirmOpen = false;
         DeleteSelected();
-        ShowToast("Backup task(s) deleted.");
+        ShowToast(T("gui_toast_deleted"));
     }
 
     private void ShowExecuteOrder()
@@ -531,12 +757,18 @@ public class MainViewModel : ViewModelBase
                 await Task.Run(() => _backupManager.ExecuteJob(jobId));
                 jobToRefresh.RefreshDisplay();
                 if (isLastJob)
+                {
                     _progressViewModel.IsCompleted = true;
+                    ReloadBackupJobs();
+                }
             }
             catch (Exception ex)
             {
                 HideProgressPopup();
-                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                job.RefreshDisplay();
+                ReloadBackupJobs();
+                if (!HandleBlockedAppException(ex))
+                    ShowErrorPopup(job.Name, ex);
                 break;
             }
         }
@@ -605,12 +837,15 @@ public class MainViewModel : ViewModelBase
             // Back on UI thread after await - refresh and mark as completed
             jobToRefresh.RefreshDisplay();
             _progressViewModel.IsCompleted = true;
+            ReloadBackupJobs();
         }
         catch (Exception ex)
         {
             HideProgressPopup();
-            // TODO: Show error message to user
-            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
+            jobToRefresh.RefreshDisplay();
+            ReloadBackupJobs();
+            if (!HandleBlockedAppException(ex))
+                ShowErrorPopup(jobToRefresh.Name, ex);
         }
     }
 
@@ -639,13 +874,16 @@ public class MainViewModel : ViewModelBase
                 if (isLastJob)
                 {
                     _progressViewModel.IsCompleted = true;
+                    ReloadBackupJobs();
                 }
             }
             catch (Exception ex)
             {
                 HideProgressPopup();
-                // TODO: Show error message to user
-                System.Diagnostics.Debug.WriteLine($"Error executing backup {job.Name}: {ex.Message}");
+                job.RefreshDisplay();
+                ReloadBackupJobs();
+                if (!HandleBlockedAppException(ex))
+                    ShowErrorPopup(job.Name, ex);
                 break;
             }
         }
@@ -668,12 +906,15 @@ public class MainViewModel : ViewModelBase
             // Back on UI thread after await - refresh and mark as completed
             jobToRefresh.RefreshDisplay();
             _progressViewModel.IsCompleted = true;
+            ReloadBackupJobs();
         }
         catch (Exception ex)
         {
             HideProgressPopup();
-            // TODO: Show error message to user
-            System.Diagnostics.Debug.WriteLine($"Error executing backup: {ex.Message}");
+            jobToRefresh.RefreshDisplay();
+            ReloadBackupJobs();
+            if (!HandleBlockedAppException(ex))
+                ShowErrorPopup(jobToRefresh.Name, ex);
         }
     }
 
@@ -690,10 +931,22 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    private async void BrowseSourcePath(SourcePathViewModel? sourcePathVm)
+    {
+        // Now handled in code-behind via BrowseSourcePath_Click
+    }
+
+    private async void BrowseTargetPath()
+    {
+        // Now handled in code-behind via BrowseTargetPath_Click
+    }
+
     private void LoadBackupJobs()
     {
-        // Load all backup jobs from BackupManager
-        var jobs = _backupManager.GetAllJobs();
+        // Load all backup jobs from BackupManager, sorted by most recently executed first
+        var jobs = _backupManager.GetAllJobs()
+            .OrderByDescending(j => j.LastExecution == DateTime.MinValue ? 0 : 1)
+            .ThenByDescending(j => j.LastExecution);
 
         foreach (var job in jobs)
         {
@@ -703,7 +956,7 @@ public class MainViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(HasNoJobs));
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ReloadBackupJobs()
@@ -711,8 +964,10 @@ public class MainViewModel : ViewModelBase
         // Clear existing jobs
         BackupJobs.Clear();
 
-        // Reload all jobs from BackupManager
-        var jobs = _backupManager.GetAllJobs();
+        // Reload all jobs from BackupManager, sorted by most recently executed first
+        var jobs = _backupManager.GetAllJobs()
+            .OrderByDescending(j => j.LastExecution == DateTime.MinValue ? 0 : 1)
+            .ThenByDescending(j => j.LastExecution);
 
         foreach (var job in jobs)
         {
@@ -730,14 +985,42 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedJobsCount));
         OnPropertyChanged(nameof(AreAllSelected));
         NotifyStats();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
-    private void ApplyFilter()
+    private void ApplyFilter(bool resetPage)
     {
         FilteredBackupJobs.Clear();
         var query = _searchText?.Trim() ?? string.Empty;
 
+        var filteredList = GetFilteredJobs(query).ToList();
+        _filteredCount = filteredList.Count;
+
+        if (resetPage)
+        {
+            _currentPage = 1;
+            OnPropertyChanged(nameof(CurrentPage));
+        }
+
+        // Apply pagination
+        var paginatedFiltered = filteredList
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize);
+
+        foreach (var job in paginatedFiltered)
+            FilteredBackupJobs.Add(job);
+
+        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        OnPropertyChanged(nameof(PageItemCount));
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(CanGoToNextPage));
+        OnPropertyChanged(nameof(CanGoToPreviousPage));
+        ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
+        ((RelayCommand)NextPageCommand).RaiseCanExecuteChanged();
+    }
+
+    private IEnumerable<BackupJobViewModel> GetFilteredJobs(string query)
+    {
         IEnumerable<BackupJobViewModel> filtered = BackupJobs;
 
         // Text search: name only
@@ -752,10 +1035,7 @@ public class MainViewModel : ViewModelBase
         if (_selectedStates.Count < AllStates.Length)
             filtered = filtered.Where(j => _selectedStates.Contains(j.BackupStateDisplay));
 
-        foreach (var job in filtered)
-            FilteredBackupJobs.Add(job);
-
-        OnPropertyChanged(nameof(HasNoFilteredJobs));
+        return filtered;
     }
 
     private void ToggleFilterType(string? type)
@@ -769,7 +1049,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedTypes.Add(type);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleFilterState(string? state)
@@ -783,7 +1063,7 @@ public class MainViewModel : ViewModelBase
         else
             _selectedStates.Add(state);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllTypes()
@@ -793,7 +1073,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var t in AllTypes) _selectedTypes.Add(t);
         NotifyFilterTypeChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ToggleAllStates()
@@ -803,7 +1083,7 @@ public class MainViewModel : ViewModelBase
         else
             foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
     }
 
     private void ClearFilters()
@@ -812,7 +1092,7 @@ public class MainViewModel : ViewModelBase
         foreach (var s in AllStates) _selectedStates.Add(s);
         NotifyFilterTypeChanged();
         NotifyFilterStateChanged();
-        ApplyFilter();
+        ApplyFilter(resetPage: true);
         IsFilterOpen = false;
     }
 
@@ -876,9 +1156,159 @@ public class MainViewModel : ViewModelBase
         _progressViewModel.Reset();
     }
 
+    /// <summary>
+    /// Called when settings are saved — reload blocked applications and logger format into BackupManager immediately.
+    /// </summary>
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        var config = ConfigurationManager.GetInstance().LoadConfiguration();
+        _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+
+        // Refresh all translated labels on the main page
+        RefreshHelpTranslations();
+    }
+
+    private void ShowBlockedPopup(string message)
+    {
+        BlockedPopupMessage = message;
+        IsBlockedPopupOpen = true;
+    }
+
+    private void CloseBlockedPopup()
+    {
+        IsBlockedPopupOpen = false;
+    }
+
+    private void ShowErrorPopup(string jobName, Exception ex)
+    {
+        var reason = GetErrorReason(ex);
+        ShowErrorToast($"{jobName} — {reason}");
+    }
+
+    private void ShowErrorToast(string message)
+    {
+        IsErrorToast = true;
+        ToastMessage = message;
+        IsToastVisible = true;
+        _toastTimer?.Stop();
+        _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
+        _toastTimer.Tick += (s, e) =>
+        {
+            IsToastVisible = false;
+            _toastTimer?.Stop();
+        };
+        _toastTimer.Start();
+    }
+
+    private void FilterErrorJobs()
+    {
+        // Set filter to show only ERROR state
+        _selectedStates.Clear();
+        _selectedStates.Add("ERROR");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void FilterAllJobs()
+    {
+        // Reset filter to show all states
+        _selectedStates.Clear();
+        foreach (var s in AllStates) _selectedStates.Add(s);
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void FilterActiveJobs()
+    {
+        _selectedStates.Clear();
+        _selectedStates.Add("ACTIVE");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void FilterCompletedJobs()
+    {
+        _selectedStates.Clear();
+        _selectedStates.Add("COMPLETED");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void PreviousPage()
+    {
+        if (CanGoToPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CanGoToNextPage)
+        {
+            CurrentPage++;
+        }
+    }
+
+    /// <summary>
+    /// Checks if an exception is caused by a blocked application and shows the popup if so.
+    /// Returns true if the exception was a blocked-app error.
+    /// </summary>
+    private bool HandleBlockedAppException(Exception ex)
+    {
+        // The blocked app exception is an InvalidOperationException with "Backup blocked" in the message
+        var blocked = ex as InvalidOperationException;
+        if (blocked != null && blocked.Message.Contains("Backup blocked", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowBlockedPopup(FormatBlockedMessage(blocked.Message));
+            return true;
+        }
+        // Also check inner exception (when wrapped by ExecuteJob's catch)
+        if (ex.InnerException is InvalidOperationException inner &&
+            inner.Message.Contains("Backup blocked", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowBlockedPopup(FormatBlockedMessage(inner.Message));
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Extracts a user-friendly error reason from an execution exception.
+    /// </summary>
+    private string GetErrorReason(Exception ex)
+    {
+        // Dig into inner exception for the real cause
+        var inner = ex.InnerException ?? ex;
+
+        if (inner is DirectoryNotFoundException)
+            return T("gui_error_path_not_found");
+        if (inner is UnauthorizedAccessException)
+            return T("gui_error_access_denied");
+        if (inner is IOException)
+            return T("gui_error_io");
+
+        return T("gui_execution_error");
+    }
+
+    /// <summary>
+    /// Formats the raw blocked message into a user-friendly translated message.
+    /// </summary>
+    private string FormatBlockedMessage(string rawMessage)
+    {
+        // Extract app names from "Backup blocked because these applications are running: chrome, excel"
+        var colonIndex = rawMessage.LastIndexOf(':');
+        if (colonIndex >= 0 && colonIndex < rawMessage.Length - 1)
+        {
+            var apps = rawMessage[(colonIndex + 1)..].Trim();
+            return $"{T("gui_blocked_popup_message")}\n\n{apps}";
+        }
+        return rawMessage;
+    }
+
     private void CloseProgress()
     {
-        ShowToast("Backup completed!");
+        ShowToast(T("gui_toast_completed"));
         HideProgressPopup();
         NotifyStats();
     }
@@ -894,6 +1324,7 @@ public class MainViewModel : ViewModelBase
 
     public void ShowToast(string message)
     {
+        IsErrorToast = false;
         ToastMessage = message;
         IsToastVisible = true;
         _toastTimer?.Stop();
@@ -924,7 +1355,7 @@ public class MainViewModel : ViewModelBase
     #endregion
 
     // ── Help screen translated labels ──
-    private string T(string key)
+    public string T(string key)
     {
         try { return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? key; }
         catch { return key; }
@@ -961,6 +1392,9 @@ public class MainViewModel : ViewModelBase
     public string HelpSettingsLogFormat => T("help_settings_log_format");
     public string HelpSettingsLogPath => T("help_settings_log_path");
     public string HelpSettingsStatePath => T("help_settings_state_path");
+    public string HelpSettingsBlockedApps => T("help_settings_blocked_apps");
+    public string HelpSettingsCryptosoftPath => T("help_settings_cryptosoft_path");
+    public string HelpSettingsEncryptedExtensions => T("help_settings_encrypted_ext");
     public string HelpLogs => T("help_logs");
     public string HelpLogsDesc => T("help_logs_desc");
     public string HelpLogsTip => T("help_logs_tip");
@@ -975,13 +1409,51 @@ public class MainViewModel : ViewModelBase
     public string HelpTip4Title => T("help_tip4_title");
     public string HelpTip4Desc => T("help_tip4_desc");
 
+    // New sections
+    public string HelpSectionFeatures => T("help_section_features");
+    public string HelpDashboard => T("help_dashboard");
+    public string HelpDashboardDesc => T("help_dashboard_desc");
+    public string HelpDashboardTip => T("help_dashboard_tip");
+    public string HelpEncryption => T("help_encryption");
+    public string HelpEncryptionDesc => T("help_encryption_desc");
+    public string HelpErrorHandling => T("help_error_handling");
+    public string HelpErrorHandlingDesc => T("help_error_handling_desc");
+    public string HelpFaq => T("help_faq");
+    public string HelpFaq1Q => T("help_faq1_q");
+    public string HelpFaq1A => T("help_faq1_a");
+    public string HelpFaq2Q => T("help_faq2_q");
+    public string HelpFaq2A => T("help_faq2_a");
+    public string HelpFaq3Q => T("help_faq3_q");
+    public string HelpFaq3A => T("help_faq3_a");
+    public string HelpFaq4Q => T("help_faq4_q");
+    public string HelpFaq4A => T("help_faq4_a");
+    public string HelpNeedHelp => T("help_need_help");
+    public string HelpNeedHelpDesc => T("help_need_help_desc");
+    public string HelpCopyEmail => T("help_copy_email");
+
     public void RefreshHelpTranslations()
     {
         foreach (var prop in GetType().GetProperties()
-            .Where(p => p.Name.StartsWith("Help")))
+            .Where(p => p.Name.StartsWith("Help") || p.Name.StartsWith("Txt")))
         {
             OnPropertyChanged(prop.Name);
         }
+    }
+
+    /// <summary>
+    /// Parse a comma, semicolon, or newline-separated list of file extensions.
+    /// </summary>
+    private List<string> ParseEncryptedExtensions(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return new List<string>();
+
+        return input
+            .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(ext => ext.Trim())
+            .Where(ext => !string.IsNullOrWhiteSpace(ext))
+            .Distinct()
+            .ToList();
     }
 }
 

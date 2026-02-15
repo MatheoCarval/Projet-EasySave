@@ -1,6 +1,7 @@
 using EasyLog.Enums;
 using EasySave.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -68,8 +69,12 @@ namespace EasySave.Services.Managers
             {
                 Language = config.GetLanguage(),
                 LogFormat = config.GetLogFormat().ToString(),
+                BlockedApplications = config.GetBlockedApplications(),
                 LogFilePath = config.GetLogFilePath(),
                 StateFilePath = config.GetStateFilePath(),
+                CryptosoftPath = config.GetCryptosoftPath(),
+                CryptosoftPublicKey = config.GetCryptosoftPublicKey(),
+                EncryptedExtensions = config.GetEncryptedExtensions(),
                 DarkMode = config.GetDarkMode()
             };
 
@@ -109,8 +114,13 @@ namespace EasySave.Services.Managers
                 config.SetLogFormat(logFormat);
             }
 
+            config.SetBlockedApplications(template.BlockedApplications ?? new List<string>());
+
             config.SetLogFilePath(template.LogFilePath);
             config.SetStateFilePath(template.StateFilePath);
+            config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
+            config.SetCryptosoftPublicKey(template.CryptosoftPublicKey ?? string.Empty);
+            config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
 
             return config;
@@ -133,8 +143,12 @@ namespace EasySave.Services.Managers
         {
             public string Language { get; set; } = string.Empty;
             public string LogFormat { get; set; } = string.Empty;
+            public List<string>? BlockedApplications { get; set; }
             public string LogFilePath { get; set; } = string.Empty;
             public string StateFilePath { get; set; } = string.Empty;
+            public string? CryptosoftPath { get; set; }
+            public string? CryptosoftPublicKey { get; set; }
+            public List<string>? EncryptedExtensions { get; set; }
             public bool DarkMode { get; set; }
         }
     }

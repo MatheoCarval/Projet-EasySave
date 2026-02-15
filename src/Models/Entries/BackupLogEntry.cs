@@ -39,6 +39,11 @@ namespace Models.Entries
         public long TransferTime { get; set; }
 
         /// <summary>
+        /// The duration of the file encryption in milliseconds; 0 means not encrypted.
+        /// </summary>
+        public long EncryptionTime { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of BackupLogEntry with default values; required for JSON and XML serialization.
         /// </summary>
         public BackupLogEntry()
@@ -49,6 +54,7 @@ namespace Models.Entries
             Timestamp = DateTime.Now;
             FileSize = 0;
             TransferTime = 0;
+            EncryptionTime = 0;
         }
 
         /// <summary>
@@ -82,7 +88,7 @@ namespace Models.Entries
         /// </summary>
         public override string ToString()
         {
-            return $"[{Timestamp:yyyy-MM-dd HH:mm:ss}] {BackupName}: {SourcePath} -> {TargetPath} ({GetFormattedSize()}, {TransferTime}ms)";
+            return $"[{Timestamp:yyyy-MM-dd HH:mm:ss}] {BackupName}: {SourcePath} -> {TargetPath} ({GetFormattedSize()}, {TransferTime}ms, {EncryptionTime}ms)";
         }
     }
 }

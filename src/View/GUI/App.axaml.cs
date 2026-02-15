@@ -4,6 +4,8 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using EasySave.Services;
 using Services.Managers;
+using System;
+using System.IO;
 
 namespace EasySave.View.GUI;
 
@@ -27,6 +29,25 @@ public class App : Application
     /// Must be set before calling Launch().
     /// </summary>
     public static bool IsDarkMode { get; set; } = false;
+
+    /// <summary>
+    /// Logs an unhandled exception to crash.log in the EasySave AppData folder.
+    /// </summary>
+    public static void LogCrash(string context, Exception ex)
+    {
+        try
+        {
+            var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+            Directory.CreateDirectory(logDir);
+            var logPath = Path.Combine(logDir, "crash.log");
+            var details = $"[{DateTime.Now}] {context} - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n";
+            if (ex.InnerException != null)
+                details += $"Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}\n";
+            details += "\n";
+            File.AppendAllText(logPath, details);
+        }
+        catch { }
+    }
 
     /// <summary>
     /// Initializes the application by loading XAML and applying the theme
