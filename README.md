@@ -1,22 +1,26 @@
 # EasySave
 
-Application de sauvegarde de fichiers en ligne de commande avec interface interactive et exécution automatisée.
-A la racine du projet, vous trouverez un fichier "EasySave.exe" qui est l'exécutable de l'application. Vous pouvez le lancer directement pour accéder à l'interface interactive ou utiliser les commandes en ligne pour exécuter des sauvegardes spécifiques. Une explication détaillée de l'utilisation de l'application est disponible dans la section "Guide d'utilisation" ci-dessous.
+Application de sauvegarde de fichiers avec interface graphique (Avalonia), interface console et exécution automatisée en ligne de commande.
 
 ## Fonctionnalités
 
-- **Créer et gérer des sauvegardes** : Configurez des tâches de sauvegarde complètes ou différentielles
-- **Interface interactive** : Menu console intuitif pour une gestion facile
-- **Mode automatisé** : Exécutez les sauvegardes en ligne de commande
-- **Logs structurés** : Fichiers de log en JSON 
+- **Interface graphique (GUI)** : Interface Avalonia moderne avec thèmes clair/sombre
+- **Interface console** : Menu interactif pour une gestion en terminal
+- **Mode automatisé (CLI)** : Exécution des sauvegardes en ligne de commande
+- **Sauvegarde complète ou différentielle** : Copie intégrale ou uniquement les fichiers modifiés
+- **Chiffrement optionnel** : Chiffrement des fichiers via un outil externe CryptoSoft configurable
+- **Logs structurés** : Fichiers de log quotidiens au format JSON ou XML
+- **Suivi d'état en temps réel** : Progression fichier par fichier avec état persistant
+- **Blocage d'applications** : Empêche l'exécution de sauvegardes si certaines applications sont en cours
 - **Support multilingue** : Interface en français et anglais
+- **Architecture MVVM** : Séparation propre entre la vue, les ViewModels et les services
 
-## Installation & Configuration
+## Prérequis
 
-### Prérequis
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) ou supérieur
+- Windows (x64) — compatible Linux/macOS via .NET mais les dépendances natives (SkiaSharp/HarfBuzz) sont configurées pour Windows
 
-- .NET 8.0 ou supérieur
-- Windows (ou compatible avec .NET)
+## Installation & Exécution
 
 ### Compilation
 
@@ -25,13 +29,13 @@ cd Projet-EasySave\src
 dotnet build
 ```
 
-### Exécution
+### Lancement (GUI par défaut)
 
 ```bash
 dotnet run --project EasySave.csproj
 ```
 
-ou directement avec l'exécutable:
+ou directement avec l'exécutable :
 
 ```bash
 EasySave.exe
@@ -39,22 +43,21 @@ EasySave.exe
 
 ## Guide d'utilisation
 
-### Mode interactif
+### Mode GUI (par défaut)
 
-Lance l'interface console interactive par défaut:
+Lancez l'application sans argument pour ouvrir l'interface graphique Avalonia :
 
 ```bash
 EasySave.exe
 ```
 
-Vous pouvez:
-- Créer une nouvelle sauvegarde
-- Voir la liste de vos sauvegardes
-- Modifier ou supprimer des sauvegardes
-- Exécuter des sauvegardes
-- Accéder aux paramètres
+Vous pouvez :
+- Créer, modifier et supprimer des tâches de sauvegarde
+- Exécuter des sauvegardes avec suivi de progression en temps réel
+- Visualiser les logs
+- Configurer la langue, le format de log, le chiffrement et les applications bloquées
 
-### Mode automatisé
+### Mode automatisé (CLI)
 
 Exécutez les sauvegardes directement en ligne de commande.
 
@@ -78,67 +81,146 @@ Exécute les sauvegardes 1, 2 et 3 dans l'ordre.
 EasySave.exe "1;3"
 EasySave.exe "1;3;5"
 ```
-Exécute les sauvegardes 1 et 3 (ou 1, 3 et 5 pour le second exemple) dans l'ordre. (Notez les guillemets pour éviter les problèmes d'interprétation des points-virgules par le shell.)
+Exécute les sauvegardes sélectionnées dans l'ordre. (Guillemets nécessaires pour les points-virgules.)
 
-##  Structure du projet
+## Structure du projet
 
 ```
 src/
-├── Directory.Build.props         # Propriétés communes MSBuild
-├── EasySave.csproj               # Projet principal
-├── EasySave.slnx                 # Solution
 ├── Program.cs                    # Point d'entrée
-├── Datas/                        # Données embarquées
-│   └── Languages.json            # Traductions
-├── EasyLog/                      # Bibliothèque de logging
-│   ├── Abstractions/             # Interfaces
-│   ├── Enums/                    # Énumérations
-│   ├── Exceptions/               # Exceptions spécifiques
-│   ├── Formatters/               # Formatage des logs
-│   └── Loggers/                  # Implémentations de loggers
-├── EasySave.Tests/               # Tests
-│   └── ...
-├── Exceptions/                   # Exceptions applicatives
+├── EasySave.csproj               # Projet principal (.NET 8.0, WinExe)
+├── EasySave.slnx                 # Solution
+├── Directory.Build.props         # Propriétés communes MSBuild
+│
 ├── Models/                       # Modèles de données
+│   ├── BackupJob.cs              # Définition d'une tâche de sauvegarde
+│   ├── Configuration.cs          # Modèle de configuration
 │   ├── Entries/                  # Entrées (state/logs)
-│   └── Enums/                    # Énumérations (BackupState, BackupType, etc.)
+│   └── Enums/                    # BackupState, BackupType, LogFormat
+│
+├── ViewModels/                   # ViewModels (pattern MVVM)
+│   ├── ViewModelBase.cs          # Classe de base (INotifyPropertyChanged)
+│   ├── MainViewModel.cs          # ViewModel principal
+│   ├── BackupJobViewModel.cs     # Gestion des tâches
+│   ├── ProgressViewModel.cs      # Suivi de progression
+│   ├── SettingsViewModel.cs      # Paramètres
+│   ├── SourcePathViewModel.cs    # Sélection des chemins source
+│   └── LogsVisualizerViewModel.cs # Visualisation des logs
+│
+├── View/                         # Interfaces utilisateur
+│   ├── GUI/                      # Interface graphique Avalonia
+│   │   ├── App.axaml             # Application Avalonia
+│   │   ├── MainWindow.axaml      # Fenêtre principale
+│   │   ├── LogsVisualizerWindow.axaml # Visualiseur de logs
+│   │   └── GUILauncher.cs        # Lanceur GUI
+│   └── Console/                  # Interface console
+│       ├── ConsoleUI.cs          # UI console principale
+│       ├── Screens/              # Écrans (menu, exécution, suppression, paramètres)
+│       └── Components/           # Composants réutilisables
+│
 ├── Services/                     # Services métier
-│   ├── FileTransferService.cs    # Gestion des transferts de fichiers
-│   ├── LocalizationService.cs    # Gestion de la localisation
-│   ├── Managers/                 # Gestionnaires (config, backups)
-│   └── Writers/                  # Écriture de l'état
-├── Utilities/                    # Utilitaires divers
-├── View/                         # Interface utilisateur
-│   └── Console/                  # UI console
-│       ├── Components/
-│       └── Screens/
-└── publish/                      # Artefacts de publication
+│   ├── FileTransferService.cs    # Transfert de fichiers avec suivi de progression
+│   ├── LocalizationService.cs    # Gestion multilingue (fr, en)
+│   ├── Managers/
+│   │   ├── BackupManager.cs      # Gestion des sauvegardes (CRUD + exécution)
+│   │   ├── ConfigurationManager.cs # Configuration (singleton, thread-safe)
+│   │   └── CryptageManager.cs    # Chiffrement via CryptoSoft externe
+│   └── Writers/
+│       └── StateWriter.cs        # Écriture de l'état des sauvegardes
+│
+├── Utilities/                    # Utilitaires
+│   ├── FileSystemHelper.cs       # Helpers système de fichiers
+│   └── PathValidator.cs          # Validation des chemins
+│
+├── Exceptions/                   # Exceptions applicatives
+│   └── FileTransferException.cs
+│
+├── Datas/                        # Données embarquées
+│   └── Languages.json            # Traductions (ressource embarquée)
+│
+├── EasyLog/                      # Bibliothèque de logging (projet séparé)
+│   ├── Abstractions/             # Interface ILogger
+│   ├── Enums/                    # LogFormat (JSON, XML)
+│   ├── Exceptions/               # Exceptions spécifiques au logging
+│   ├── Formatters/               # Formatage des entrées de log
+│   └── Loggers/                  # DailyJsonLogger, DailyXmlLogger
+│
+└── EasySave.Tests/               # Tests unitaires (xUnit + Moq)
 ```
 
-## Fichiers de configuration et données
+## Fichiers de données (`%AppData%\EasySave\`)
 
-- **`Datas/jobs.json`** : Stockage des sauvegardes créées
-- **`Datas/Languages.json`** : Traductions de l'interface (embarqué en ressource)
-- **`%AppData%\EasySave\Config.json`** : Configuration (langue, format de log, chemins)
-- **`%AppData%\EasySave\state.json`** : État courant des sauvegardes
-- **`%AppData%\EasySave\jobs.json`** ou **`%AppData%\EasySave\jobs.xml`** : Fichiers de logs selon le format choisi
+Toutes les données utilisateur sont stockées dans le dossier **`%AppData%\EasySave\`** :
+
+| Fichier | Description |
+|---|---|
+| `Config.json` | Configuration de l'application (langue, format de log, chemins, chiffrement, thème, applications bloquées) |
+| `jobs.json` | Définition des tâches de sauvegarde |
+| `state.json` | État courant de chaque tâche (progression, fichiers restants, etc.) |
+| `logs/` | Dossier contenant les fichiers de log quotidiens (JSON ou XML selon la configuration) |
+
+> **Migration automatique** : Si un ancien fichier `Datas/jobs.json` existe à côté de l'exécutable (ancien emplacement), il est automatiquement copié vers `%AppData%\EasySave\jobs.json` au premier lancement.
+
+## Configuration
+
+La configuration est gérée dans `%AppData%\EasySave\Config.json` et peut être modifiée via l'interface (GUI ou console).
+
+| Paramètre | Description | Valeur par défaut |
+|---|---|---|
+| Langue | Langue de l'interface (`fr`, `en`) | `fr` |
+| Format de log | Format des fichiers de log (`JSON`, `XML`) | `JSON` |
+| Chemin des logs | Répertoire de stockage des logs | `%AppData%\EasySave\logs\` |
+| Chemin du state | Fichier d'état des sauvegardes | `%AppData%\EasySave\state.json` |
+| Chemin CryptoSoft | Chemin vers l'exécutable de chiffrement | *(vide — chiffrement désactivé)* |
+| Clé publique CryptoSoft | Clé publique pour le chiffrement | *(vide)* |
+| Extensions chiffrées | Extensions de fichiers à chiffrer (ex: `.txt`, `.docx`) | *(vide)* |
+| Applications bloquées | Applications empêchant l'exécution des sauvegardes | *(vide)* |
+| Thème sombre | Activer le thème sombre dans la GUI | `false` |
 
 ## Types de sauvegarde
 
-- **COMPLETE** : Copie complète de tous les fichiers
-- **DIFFERENTIAL** : Copie uniquement des fichiers modifiés depuis la dernière sauvegarde
+| Type | Description |
+|---|---|
+| **COMPLETE** | Copie intégrale de tous les fichiers source vers la destination |
+| **DIFFERENTIAL** | Copie uniquement les fichiers modifiés depuis la dernière sauvegarde complète |
 
-##  Dépannage
+## États d'une sauvegarde
+
+| État | Description |
+|---|---|
+| `PENDING` | Tâche créée, en attente d'exécution |
+| `ACTIVE` | Exécution en cours |
+| `PAUSED` | Suspendue temporairement |
+| `COMPLETED` | Terminée avec succès |
+| `ERROR` | Erreur rencontrée lors de l'exécution |
+
+## Chiffrement
+
+Le chiffrement est optionnel et repose sur un exécutable externe **CryptoSoft** :
+
+1. Configurer le chemin vers CryptoSoft dans les paramètres
+2. Fournir la clé publique de chiffrement
+3. Définir les extensions de fichiers à chiffrer (ex: `.txt`, `.pdf`, `.docx`)
+4. Activer le chiffrement sur les tâches de sauvegarde concernées
+
+Les fichiers correspondants sont chiffrés après copie vers la destination.
+
+## Dépannage
+
+### L'application ne se lance pas
+
+Vérifiez les logs d'erreur dans `%AppData%\EasySave\error.log` et `%AppData%\EasySave\crash.log`.
 
 ### Aucune sauvegarde trouvée
 
-Assurez-vous d'avoir créé au moins une sauvegarde via le mode interactif avant d'utiliser les modes automatisés.
+Créez au moins une sauvegarde via l'interface avant d'utiliser le mode CLI.
 
 ### Erreur d'accès aux fichiers
 
-Vérifiez que vous avez les permissions de lecture/écriture sur les chemins source et destination.
+Vérifiez les permissions de lecture/écriture sur les chemins source et destination.
 
-### Fichier jobs.json non trouvé
+### Sauvegarde bloquée
 
-Le fichier `Datas/jobs.json` est créé automatiquement lors de la première exécution. Si le dossier `Datas` n'existe pas, il sera créé.
+Si des applications bloquées sont configurées et en cours d'exécution, la sauvegarde sera refusée. Fermez ces applications ou modifiez la liste dans les paramètres.
+
 
