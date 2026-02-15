@@ -51,6 +51,22 @@ public partial class MainWindow : Window
 
         DataContext = vm;
 
+        // Subscribe to property changes to load logs when panel becomes visible
+        vm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.IsLogsOpen) && vm.IsLogsOpen)
+            {
+                try
+                {
+                    ResetLogsToJournal();
+                }
+                catch (Exception ex)
+                {
+                    App.LogCrash("LoadLogsOnOpen", ex);
+                }
+            }
+        };
+
         // Catch all unobserved task exceptions (async void crashes)
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {

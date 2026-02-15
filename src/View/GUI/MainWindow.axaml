@@ -1675,7 +1675,7 @@
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!-- Logs Panel -->
             <!-- ═══════════════════════════════════════════════════════════════ -->
-            <Grid Grid.Column="1" IsVisible="{Binding IsLogsOpen}" RowDefinitions="Auto,*">
+            <Grid Grid.Column="1" Name="LogsPanel" IsVisible="{Binding IsLogsOpen}" RowDefinitions="Auto,*">
 
                 <!-- Top Navigation Bar -->
                 <Border Grid.Row="0" BorderBrush="{DynamicResource ClickableCardBorder}" 
