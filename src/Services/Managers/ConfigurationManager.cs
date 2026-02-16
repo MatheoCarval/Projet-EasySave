@@ -74,7 +74,9 @@ namespace EasySave.Services.Managers
                 StateFilePath = config.GetStateFilePath(),
                 CryptosoftPath = config.GetCryptosoftPath(),
                 EncryptedExtensions = config.GetEncryptedExtensions(),
-                DarkMode = config.GetDarkMode()
+                DarkMode = config.GetDarkMode(),
+                OnboardingCompleted = config.GetOnboardingCompleted(),
+                AccentColor = config.GetAccentColor()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -120,6 +122,8 @@ namespace EasySave.Services.Managers
             config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
             config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
+            config.SetOnboardingCompleted(template.OnboardingCompleted);
+            config.SetAccentColor(template.AccentColor ?? "Blue");
 
             return config;
         }
@@ -147,6 +151,8 @@ namespace EasySave.Services.Managers
             public string? CryptosoftPath { get; set; }
             public List<string>? EncryptedExtensions { get; set; }
             public bool DarkMode { get; set; }
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
         }
     }
 }

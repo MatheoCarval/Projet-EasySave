@@ -51,12 +51,114 @@ public partial class MainWindow : Window
 
         DataContext = vm;
 
+        // Subscribe to onboarding step changes
+        vm.OnboardingStepChanged += OnOnboardingStepChanged;
+        vm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.IsOnboardingActive))
+            {
+                if (vm.IsOnboardingActive)
+                {
+                    // Delay to let layout complete, then position
+                    Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
+                }
+            }
+            else if (e.PropertyName == nameof(MainViewModel.IsSettingsOpen) && vm.IsSettingsOpen)
+            {
+                Dispatcher.UIThread.Post(() => UpdateAccentChecks(vm.SettingsVM.AccentColorIndex), DispatcherPriority.Loaded);
+            }
+        };
+
+        // Initial onboarding positioning after window is loaded
+        this.Opened += (s, e) =>
+        {
+            if (vm.IsOnboardingActive)
+            {
+                Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
+            }
+        };
+
+        // Re-render onboarding overlay when window is resized / maximized
+        this.PropertyChanged += (s, e) =>
+        {
+            if (e.Property == BoundsProperty && vm.IsOnboardingActive)
+            {
+                Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
+            }
+        };
+
         // Catch all unobserved task exceptions (async void crashes)
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {
             App.LogCrash("UnobservedTaskException", e.Exception);
             e.SetObserved();
         };
+
+        // Global keyboard shortcuts
+        this.KeyDown += MainWindow_KeyDown;
+
+        // Drag & drop for source paths
+        AddHandler(DragDrop.DropEvent, SourcePathDrop);
+        AddHandler(DragDrop.DragOverEvent, SourcePathDragOver);
+        AddHandler(DragDrop.DragEnterEvent, SourcePathDragEnter);
+        AddHandler(DragDrop.DragLeaveEvent, SourcePathDragLeave);
+    }
+
+    /// <summary>
+    /// Handles global keyboard shortcuts: Ctrl+N (add), Ctrl+S (settings), F1 (help), Delete (delete selected)
+    /// </summary>
+    private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        // Ignore shortcuts when typing in a text field
+        if (e.Source is TextBox || e.Source is Avalonia.Controls.AutoCompleteBox) return;
+
+        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+        if (ctrl && e.Key == Key.N)
+        {
+            if (vm.AddBackupCommand.CanExecute(null))
+                vm.AddBackupCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == Key.S)
+        {
+            if (vm.OpenSettingsCommand.CanExecute(null))
+                vm.OpenSettingsCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F1)
+        {
+            if (vm.OpenHelpCommand.CanExecute(null))
+                vm.OpenHelpCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Delete)
+        {
+            if (vm.BackupJobs.Any(j => j.IsSelected))
+            {
+                if (vm.DeleteSelectedCommand.CanExecute(null))
+                    vm.DeleteSelectedCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Escape)
+        {
+            // Close any open modal/page
+            if (vm.IsAddEditModalOpen)
+            {
+                if (vm.CancelModalCommand.CanExecute(null))
+                    vm.CancelModalCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if (vm.IsSettingsOpen || vm.IsHelpOpen || vm.IsLogsOpen || vm.IsSchedulerOpen)
+            {
+                if (vm.GoHomeCommand.CanExecute(null))
+                    vm.GoHomeCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
     }
 
     /// <summary>
@@ -107,31 +209,90 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Opens the native folder picker dialog. Handles COM cleanup to prevent
-    /// crashes when opening the picker multiple times in sequence on Windows.
+    /// Opens a folder picker dialog.
+    /// On Windows: uses native Win32 COM API on a dedicated STA thread (bypasses Avalonia's
+    /// buggy StorageProvider which causes random native COM crashes).
+    /// On other platforms: falls back to Avalonia's StorageProvider.
     /// </summary>
-    private async Task<string?> OpenFolderPickerSafeAsync()
+    private async Task<string?> OpenFolderPickerSafeAsync(string title = "Select Folder")
     {
+        if (!await _browseSemaphore.WaitAsync(0)) return null;
         try
         {
-            var options = new FolderPickerOpenOptions
+            if (OperatingSystem.IsWindows())
             {
-                Title = "Select Folder",
-                AllowMultiple = false
-            };
-
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-            if (result.Count > 0 && result[0].Path != null)
+                // Use Win32 native picker on a dedicated STA thread — no COM crash
+                return await EasySave.Utilities.Win32Picker.PickFolderAsync(title);
+            }
+            else
             {
-                return result[0].Path.LocalPath;
+                // Avalonia fallback for macOS/Linux
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false
+                };
+                var result = await StorageProvider.OpenFolderPickerAsync(options);
+                if (result.Count > 0 && result[0].Path != null)
+                    return result[0].Path.LocalPath;
+                return null;
             }
         }
         catch (Exception ex)
         {
             App.LogCrash("OpenFolderPickerSafe", ex);
+            return null;
         }
-        return null;
+        finally
+        {
+            _browseSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Opens a file picker dialog.
+    /// On Windows: uses native Win32 COM API on a dedicated STA thread.
+    /// On other platforms: falls back to Avalonia's StorageProvider.
+    /// </summary>
+    private async Task<string?> OpenFilePickerSafeAsync(string title,
+        string? filterName = null, string? filterPattern = null)
+    {
+        if (!await _browseSemaphore.WaitAsync(0)) return null;
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Use Win32 native picker on a dedicated STA thread — no COM crash
+                return await EasySave.Utilities.Win32Picker.PickFileAsync(title, filterName, filterPattern);
+            }
+            else
+            {
+                // Avalonia fallback for macOS/Linux
+                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+                if (!string.IsNullOrEmpty(filterName) && !string.IsNullOrEmpty(filterPattern))
+                    fileTypes.Add(new FilePickerFileType(filterName) { Patterns = new[] { filterPattern } });
+
+                var options = new FilePickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false,
+                    FileTypeFilter = fileTypes.Count > 0 ? fileTypes : null
+                };
+                var result = await StorageProvider.OpenFilePickerAsync(options);
+                if (result.Count > 0 && result[0].Path != null)
+                    return result[0].Path.LocalPath;
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("OpenFilePickerSafe", ex);
+            return null;
+        }
+        finally
+        {
+            _browseSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -165,6 +326,108 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    #region Drag & Drop Source Paths
+
+    private Border? _sourceDropZone;
+    private Border? FindSourceDropZone() => _sourceDropZone ??= this.FindControl<Border>("SourcePathDropZone");
+
+    /// <summary>
+    /// Allow drag when files/folders are being dragged over the source path zone.
+    /// </summary>
+    private void SourcePathDragOver(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        e.DragEffects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Highlight the drop zone when dragging enters it.
+    /// </summary>
+    private void SourcePathDragEnter(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
+            zone.BorderThickness = new Avalonia.Thickness(2.5);
+        }
+    }
+
+    /// <summary>
+    /// Remove highlight when drag leaves the zone.
+    /// </summary>
+    private void SourcePathDragLeave(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = (IBrush?)this.FindResource("BorderSubtle") ?? Brushes.Gray;
+            zone.BorderThickness = new Avalonia.Thickness(2);
+        }
+    }
+
+    /// <summary>
+    /// Handles files/folders dropped onto the source path zone.
+    /// Adds each dropped path as a new source path entry.
+    /// </summary>
+    private void SourcePathDrop(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        if (DataContext is not MainViewModel vm) return;
+
+        // Reset visual
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = (IBrush?)this.FindResource("BorderSubtle") ?? Brushes.Gray;
+            zone.BorderThickness = new Avalonia.Thickness(2);
+        }
+
+        var files = e.Data.GetFiles();
+        if (files == null) return;
+
+        foreach (var item in files)
+        {
+            var path = item.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path)) continue;
+
+            // If the first source path is empty, fill it instead of adding a new one
+            var emptySlot = vm.ModalSourcePaths.FirstOrDefault(s => string.IsNullOrWhiteSpace(s.Path));
+            if (emptySlot != null)
+            {
+                emptySlot.Path = path;
+            }
+            else
+            {
+                vm.ModalSourcePaths.Add(new SourcePathViewModel(path));
+            }
+        }
+
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Checks if the drag event targets the source path drop zone.
+    /// </summary>
+    private bool IsSourceDropTarget(DragEventArgs e)
+    {
+        var zone = FindSourceDropZone();
+        if (zone == null) return false;
+
+        // Check if the event source is within the drop zone
+        if (e.Source is Avalonia.Visual visual)
+        {
+            var ancestors = visual.GetSelfAndVisualAncestors();
+            return ancestors.Any(a => a == zone);
+        }
+        return false;
+    }
+
+    #endregion
 
     /// <summary>
     /// Handles the Tapped event on the selection zone to toggle checkbox
@@ -230,6 +493,56 @@ public partial class MainWindow : Window
         catch { }
     }
 
+    private void SendEmail_Tapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "mailto:support@prosoft.com?subject=EasySave%20-%20Support%20Request",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch { }
+    }
+
+    #region Accent Color Handlers
+
+    private void SetAccentColor(int index)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SettingsVM.AccentColorIndex = index;
+            UpdateAccentChecks(index);
+        }
+    }
+
+    private void UpdateAccentChecks(int index)
+    {
+        var checks = new[] {
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckBlue"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckPurple"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckGreen"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckOrange"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckRed"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckTeal")
+        };
+        for (int i = 0; i < checks.Length; i++)
+        {
+            if (checks[i] != null) checks[i]!.IsVisible = (i == index);
+        }
+    }
+
+    private void AccentBlue_Tapped(object? s, TappedEventArgs e) => SetAccentColor(0);
+    private void AccentPurple_Tapped(object? s, TappedEventArgs e) => SetAccentColor(1);
+    private void AccentGreen_Tapped(object? s, TappedEventArgs e) => SetAccentColor(2);
+    private void AccentOrange_Tapped(object? s, TappedEventArgs e) => SetAccentColor(3);
+    private void AccentRed_Tapped(object? s, TappedEventArgs e) => SetAccentColor(4);
+    private void AccentTeal_Tapped(object? s, TappedEventArgs e) => SetAccentColor(5);
+
+    #endregion
+
     /// <summary>
     /// Forces COM cleanup to prevent Windows folder/file picker crashes
     /// when opening multiple dialogs in sequence.
@@ -247,35 +560,11 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var dir = await OpenFolderPickerSafeAsync("Select Log Directory");
+        if (!string.IsNullOrEmpty(dir) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select Log Directory",
-                    AllowMultiple = false
-                };
-
-                var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-                if (result.Count > 0 && result[0].Path != null)
-                {
-                    string dir = result[0].Path.LocalPath;
-                    string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
-                    mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseLogPath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
+            mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
         }
     }
 
@@ -284,34 +573,10 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var dir = await OpenFolderPickerSafeAsync("Select State File Directory");
+        if (!string.IsNullOrEmpty(dir) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select State File Directory",
-                    AllowMultiple = false
-                };
-
-                var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-                if (result.Count > 0 && result[0].Path != null)
-                {
-                    string dir = result[0].Path.LocalPath;
-                    mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseStatePath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
         }
     }
 
@@ -320,105 +585,34 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseCryptosoftPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var title = OperatingSystem.IsWindows()
+            ? "Select Cryptosoft executable (.exe)"
+            : "Select Cryptosoft executable";
+
+        var path = await OpenFilePickerSafeAsync(title, "Executables", "*.exe");
+        if (!string.IsNullOrEmpty(path) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
-
-                if (OperatingSystem.IsWindows())
-                {
-                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
-                }
-                else
-                {
-                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-                }
-
-                var options = new FilePickerOpenOptions
-                {
-                    Title = OperatingSystem.IsWindows()
-                        ? "Select Cryptosoft executable (.exe)"
-                        : "Select Cryptosoft executable",
-                    AllowMultiple = false,
-                    FileTypeFilter = fileTypes
-                };
-
-                var result = await StorageProvider.OpenFilePickerAsync(options);
-
-                if (result.Count > 0)
-                {
-                    mainVm.SettingsVM.CryptosoftPath = result[0].Path.LocalPath;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseCryptosoftPath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            mainVm.SettingsVM.CryptosoftPath = path;
         }
     }
 
     /// <summary>
     /// Handles the Browse button click to add a process name from an executable file.
-    /// Cross-platform: .exe on Windows, .app bundles or any file on macOS, any file on Linux.
     /// </summary>
     private async void BrowseExe_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var title = OperatingSystem.IsWindows()
+            ? "Select an application (.exe)"
+            : "Select an application";
+
+        var path = await OpenFilePickerSafeAsync(title, "Executables", "*.exe");
+        if (!string.IsNullOrEmpty(path) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (!string.IsNullOrWhiteSpace(fileName))
             {
-                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
-
-                if (OperatingSystem.IsWindows())
-                {
-                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
-                }
-                else if (OperatingSystem.IsMacOS())
-                {
-                    fileTypes.Add(new FilePickerFileType("Applications") { Patterns = new[] { "*.app", "*" } });
-                }
-                else
-                {
-                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-                }
-
-                var options = new FilePickerOpenOptions
-                {
-                    Title = OperatingSystem.IsWindows()
-                        ? "Select an application (.exe)"
-                        : "Select an application",
-                    AllowMultiple = false,
-                    FileTypeFilter = fileTypes
-                };
-
-                var result = await StorageProvider.OpenFilePickerAsync(options);
-
-                if (result.Count > 0)
-                {
-                    string fileName = System.IO.Path.GetFileNameWithoutExtension(result[0].Name);
-                    if (!string.IsNullOrWhiteSpace(fileName))
-                    {
-                        mainVm.SettingsVM.AddBlockedApplication(fileName);
-                    }
-                }
+                mainVm.SettingsVM.AddBlockedApplication(fileName);
             }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseExe", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
         }
     }
 
@@ -2428,6 +2622,170 @@ public partial class MainWindow : Window
             _etatCurrentPage = page;
             ApplyEtatPagination();
             jumpBox.Text = "";
+        }
+    }
+
+    #endregion
+
+    #region Onboarding
+
+    private void OnOnboardingStepChanged(int step)
+    {
+        Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(step), DispatcherPriority.Loaded);
+    }
+
+    /// <summary>
+    /// Positions the spotlight cutout, glow ring, and tooltip card for the given onboarding step.
+    /// Step 0 = welcome (centered card, no spotlight).
+    /// Steps 1-5 = sidebar buttons (Home, Add, Logs, Settings, Help).
+    /// </summary>
+    private void UpdateOnboardingPosition(int step)
+    {
+        var backdropPath = this.FindControl<Avalonia.Controls.Shapes.Path>("OnboardingBackdropPath");
+        var glowRing = this.FindControl<Border>("OnboardingGlowRing");
+        var card = this.FindControl<Border>("OnboardingCard");
+
+        if (backdropPath == null || glowRing == null || card == null) return;
+
+        // Update step dots
+        UpdateOnboardingDots(step);
+
+        var windowBounds = this.Bounds;
+        double winW = windowBounds.Width;
+        double winH = windowBounds.Height;
+
+        if (step == 0)
+        {
+            // Welcome step: full dark overlay, centered card, no glow ring
+            var fullRect = new Avalonia.Media.RectangleGeometry { Rect = new Avalonia.Rect(0, 0, winW, winH) };
+            backdropPath.Data = fullRect;
+            glowRing.IsVisible = false;
+
+            // Center the card
+            double cx = (winW - 380) / 2;
+            double cy = (winH - 340) / 2;
+            card.Margin = new Avalonia.Thickness(cx, cy, 0, 0);
+            return;
+        }
+
+        // Steps 1-5: find the target sidebar button
+        Avalonia.Visual? target = step switch
+        {
+            1 => this.FindControl<Grid>("SidebarHomeBtn"),
+            2 => this.FindControl<Grid>("SidebarAddBtn"),
+            3 => this.FindControl<Grid>("SidebarLogsBtn"),
+            4 => this.FindControl<Grid>("SidebarSettingsBtn"),
+            5 => this.FindControl<Grid>("SidebarHelpBtn"),
+            _ => null
+        };
+
+        if (target == null) return;
+
+        // Get target position relative to this window by walking the visual tree
+        var targetBounds = target.Bounds;
+        var pos = GetPositionInWindow(target);
+
+        double tX = pos.X;
+        double tY = pos.Y;
+        double tW = targetBounds.Width;
+        double tH = targetBounds.Height;
+
+        // Rounded rectangle spotlight
+        double pad = 8;
+        double holeX = tX - pad;
+        double holeY = tY - pad;
+        double holeW = tW + pad * 2;
+        double holeH = tH + pad * 2;
+        double holeR = 14;
+
+        // Create backdrop with rounded-rect cutout using StreamGeometry
+        var fullGeom = new Avalonia.Media.RectangleGeometry { Rect = new Avalonia.Rect(0, 0, winW, winH) };
+        var holeGeom = BuildRoundedRectGeometry(holeX, holeY, holeW, holeH, holeR);
+
+        var combined = new Avalonia.Media.CombinedGeometry(
+            Avalonia.Media.GeometryCombineMode.Exclude, fullGeom, holeGeom);
+
+        backdropPath.Data = combined;
+
+        // Show and position glow ring (rounded rectangle)
+        glowRing.IsVisible = true;
+        glowRing.Width = holeW;
+        glowRing.Height = holeH;
+        glowRing.CornerRadius = new Avalonia.CornerRadius(holeR);
+        glowRing.Margin = new Avalonia.Thickness(holeX, holeY, 0, 0);
+
+        // Position tooltip card to the right of the sidebar (100px sidebar width + gap)
+        double cardLeft = 120;
+        double cardTop = Math.Max(20, tY - 30);
+
+        // Make sure the card doesn't go below the window
+        if (cardTop + 320 > winH)
+            cardTop = winH - 340;
+
+        card.Margin = new Avalonia.Thickness(cardLeft, cardTop, 0, 0);
+    }
+
+    /// <summary>
+    /// Gets the position of a visual element relative to this window by walking the visual tree.
+    /// </summary>
+    private Avalonia.Point GetPositionInWindow(Avalonia.Visual element)
+    {
+        double x = 0, y = 0;
+        Avalonia.Visual? current = element;
+        while (current != null && current != this)
+        {
+            x += current.Bounds.X;
+            y += current.Bounds.Y;
+            current = current.GetVisualParent();
+        }
+        return new Avalonia.Point(x, y);
+    }
+
+    /// <summary>
+    /// Builds a StreamGeometry for a rounded rectangle (Avalonia RectangleGeometry has no corner radius).
+    /// </summary>
+    private static Avalonia.Media.StreamGeometry BuildRoundedRectGeometry(double x, double y, double w, double h, double r)
+    {
+        var sg = new Avalonia.Media.StreamGeometry();
+        using (var ctx = sg.Open())
+        {
+            ctx.BeginFigure(new Avalonia.Point(x + r, y), true);
+            ctx.LineTo(new Avalonia.Point(x + w - r, y));
+            ctx.ArcTo(new Avalonia.Point(x + w, y + r), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x + w, y + h - r));
+            ctx.ArcTo(new Avalonia.Point(x + w - r, y + h), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x + r, y + h));
+            ctx.ArcTo(new Avalonia.Point(x, y + h - r), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x, y + r));
+            ctx.ArcTo(new Avalonia.Point(x + r, y), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.EndFigure(true);
+        }
+        return sg;
+    }
+
+    /// <summary>
+    /// Updates the dot indicators for the current onboarding step.
+    /// </summary>
+    private void UpdateOnboardingDots(int activeStep)
+    {
+        var dots = new[]
+        {
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot0"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot1"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot2"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot3"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot4"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot5"),
+        };
+
+        for (int i = 0; i < dots.Length; i++)
+        {
+            if (dots[i] != null)
+            {
+                dots[i]!.Fill = i == activeStep
+                    ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4FC3F7"))
+                    : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#40808080"));
+            }
         }
     }
 
