@@ -3037,6 +3037,65 @@
                             </StackPanel>
                         </Grid>
 
+                        <!-- Play / Pause / Stop Buttons -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Spacing="16"
+                                    Margin="0,8,0,0"
+                                    IsVisible="{Binding !ProgressViewModel.IsCompleted}">
+
+                            <!-- Play (Resume) Button -->
+                            <Button Width="48" Height="48"
+                                    CornerRadius="24"
+                                    Background="#224CAF50"
+                                    BorderBrush="#4CAF50"
+                                    BorderThickness="1.5"
+                                    Padding="0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Play"
+                                    Command="{Binding PlayBackupCommand}">
+                                <Viewbox Width="22" Height="22">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#4CAF50" Data="M8 5v14l11-7z"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+
+                            <!-- Pause Button -->
+                            <Button Width="48" Height="48"
+                                    CornerRadius="24"
+                                    Background="#22FF9800"
+                                    BorderBrush="#FF9800"
+                                    BorderThickness="1.5"
+                                    Padding="0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Pause"
+                                    Command="{Binding PauseBackupCommand}">
+                                <Viewbox Width="22" Height="22">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#FF9800" Data="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+
+                            <!-- Stop Button -->
+                            <Button Width="48" Height="48"
+                                    CornerRadius="24"
+                                    Background="#22F44336"
+                                    BorderBrush="#F44336"
+                                    BorderThickness="1.5"
+                                    Padding="0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Stop"
+                                    Command="{Binding StopBackupCommand}">
+                                <Viewbox Width="22" Height="22">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#F44336" Data="M6 6h12v12H6z"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+                        </StackPanel>
+
                         <!-- Close Button -->
                         <Button Classes="PrimaryButton"
                                 Content="{Binding TxtBtnClose}"
