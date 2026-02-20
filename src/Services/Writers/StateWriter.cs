@@ -15,22 +15,12 @@ namespace Services.Writers
     /// </summary>
     public class StateWriter
     {
-        /// <summary>
-        /// The file path where backup job state information is persisted.
-        /// </summary>
         private readonly string _stateFilePath;
-        /// <summary>
-        /// In-memory cache of state entries indexed by job name.
-        /// </summary>
         private readonly Dictionary<string, StateEntry> _stateEntries;
-        /// <summary>
-        /// Lock object for thread-safe access to state entries.
-        /// </summary>
         private readonly object _lock = new object();
-        /// <summary>
-        /// JSON serialization options configured for pretty printing with camelCase property naming.
-        /// </summary>
         private readonly JsonSerializerOptions _jsonOptions;
+        private bool _dirty;
+        private Timer? _flushTimer;
 
         /// <summary>
         /// Initializes a new instance of StateWriter with the specified state file path. Creates directory if needed and loads existing state from disk.
@@ -66,8 +56,48 @@ namespace Services.Writers
             {
                 var stateEntry = StateEntry.FromBackupJob(job);
                 _stateEntries[job.Name] = stateEntry;
+                _dirty = true;
+                EnsureFlushTimer();
+            }
+        }
 
-                WriteStateToDisk();
+        /// <summary>
+        /// Forces an immediate write to disk (call at job completion/error).
+        /// </summary>
+        public void Flush()
+        {
+            lock (_lock)
+            {
+                if (_dirty)
+                {
+                    WriteStateToDisk();
+                    _dirty = false;
+                }
+            }
+        }
+
+        private void EnsureFlushTimer()
+        {
+            if (_flushTimer == null)
+            {
+                _flushTimer = new Timer(_ =>
+                {
+                    try
+                    {
+                        lock (_lock)
+                        {
+                            if (_dirty)
+                            {
+                                WriteStateToDisk();
+                                _dirty = false;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[StateWriter] Timer flush error: {ex.Message}");
+                    }
+                }, null, 500, 500);
             }
         }
 

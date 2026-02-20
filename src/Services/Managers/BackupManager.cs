@@ -6,6 +6,7 @@ using Utilities;
 using System.Text.Json;
 using System.Runtime.ConstrainedExecution;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Services.Managers;
 
@@ -162,7 +163,7 @@ public class BackupManager
 
         try
         {
-            // Calculate totals BEFORE starting transfers
+            // Calculate totals in a single pass
             job.TotalFiles = 0;
             job.TotalSize = 0;
             job.BackupState = BackupState.ACTIVE;
@@ -171,9 +172,11 @@ public class BackupManager
             {
                 if (PathValidator.IsDirectory(sourcePath))
                 {
-                    var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
-                    job.TotalFiles += files.Length;
-                    job.TotalSize += files.Sum(f => new FileInfo(f).Length);
+                    foreach (var fi in new DirectoryInfo(sourcePath).EnumerateFiles("*", SearchOption.AllDirectories))
+                    {
+                        job.TotalFiles++;
+                        job.TotalSize += fi.Length;
+                    }
                 }
                 else if (File.Exists(sourcePath))
                 {
@@ -182,7 +185,6 @@ public class BackupManager
                 }
                 else
                 {
-                    // Fail fast on misconfigured jobs: a configured source path does not exist.
                     throw new DirectoryNotFoundException(
                         $"Source path '{sourcePath}' does not exist for job '{jobId}'.");
                 }
@@ -209,14 +211,39 @@ public class BackupManager
             job.MarkAsCompleted();
             job.ErrorReason = null;
             _stateWriter.UpdateJobState(job);
+            _stateWriter.Flush();
+            _fileTransferService.FlushLogger();
         }
         catch (Exception ex)
         {
             job.MarkAsError();
             job.ErrorReason = GetUserFriendlyError(ex);
             _stateWriter.UpdateJobState(job);
+            _stateWriter.Flush();
+            _fileTransferService.FlushLogger();
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
+    }
+
+    /// <summary>
+    /// Executes a backup job asynchronously on a background thread.
+    /// </summary>
+    public Task ExecuteJobAsync(string jobId)
+    {
+        return Task.Run(() => ExecuteJob(jobId));
+    }
+
+    /// <summary>
+    /// Executes multiple backup jobs in parallel asynchronously.
+    /// Checks blocked applications once before launching all jobs.
+    /// </summary>
+    public async Task ExecuteJobsInParallelAsync(IEnumerable<string> jobIds)
+    {
+        EnsureNoBlockedApplicationsRunning();
+
+        var tasks = jobIds.Select(jobId => Task.Run(() => ExecuteJob(jobId))).ToList();
+
+        await Task.WhenAll(tasks);
     }
 
     /// <summary>

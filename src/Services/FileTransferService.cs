@@ -33,9 +33,11 @@ namespace EasySave.Services
         private readonly CryptageManager _cryptageManager;
 
         /// <summary>
-        /// Event raised when a file transfer completes
+        /// Event raised when a file transfer completes (throttled)
         /// </summary>
         public event EventHandler<FileProgressEventArgs>? FileTransferred;
+        private DateTime _lastProgressEvent = DateTime.MinValue;
+        private const int ProgressEventIntervalMs = 150;
 
         /// <summary>
         /// Initializes FileTransferService with required dependencies for logging and state persistence.
@@ -57,6 +59,11 @@ namespace EasySave.Services
         public void UpdateLogger(ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public void FlushLogger()
+        {
+            _logger.Flush();
         }
 
         /// <summary>
@@ -85,10 +92,8 @@ namespace EasySave.Services
                 {
                     job.RemainingFiles--;
                     job.RemainingSize -= FileSystemHelper.GetFileSize(sourceFile);
+                    job.UpdateProgress();
                 }
-
-                job.UpdateProgress();
-                _stateWriter.UpdateJobState(job);
             }
         }
 
@@ -101,7 +106,6 @@ namespace EasySave.Services
                 PathValidator.ToUncPath(sourceFile),
                 PathValidator.ToUncPath(targetFile)
             );
-            _stateWriter.UpdateJobState(job);
 
             string? targetDirectory = Path.GetDirectoryName(targetFile);
 
@@ -137,18 +141,24 @@ namespace EasySave.Services
                 job.UpdateProgress();
                 _stateWriter.UpdateJobState(job);
 
-                // Raise file transferred event
-                FileTransferred?.Invoke(this, new FileProgressEventArgs
+                // Raise file transferred event (throttled to avoid UI flooding)
+                var now = DateTime.UtcNow;
+                if ((now - _lastProgressEvent).TotalMilliseconds >= ProgressEventIntervalMs
+                    || job.RemainingFiles <= 0)
                 {
-                    JobId = job.Id,
-                    JobName = job.Name,
-                    CurrentFile = Path.GetFileName(sourceFile),
-                    TotalFiles = (int)job.TotalFiles,
-                    RemainingFiles = (int)job.RemainingFiles,
-                    TotalSize = job.TotalSize,
-                    RemainingSize = job.RemainingSize,
-                    ProgressPercentage = (int)job.Progress
-                });
+                    _lastProgressEvent = now;
+                    FileTransferred?.Invoke(this, new FileProgressEventArgs
+                    {
+                        JobId = job.Id,
+                        JobName = job.Name,
+                        CurrentFile = Path.GetFileName(sourceFile),
+                        TotalFiles = (int)job.TotalFiles,
+                        RemainingFiles = (int)job.RemainingFiles,
+                        TotalSize = job.TotalSize,
+                        RemainingSize = job.RemainingSize,
+                        ProgressPercentage = (int)job.Progress
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -177,11 +187,33 @@ namespace EasySave.Services
         /// <summary>
         /// Copies a file from source to destination using File.Copy with overwrite and measures elapsed time.
         /// </summary>
+        private const int SmallFileThreshold = 1024 * 1024; // 1 MB
+        private const int LargeBufferSize = 256 * 1024;    // 256 KB buffer
+
         private long CopyFile(string source, string destination)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            File.Copy(source, destination, overwrite: true);
+            // If destination exists with ReadOnly attribute, overwrite fails — clear it first
+            if (File.Exists(destination))
+            {
+                var attrs = File.GetAttributes(destination);
+                if ((attrs & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(destination, attrs & ~FileAttributes.ReadOnly);
+            }
+
+            var sourceInfo = new FileInfo(source);
+            if (sourceInfo.Length > SmallFileThreshold)
+            {
+                // Large file: use buffered stream copy for better throughput
+                using var sourceStream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read, LargeBufferSize, FileOptions.SequentialScan);
+                using var destStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, LargeBufferSize, FileOptions.SequentialScan);
+                sourceStream.CopyTo(destStream, LargeBufferSize);
+            }
+            else
+            {
+                File.Copy(source, destination, overwrite: true);
+            }
 
             stopwatch.Stop();
             return stopwatch.ElapsedMilliseconds;
