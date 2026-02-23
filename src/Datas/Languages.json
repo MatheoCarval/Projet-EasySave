@@ -442,7 +442,7 @@
 
     "gui_drop_hint": "or drag & drop files/folders here",
     "gui_notif_completed": "Backup completed successfully",
-    "gui_notif_failed": "Backup failed"
+    "gui_notif_failed": "Backup failed",
     "logs_no_logs_found": "No log file found",
     "logs_read_error": "Read error: ",
     "logs_save_xml": "Save XML file",
@@ -887,7 +887,7 @@
 
     "gui_drop_hint": "ou glisser-déposer des fichiers/dossiers ici",
     "gui_notif_completed": "Sauvegarde terminée avec succès",
-    "gui_notif_failed": "Échec de la sauvegarde"
+    "gui_notif_failed": "Échec de la sauvegarde",
     "logs_no_logs_found": "Aucun fichier log trouv\u00e9",
     "logs_read_error": "Erreur de lecture : ",
     "logs_save_xml": "Enregistrer le fichier XML",
