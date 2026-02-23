@@ -11,6 +11,40 @@ using System.Threading.Tasks;
 namespace Services.Managers;
 
 /// <summary>
+/// Token used to pause and resume a running backup job between file copies.
+/// Based on ManualResetEventSlim: initially set (running), Reset = paused, Set = running.
+/// </summary>
+public class PauseToken
+{
+    private readonly ManualResetEventSlim _event = new(true); // true = initially running
+    private bool _isAutoPaused;
+
+    public bool IsPaused => !_event.IsSet;
+    public bool IsAutoPaused => _isAutoPaused;
+
+    /// <summary>Manual pause (user-triggered)</summary>
+    public void Pause() { _event.Reset(); _isAutoPaused = false; }
+
+    /// <summary>Automatic pause (blocked app detected)</summary>
+    public void AutoPause() { _event.Reset(); _isAutoPaused = true; }
+
+    /// <summary>Resume (manual or auto)</summary>
+    public void Resume() { _event.Set(); _isAutoPaused = false; }
+
+    /// <summary>Blocks the calling thread until the token is resumed.</summary>
+    public void WaitIfPaused() { _event.Wait(); }
+}
+
+/// <summary>
+/// Event arguments raised when jobs are automatically paused due to a blocked application.
+/// </summary>
+public class JobPauseEventArgs : EventArgs
+{
+    public List<string> JobIds { get; set; } = new();
+    public List<string> BlockedApps { get; set; } = new();
+}
+
+/// <summary>
 /// Event arguments for file transfer progress
 /// </summary>
 public class FileProgressEventArgs : EventArgs
@@ -46,10 +80,22 @@ public class BackupManager
     private readonly string _jobsFilePath;
     private List<string> _blockedApplications;
 
+    /// <summary>Pause tokens keyed by jobId for running jobs.</summary>
+    private readonly Dictionary<string, PauseToken> _pauseTokens = new();
+    private readonly object _pauseTokensLock = new();
+
+    /// <summary>Set to 1 when auto-pause is active (blocked app running), reset to 0 when cleared.</summary>
+    private int _autoPauseFired;
+
     /// <summary>
     /// Event raised when a file transfer completes during backup execution
     /// </summary>
     public event EventHandler<FileProgressEventArgs>? FileTransferred;
+
+    /// <summary>Raised when all running jobs are automatically paused because a blocked application started.</summary>
+    public event EventHandler<JobPauseEventArgs>? JobAutoPaused;
+    /// <summary>Raised when all auto-paused jobs resume because the blocked application stopped.</summary>
+    public event EventHandler<List<string>>? JobAutoResumed;
 
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
@@ -161,6 +207,13 @@ public class BackupManager
             throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
         }
 
+        var pauseToken = new PauseToken();
+        lock (_pauseTokensLock) { _pauseTokens[jobId] = pauseToken; }
+
+        // Poll for blocked apps every 2s while the job is running
+        var blockedCheckTimer = new System.Threading.Timer(
+            _ => CheckBlockedAppsForJob(jobId, pauseToken), null, 2000, 2000);
+
         try
         {
             // Calculate totals in a single pass
@@ -198,13 +251,13 @@ public class BackupManager
             {
                 if (PathValidator.IsDirectory(sourcePath))
                 {
-                    _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
+                    _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job, pauseToken);
                 }
                 else if (File.Exists(sourcePath))
                 {
                     string fileName = Path.GetFileName(sourcePath);
                     string targetFile = Path.Combine(job.TargetPath, fileName);
-                    _fileTransferService.TransferFile(sourcePath, targetFile, job);
+                    _fileTransferService.TransferFile(sourcePath, targetFile, job, pauseToken);
                 }
             }
 
@@ -222,6 +275,16 @@ public class BackupManager
             _stateWriter.Flush();
             _fileTransferService.FlushLogger();
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
+        }
+        finally
+        {
+            blockedCheckTimer.Dispose();
+            lock (_pauseTokensLock)
+            {
+                _pauseTokens.Remove(jobId);
+                if (_pauseTokens.Count == 0)
+                    System.Threading.Interlocked.Exchange(ref _autoPauseFired, 0);
+            }
         }
     }
 
@@ -284,12 +347,129 @@ public class BackupManager
         }
     }
 
-    private void EnsureNoBlockedApplicationsRunning()
+    /// <summary>
+    /// Manually pauses a running job. The backup thread will block between files.
+    /// </summary>
+    public void PauseJob(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        if (token != null)
+        {
+            token.Pause();
+            var job = GetJob(jobId);
+            if (job != null) { job.BackupState = BackupState.PAUSED; _stateWriter.UpdateJobState(job); }
+        }
+    }
+
+    /// <summary>
+    /// Resumes a paused job.
+    /// </summary>
+    public void ResumeJob(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        if (token != null)
+        {
+            token.Resume();
+            var job = GetJob(jobId);
+            if (job != null) { job.BackupState = BackupState.ACTIVE; _stateWriter.UpdateJobState(job); }
+        }
+    }
+
+    /// <summary>
+    /// Returns true if the job is currently paused.
+    /// </summary>
+    public bool IsJobPaused(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        return token?.IsPaused ?? false;
+    }
+
+    /// <summary>
+    /// Called by the per-job timer to detect blocked apps mid-execution.
+    /// When a blocked app is detected, stops ALL running jobs immediately.
+    /// Uses an atomic flag so only the first timer that fires handles the stop.
+    /// </summary>
+    private void CheckBlockedAppsForJob(string jobId, PauseToken pauseToken)
+    {
+        try
+        {
+            var running = GetRunningBlockedApps();
+
+            if (running.Count > 0)
+            {
+                // Atomically claim the right to trigger the auto-pause (only one timer wins)
+                if (System.Threading.Interlocked.CompareExchange(ref _autoPauseFired, 1, 0) != 0) return;
+
+                List<(string Id, PauseToken Token)> snapshot;
+                lock (_pauseTokensLock)
+                {
+                    snapshot = _pauseTokens.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+                }
+
+                var pausedIds = new List<string>();
+                foreach (var (id, token) in snapshot)
+                {
+                    if (!token.IsPaused)
+                    {
+                        token.AutoPause();
+                        var job = GetJob(id);
+                        if (job != null) { job.BackupState = BackupState.PAUSED; _stateWriter.UpdateJobState(job); }
+                        pausedIds.Add(id);
+                    }
+                }
+
+                if (pausedIds.Count > 0)
+                {
+                    JobAutoPaused?.Invoke(this, new JobPauseEventArgs
+                    {
+                        JobIds = pausedIds,
+                        BlockedApps = running
+                    });
+                }
+            }
+            else if (System.Threading.Interlocked.CompareExchange(ref _autoPauseFired, 0, 1) == 1)
+            {
+                // Blocked app closed — resume ALL auto-paused jobs
+                List<(string Id, PauseToken Token)> snapshot;
+                lock (_pauseTokensLock)
+                {
+                    snapshot = _pauseTokens.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+                }
+
+                var resumedIds = new List<string>();
+                foreach (var (id, token) in snapshot)
+                {
+                    if (token.IsAutoPaused)
+                    {
+                        token.Resume();
+                        var job = GetJob(id);
+                        if (job != null) { job.BackupState = BackupState.ACTIVE; _stateWriter.UpdateJobState(job); }
+                        resumedIds.Add(id);
+                    }
+                }
+
+                if (resumedIds.Count > 0)
+                {
+                    JobAutoResumed?.Invoke(this, resumedIds);
+                }
+            }
+        }
+        catch
+        {
+            // Never crash the timer callback
+        }
+    }
+
+    /// <summary>
+    /// Returns the list of currently-running processes that are in the blocked-applications list.
+    /// </summary>
+    private List<string> GetRunningBlockedApps()
     {
         if (_blockedApplications.Count == 0)
-        {
-            return;
-        }
+            return new List<string>();
 
         var runningProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var process in Process.GetProcesses())
@@ -298,20 +478,19 @@ public class BackupManager
             {
                 var name = process.ProcessName;
                 if (!string.IsNullOrWhiteSpace(name))
-                {
                     runningProcesses.Add(name);
-                }
             }
-            catch
-            {
-                // Ignore processes that cannot be accessed.
-            }
+            catch { }
         }
 
-        var blockedRunning = _blockedApplications
+        return _blockedApplications
             .Where(app => runningProcesses.Contains(app))
             .ToList();
+    }
 
+    private void EnsureNoBlockedApplicationsRunning()
+    {
+        var blockedRunning = GetRunningBlockedApps();
         if (blockedRunning.Count > 0)
         {
             throw new InvalidOperationException(

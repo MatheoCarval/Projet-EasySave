@@ -69,7 +69,7 @@ namespace EasySave.Services
         /// <summary>
         /// Recursively transfers all files from the source directory to the target directory, skipping files based on the backup type and updating job progress.
         /// </summary>
-        public void TransferDirectory(string sourceDir, string targetDir, BackupJob job)
+        public void TransferDirectory(string sourceDir, string targetDir, BackupJob job, PauseToken? pauseToken = null)
         {
             if (!PathValidator.PathExists(sourceDir))
                 throw new DirectoryNotFoundException($"Source directory not found: {sourceDir}");
@@ -81,12 +81,15 @@ namespace EasySave.Services
 
             foreach (var sourceFile in allFiles)
             {
+                // Block here between files if the job is paused
+                pauseToken?.WaitIfPaused();
+
                 string relativePath = Path.GetRelativePath(sourceDir, sourceFile);
                 string targetFile = Path.Combine(targetDir, relativePath);
 
                 if (ShouldCopyFile(sourceFile, targetFile, job.BackupType))
                 {
-                    TransferFile(sourceFile, targetFile, job);
+                    TransferFile(sourceFile, targetFile, job, pauseToken);
                 }
                 else
                 {
@@ -100,8 +103,11 @@ namespace EasySave.Services
         /// <summary>
         /// Transfers a single file from source to target, records transfer metrics in the log, and updates job progress; throws FileTransferException on failure.
         /// </summary>
-        public void TransferFile(string sourceFile, string targetFile, BackupJob job)
+        public void TransferFile(string sourceFile, string targetFile, BackupJob job, PauseToken? pauseToken = null)
         {
+            // Block here if the job is paused (important for direct single-file calls)
+            pauseToken?.WaitIfPaused();
+
             job.SetCurrentFile(
                 PathValidator.ToUncPath(sourceFile),
                 PathValidator.ToUncPath(targetFile)

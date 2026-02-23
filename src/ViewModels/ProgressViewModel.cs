@@ -21,6 +21,7 @@ public class JobProgressItem : ViewModelBase
     private long _processedSize;
     private bool _isCompleted;
     private bool _hasError;
+    private bool _isPaused;
     private string _errorMessage = string.Empty;
     private DateTime _startTime;
 
@@ -96,14 +97,44 @@ public class JobProgressItem : ViewModelBase
     public bool IsCompleted
     {
         get => _isCompleted;
-        set => SetProperty(ref _isCompleted, value);
+        set
+        {
+            if (SetProperty(ref _isCompleted, value))
+            {
+                OnPropertyChanged(nameof(CanPause));
+                OnPropertyChanged(nameof(CanResume));
+            }
+        }
     }
 
     public bool HasError
     {
         get => _hasError;
-        set => SetProperty(ref _hasError, value);
+        set
+        {
+            if (SetProperty(ref _hasError, value))
+            {
+                OnPropertyChanged(nameof(CanPause));
+                OnPropertyChanged(nameof(CanResume));
+            }
+        }
     }
+
+    public bool IsPaused
+    {
+        get => _isPaused;
+        set
+        {
+            if (SetProperty(ref _isPaused, value))
+            {
+                OnPropertyChanged(nameof(CanPause));
+                OnPropertyChanged(nameof(CanResume));
+            }
+        }
+    }
+
+    public bool CanPause => !IsCompleted && !HasError && !IsPaused;
+    public bool CanResume => !IsCompleted && !HasError && IsPaused;
 
     public string ErrorMessage
     {
@@ -171,33 +202,20 @@ public class JobProgressItem : ViewModelBase
 }
 
 /// <summary>
-/// ViewModel for displaying backup progress in real-time, supporting multiple concurrent jobs
+/// ViewModel for displaying backup progress in real-time, supporting multiple concurrent jobs.
 /// </summary>
 public class ProgressViewModel : ViewModelBase
 {
-    private string _jobName = string.Empty;
-    private string _currentFile = string.Empty;
-    private int _totalFiles;
-    private int _filesProcessed;
-    private int _progressPercentage;
-    private long _totalSize;
-    private long _processedSize;
     private bool _isCompleted;
-    private DateTime _startTime;
 
-    /// <summary>
-    /// Collection of individual job progress items for parallel execution
-    /// </summary>
+    /// <summary>Collection of individual job progress items (one per running job).</summary>
     public ObservableCollection<JobProgressItem> Jobs { get; } = new();
 
-    /// <summary>
-    /// Overall progress percentage across all jobs
-    /// </summary>
+    /// <summary>Overall progress percentage weighted by size across all jobs.</summary>
     public int OverallProgressPercentage
     {
         get
         {
-            if (Jobs.Count == 0) return _progressPercentage;
             var totalSize = Jobs.Sum(j => j.TotalSize);
             if (totalSize == 0) return 0;
             var processedSize = Jobs.Sum(j => j.ProcessedSize);
@@ -205,183 +223,17 @@ public class ProgressViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// True when all jobs in the collection have completed or errored
-    /// </summary>
+    /// <summary>True when all jobs have completed or errored (and at least one exists).</summary>
     public bool AllCompleted => Jobs.Count > 0 && Jobs.All(j => j.IsCompleted || j.HasError);
 
     public int CompletedJobsCount => Jobs.Count(j => j.IsCompleted);
     public int ErrorJobsCount => Jobs.Count(j => j.HasError);
     public int TotalJobsCount => Jobs.Count;
 
-    /// <summary>
-    /// Whether we're in multi-job mode
-    /// </summary>
+    /// <summary>True when there are multiple jobs tracked simultaneously.</summary>
     public bool IsMultiJob => Jobs.Count > 1;
 
-    // ── Single-job properties (backward compatibility) ──
-
-    /// <summary>
-    /// Name of the backup job being executed
-    /// </summary>
-    public string JobName
-    {
-        get => _jobName;
-        set => SetProperty(ref _jobName, value);
-    }
-
-    /// <summary>
-    /// Name of the file currently being transferred
-    /// </summary>
-    public string CurrentFile
-    {
-        get => _currentFile;
-        set => SetProperty(ref _currentFile, value);
-    }
-
-    /// <summary>
-    /// Total number of files to transfer
-    /// </summary>
-    public int TotalFiles
-    {
-        get => _totalFiles;
-        set
-        {
-            if (SetProperty(ref _totalFiles, value))
-            {
-                OnPropertyChanged(nameof(FilesDisplay));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Number of files processed so far
-    /// </summary>
-    public int FilesProcessed
-    {
-        get => _filesProcessed;
-        set
-        {
-            if (SetProperty(ref _filesProcessed, value))
-            {
-                OnPropertyChanged(nameof(FilesDisplay));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Progress percentage (0-100)
-    /// </summary>
-    public int ProgressPercentage
-    {
-        get => _progressPercentage;
-        set => SetProperty(ref _progressPercentage, value);
-    }
-
-    /// <summary>
-    /// Total size in bytes
-    /// </summary>
-    public long TotalSize
-    {
-        get => _totalSize;
-        set
-        {
-            if (SetProperty(ref _totalSize, value))
-            {
-                OnPropertyChanged(nameof(SizeDisplay));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Processed size in bytes
-    /// </summary>
-    public long ProcessedSize
-    {
-        get => _processedSize;
-        set
-        {
-            if (SetProperty(ref _processedSize, value))
-            {
-                OnPropertyChanged(nameof(SizeDisplay));
-                OnPropertyChanged(nameof(ElapsedTimeDisplay));
-                OnPropertyChanged(nameof(TransferSpeedDisplay));
-                OnPropertyChanged(nameof(EstimatedTimeDisplay));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Display string for file count: "5 / 100 files"
-    /// </summary>
-    public string FilesDisplay => $"{FilesProcessed} / {TotalFiles} files";
-
-    /// <summary>
-    /// Display string for size: "2.5 MB / 10 MB"
-    /// </summary>
-    public string SizeDisplay => $"{FormatBytes(ProcessedSize)} / {FormatBytes(TotalSize)}";
-
-    /// <summary>
-    /// Elapsed time since backup started
-    /// </summary>
-    public string ElapsedTimeDisplay
-    {
-        get
-        {
-            if (_startTime == default) return "--:--";
-            var elapsed = DateTime.Now - _startTime;
-            return elapsed.TotalHours >= 1
-                ? elapsed.ToString(@"hh\:mm\:ss")
-                : elapsed.ToString(@"mm\:ss");
-        }
-    }
-
-    /// <summary>
-    /// Current transfer speed
-    /// </summary>
-    public string TransferSpeedDisplay
-    {
-        get
-        {
-            if (_startTime == default || ProcessedSize == 0) return "-- /s";
-            var elapsed = (DateTime.Now - _startTime).TotalSeconds;
-            if (elapsed < 0.5) return "-- /s";
-            var bytesPerSec = ProcessedSize / elapsed;
-            return $"{FormatBytes((long)bytesPerSec)}/s";
-        }
-    }
-
-    /// <summary>
-    /// Estimated time remaining
-    /// </summary>
-    public string EstimatedTimeDisplay
-    {
-        get
-        {
-            if (_startTime == default || ProcessedSize == 0 || TotalSize == 0) return "Calculating...";
-            var elapsed = (DateTime.Now - _startTime).TotalSeconds;
-            if (elapsed < 0.5) return "Calculating...";
-            var bytesPerSec = ProcessedSize / elapsed;
-            if (bytesPerSec < 1) return "Calculating...";
-            var remainingBytes = TotalSize - ProcessedSize;
-            var seconds = remainingBytes / bytesPerSec;
-            if (seconds < 60) return $"~{(int)seconds}s remaining";
-            if (seconds < 3600) return $"~{(int)(seconds / 60)}min remaining";
-            return $"~{seconds / 3600:F1}h remaining";
-        }
-    }
-
-    /// <summary>
-    /// Starts tracking elapsed time
-    /// </summary>
-    public void StartTracking()
-    {
-        _startTime = DateTime.Now;
-    }
-
-    /// <summary>
-    /// Indicates whether the backup has completed
-    /// </summary>
+    /// <summary>True when all jobs have finished and their entries have been removed.</summary>
     public bool IsCompleted
     {
         get => _isCompleted;
@@ -458,6 +310,38 @@ public class ProgressViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Removes a job that was stopped (blocked-app detection) without marking it as error.
+    /// </summary>
+    public void MarkJobStopped(string jobId)
+    {
+        var job = Jobs.FirstOrDefault(j => j.JobId == jobId);
+        if (job != null)
+        {
+            job.IsCompleted = true;
+            OnPropertyChanged(nameof(AllCompleted));
+            ScheduleRemoveJob(job, 1);
+        }
+    }
+
+    /// <summary>
+    /// Marks a job as paused in the UI.
+    /// </summary>
+    public void MarkJobPaused(string jobId)
+    {
+        var job = Jobs.FirstOrDefault(j => j.JobId == jobId);
+        if (job is not null) job.IsPaused = true;
+    }
+
+    /// <summary>
+    /// Marks a job as resumed (no longer paused) in the UI.
+    /// </summary>
+    public void MarkJobResumed(string jobId)
+    {
+        var job = Jobs.FirstOrDefault(j => j.JobId == jobId);
+        if (job is not null) job.IsPaused = false;
+    }
+
+    /// <summary>
     /// Updates progress for a specific job
     /// </summary>
     public void UpdateJobProgress(string jobId, string currentFile, int totalFiles, int filesProcessed,
@@ -477,33 +361,11 @@ public class ProgressViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Formats bytes to a human-readable format (KB, MB, GB)
-    /// </summary>
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024)
-            return $"{bytes} B";
-        if (bytes < 1024 * 1024)
-            return $"{bytes / 1024.0:F1} KB";
-        if (bytes < 1024 * 1024 * 1024)
-            return $"{bytes / (1024.0 * 1024.0):F1} MB";
-        return $"{bytes / (1024.0 * 1024.0 * 1024.0):F2} GB";
-    }
-
-    /// <summary>
     /// Resets all progress values to initial state
     /// </summary>
     public void Reset()
     {
-        JobName = string.Empty;
-        CurrentFile = string.Empty;
-        TotalFiles = 0;
-        FilesProcessed = 0;
-        ProgressPercentage = 0;
-        TotalSize = 0;
-        ProcessedSize = 0;
         IsCompleted = false;
-        _startTime = default;
         Jobs.Clear();
         OnPropertyChanged(nameof(IsMultiJob));
         OnPropertyChanged(nameof(AllCompleted));

@@ -229,6 +229,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void PausedCard_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            mainVm.FilterPausedJobsCommand.Execute(null);
+        }
+    }
+
     private async void CopyEmail_Tapped(object? sender, TappedEventArgs e)
     {
         try

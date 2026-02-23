@@ -165,5 +165,21 @@ namespace Models
             CurrentTargetFile = null;
             BackupState = BackupState.ERROR;
         }
+
+        /// <summary>
+        /// Marks the backup job as paused (preserves current progress).
+        /// </summary>
+        public void MarkAsPaused()
+        {
+            BackupState = BackupState.PAUSED;
+        }
+
+        /// <summary>
+        /// Marks the backup job as active again (resumed from pause).
+        /// </summary>
+        public void MarkAsResumed()
+        {
+            BackupState = BackupState.ACTIVE;
+        }
     }
 }

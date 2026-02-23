@@ -87,6 +87,8 @@ public class MainViewModel : ViewModelBase
 
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
+        _backupManager.JobAutoPaused += OnJobAutoPaused;
+        _backupManager.JobAutoResumed += OnJobAutoResumed;
 
         // Commands
         AddBackupCommand = new RelayCommand(OpenAddModal);
@@ -123,6 +125,7 @@ public class MainViewModel : ViewModelBase
         FilterErrorJobsCommand = new RelayCommand(FilterErrorJobs);
         FilterAllJobsCommand = new RelayCommand(FilterAllJobs);
         FilterActiveJobsCommand = new RelayCommand(FilterActiveJobs);
+        FilterPausedJobsCommand = new RelayCommand(FilterPausedJobs);
         FilterCompletedJobsCommand = new RelayCommand(FilterCompletedJobs);
         DeselectAllCommand = new RelayCommand(DeselectAll);
         SelectAllCommand = new RelayCommand(ToggleSelectAll);
@@ -137,6 +140,8 @@ public class MainViewModel : ViewModelBase
         PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
         NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
         PlayJobCommand = new RelayCommand<BackupJobViewModel>(PlayJob);
+        PauseJobCommand = new RelayCommand<string>(PauseJob);
+        ResumeJobCommand = new RelayCommand<string>(ResumeJob);
 
         // Load real data from BackupManager
         LoadBackupJobs();
@@ -304,8 +309,7 @@ public class MainViewModel : ViewModelBase
     /// <summary>
     /// True when popup is closed but there is progress data to show (running or completed)
     /// </summary>
-    public bool HasProgressData => !IsProgressPopupOpen &&
-        (_progressViewModel.Jobs.Count > 0 || _progressViewModel.JobName != string.Empty);
+    public bool HasProgressData => !IsProgressPopupOpen && _progressViewModel.Jobs.Count > 0;
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
 
@@ -495,9 +499,11 @@ public class MainViewModel : ViewModelBase
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
     public int ActiveJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ACTIVE);
+    public int PausedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.PAUSED);
     public int CompletedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.COMPLETED);
     public int ErrorJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ERROR);
     public bool HasActiveOrErrorJobs => BackupJobs.Any(j => j.BackupState == BackupState.ACTIVE || j.BackupState == BackupState.ERROR);
+    public string TxtPaused => T("gui_filter_paused");
 
     // Toast notification
     public string ToastMessage
@@ -560,10 +566,13 @@ public class MainViewModel : ViewModelBase
     public ICommand FilterErrorJobsCommand { get; }
     public ICommand FilterAllJobsCommand { get; }
     public ICommand FilterActiveJobsCommand { get; }
+    public ICommand FilterPausedJobsCommand { get; }
     public ICommand FilterCompletedJobsCommand { get; }
     public ICommand PreviousPageCommand { get; }
     public ICommand NextPageCommand { get; }
     public ICommand PlayJobCommand { get; }
+    public ICommand PauseJobCommand { get; }
+    public ICommand ResumeJobCommand { get; }
 
     #endregion
 
@@ -885,6 +894,72 @@ public class MainViewModel : ViewModelBase
         });
     }
 
+    /// <summary>
+    /// Manually pauses a running job (called from pause button in popup).
+    /// </summary>
+    private void PauseJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.PauseJob(jobId);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.MarkJobPaused(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Resumes a manually or auto-paused job.
+    /// </summary>
+    private void ResumeJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.ResumeJob(jobId);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.MarkJobResumed(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-pauses all running jobs because a blocked application started.
+    /// </summary>
+    private void OnJobAutoPaused(object? sender, JobPauseEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in e.JobIds)
+            {
+                _progressViewModel.MarkJobPaused(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast($"{T("gui_toast_paused_blocked")} ({string.Join(", ", e.BlockedApps)})");
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-resumes all paused jobs because the blocked application stopped.
+    /// </summary>
+    private void OnJobAutoResumed(object? sender, List<string> resumedIds)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in resumedIds)
+            {
+                _progressViewModel.MarkJobResumed(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast(T("gui_toast_resumed"));
+        });
+    }
+
     private async void ExecuteSelected()
     {
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
@@ -1162,9 +1237,6 @@ public class MainViewModel : ViewModelBase
             _progressViewModel.Reset();
         }
 
-        if (_progressViewModel.Jobs.Count == 0)
-            _progressViewModel.StartTracking();
-
         foreach (var job in jobs)
         {
             // Don't add duplicates (same job launched twice)
@@ -1217,21 +1289,6 @@ public class MainViewModel : ViewModelBase
         IsBlockedPopupOpen = false;
     }
 
-    private void ShowErrorToast(string message)
-    {
-        IsErrorToast = true;
-        ToastMessage = message;
-        IsToastVisible = true;
-        _toastTimer?.Stop();
-        _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
-        _toastTimer.Tick += (s, e) =>
-        {
-            IsToastVisible = false;
-            _toastTimer?.Stop();
-        };
-        _toastTimer.Start();
-    }
-
     private void FilterErrorJobs()
     {
         // Set filter to show only ERROR state
@@ -1254,6 +1311,14 @@ public class MainViewModel : ViewModelBase
     {
         _selectedStates.Clear();
         _selectedStates.Add("ACTIVE");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void FilterPausedJobs()
+    {
+        _selectedStates.Clear();
+        _selectedStates.Add("PAUSED");
         NotifyFilterStateChanged();
         ApplyFilter(resetPage: true);
     }
@@ -1351,6 +1416,7 @@ public class MainViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(TotalJobsCount));
         OnPropertyChanged(nameof(ActiveJobsCount));
+        OnPropertyChanged(nameof(PausedJobsCount));
         OnPropertyChanged(nameof(CompletedJobsCount));
         OnPropertyChanged(nameof(ErrorJobsCount));
         OnPropertyChanged(nameof(HasActiveOrErrorJobs));
