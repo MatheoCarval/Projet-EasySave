@@ -33,6 +33,34 @@ namespace EasySave.Services
         private readonly CryptageManager _cryptageManager;
 
         /// <summary>
+        /// Ordered list of priority extensions (first = highest priority). Files with these extensions
+        /// are copied before others within a single backup job.
+        /// </summary>
+        private List<string> _priorityExtensions = new();
+
+        /// <summary>
+        /// Shared throttle that limits total bytes in-flight across all parallel backup jobs.
+        /// Null or HasLimit=false means no restriction.
+        /// </summary>
+        private TransferThrottle? _throttle;
+
+        /// <summary>
+        /// Updates the priority extensions list used to sort files before transfer.
+        /// </summary>
+        public void SetPriorityExtensions(IEnumerable<string>? extensions)
+        {
+            _priorityExtensions = extensions?.ToList() ?? new List<string>();
+        }
+
+        /// <summary>
+        /// Sets (or clears) the shared byte-level throttle for parallel transfers.
+        /// </summary>
+        public void SetThrottle(TransferThrottle? throttle)
+        {
+            _throttle = throttle;
+        }
+
+        /// <summary>
         /// Event raised when a file transfer completes (throttled)
         /// </summary>
         public event EventHandler<FileProgressEventArgs>? FileTransferred;
@@ -79,31 +107,108 @@ namespace EasySave.Services
 
             var allFiles = GetAllFiles(sourceDir);
 
-            foreach (var sourceFile in allFiles)
+            // Sort: priority extensions first (in priority order), then the rest alphabetically
+            if (_priorityExtensions.Count > 0)
             {
-                // Block here between files if the job is paused
-                pauseToken?.WaitIfPaused();
+                allFiles = allFiles
+                    .OrderBy(f =>
+                    {
+                        var ext = Path.GetExtension(f).ToLowerInvariant();
+                        var idx = _priorityExtensions.IndexOf(ext);
+                        return idx >= 0 ? idx : _priorityExtensions.Count;
+                    })
+                    .ThenBy(f => f)
+                    .ToList();
+            }
 
-                string relativePath = Path.GetRelativePath(sourceDir, sourceFile);
-                string targetFile = Path.Combine(targetDir, relativePath);
-
-                if (ShouldCopyFile(sourceFile, targetFile, job.BackupType))
+            if (_throttle == null || !_throttle.HasLimit)
+            {
+                // Simple sequential loop — no throttle
+                foreach (var sourceFile in allFiles)
                 {
-                    TransferFile(sourceFile, targetFile, job, pauseToken);
+                    pauseToken?.WaitIfPaused();
+
+                    string relativePath = Path.GetRelativePath(sourceDir, sourceFile);
+                    string targetFile = Path.Combine(targetDir, relativePath);
+
+                    if (ShouldCopyFile(sourceFile, targetFile, job.BackupType))
+                        TransferFileCore(sourceFile, targetFile, job, pauseToken);
+                    else
+                    {
+                        job.RemainingFiles--;
+                        job.RemainingSize -= FileSystemHelper.GetFileSize(sourceFile);
+                        job.UpdateProgress();
+                    }
                 }
-                else
+            }
+            else
+            {
+                // Throttled loop: skip ahead to find the first file that fits within remaining capacity.
+                // Pre-compute sizes once to avoid repeated filesystem calls in AcquireFirstFitting.
+                var pending = allFiles
+                    .Select(f => (Path: f, Size: FileSystemHelper.GetFileSize(f)))
+                    .ToList();
+
+                while (pending.Count > 0)
                 {
-                    job.RemainingFiles--;
-                    job.RemainingSize -= FileSystemHelper.GetFileSize(sourceFile);
-                    job.UpdateProgress();
+                    // Check pause BEFORE acquiring a throttle slot (avoids holding a slot while paused)
+                    pauseToken?.WaitIfPaused();
+
+                    var sizes = pending.Select(p => p.Size).ToList();
+                    int idx = _throttle.AcquireFirstFitting(sizes); // blocks until a slot is free
+                    var chosen = pending[idx];
+                    pending.RemoveAt(idx);
+
+                    string relativePath = Path.GetRelativePath(sourceDir, chosen.Path);
+                    string targetFile = Path.Combine(targetDir, relativePath);
+
+                    if (ShouldCopyFile(chosen.Path, targetFile, job.BackupType))
+                    {
+                        try
+                        {
+                            TransferFileCore(chosen.Path, targetFile, job, pauseToken);
+                        }
+                        finally
+                        {
+                            _throttle.Release(chosen.Size);
+                        }
+                    }
+                    else
+                    {
+                        _throttle.Release(chosen.Size);
+                        job.RemainingFiles--;
+                        job.RemainingSize -= chosen.Size;
+                        job.UpdateProgress();
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Transfers a single file from source to target, records transfer metrics in the log, and updates job progress; throws FileTransferException on failure.
+        /// Transfers a single file from source to target (public entry point for single-file jobs).
+        /// Acquires the shared throttle slot before copying and releases it after.
         /// </summary>
         public void TransferFile(string sourceFile, string targetFile, BackupJob job, PauseToken? pauseToken = null)
+        {
+            pauseToken?.WaitIfPaused();
+
+            long fileSize = FileSystemHelper.GetFileSize(sourceFile);
+            _throttle?.Acquire(fileSize);
+            try
+            {
+                TransferFileCore(sourceFile, targetFile, job, pauseToken);
+            }
+            finally
+            {
+                _throttle?.Release(fileSize);
+            }
+        }
+
+        /// <summary>
+        /// Core file transfer logic: copies the file, logs metrics, updates job progress.
+        /// Called by TransferFile (throttle already acquired) and by TransferDirectory (throttle managed externally).
+        /// </summary>
+        private void TransferFileCore(string sourceFile, string targetFile, BackupJob job, PauseToken? pauseToken = null)
         {
             // Block here if the job is paused (important for direct single-file calls)
             pauseToken?.WaitIfPaused();
@@ -125,7 +230,41 @@ namespace EasySave.Services
 
             try
             {
-                CopyFile(sourceFile, targetFile);
+                // Track bytes written during chunked copy for real-time progress on large files
+                long bytesInCurrentFile = 0;
+                int chunkIndex = 0;
+                CopyFile(sourceFile, targetFile, chunkBytes =>
+                {
+                    bytesInCurrentFile += chunkBytes;
+
+                    // Skip the DateTime check for most chunks — only check every 8th chunk (every ~2 MB)
+                    // to avoid calling DateTime.UtcNow thousands of times per second on fast storage.
+                    if ((chunkIndex++ & 7) != 0) return;
+
+                    // Throttled intermediate progress event — fires every ProgressEventIntervalMs even
+                    // within a single large file so the UI progresses smoothly
+                    var chunkNow = DateTime.UtcNow;
+                    if ((chunkNow - _lastProgressEvent).TotalMilliseconds >= ProgressEventIntervalMs)
+                    {
+                        _lastProgressEvent = chunkNow;
+                        var effectiveRemaining = Math.Max(0, job.RemainingSize - bytesInCurrentFile);
+                        var effectiveProgress = job.TotalSize > 0
+                            ? (int)(100.0 * (job.TotalSize - effectiveRemaining) / job.TotalSize)
+                            : 0;
+                        FileTransferred?.Invoke(this, new FileProgressEventArgs
+                        {
+                            JobId = job.Id,
+                            JobName = job.Name,
+                            CurrentFile = Path.GetFileName(sourceFile),
+                            TotalFiles = (int)job.TotalFiles,
+                            RemainingFiles = (int)job.RemainingFiles,
+                            TotalSize = job.TotalSize,
+                            RemainingSize = effectiveRemaining,
+                            ProgressPercentage = effectiveProgress
+                        });
+                    }
+                });
+
                 stopwatch.Stop();
                 long encryptionTime = _cryptageManager.EncryptIfNeeded(targetFile, job);
 
@@ -147,7 +286,7 @@ namespace EasySave.Services
                 job.UpdateProgress();
                 _stateWriter.UpdateJobState(job);
 
-                // Raise file transferred event (throttled to avoid UI flooding)
+                // Final event after file completes (always fires to ensure exact end state)
                 var now = DateTime.UtcNow;
                 if ((now - _lastProgressEvent).TotalMilliseconds >= ProgressEventIntervalMs
                     || job.RemainingFiles <= 0)
@@ -196,7 +335,12 @@ namespace EasySave.Services
         private const int SmallFileThreshold = 1024 * 1024; // 1 MB
         private const int LargeBufferSize = 256 * 1024;    // 256 KB buffer
 
-        private long CopyFile(string source, string destination)
+        /// <summary>
+        /// Copies a file from source to destination.
+        /// For large files, copies in chunks and invokes <paramref name="onChunkWritten"/> after each chunk
+        /// so callers can report real-time progress.
+        /// </summary>
+        private long CopyFile(string source, string destination, Action<long>? onChunkWritten = null)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -211,10 +355,17 @@ namespace EasySave.Services
             var sourceInfo = new FileInfo(source);
             if (sourceInfo.Length > SmallFileThreshold)
             {
-                // Large file: use buffered stream copy for better throughput
+                // Large file: manual chunked copy so we can report progress per chunk
                 using var sourceStream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read, LargeBufferSize, FileOptions.SequentialScan);
                 using var destStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, LargeBufferSize, FileOptions.SequentialScan);
-                sourceStream.CopyTo(destStream, LargeBufferSize);
+
+                byte[] buffer = new byte[LargeBufferSize];
+                int bytesRead;
+                while ((bytesRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    destStream.Write(buffer, 0, bytesRead);
+                    onChunkWritten?.Invoke(bytesRead);
+                }
             }
             else
             {

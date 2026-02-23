@@ -75,7 +75,10 @@ namespace EasySave.Services.Managers
                 CryptosoftPath = config.GetCryptosoftPath(),
                 CryptosoftPublicKey = config.GetCryptosoftPublicKey(),
                 EncryptedExtensions = config.GetEncryptedExtensions(),
-                DarkMode = config.GetDarkMode()
+                PriorityExtensions = config.GetPriorityExtensions(),
+                DarkMode = config.GetDarkMode(),
+                MaxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue(),
+                MaxParallelTransferSizeUnit = config.GetMaxParallelTransferSizeUnit()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -121,7 +124,9 @@ namespace EasySave.Services.Managers
             config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
             config.SetCryptosoftPublicKey(template.CryptosoftPublicKey ?? string.Empty);
             config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
+            config.SetPriorityExtensions(template.PriorityExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
+            config.SetMaxParallelTransferSize(template.MaxParallelTransferSizeValue, template.MaxParallelTransferSizeUnit ?? "GB");
 
             return config;
         }
@@ -149,7 +154,10 @@ namespace EasySave.Services.Managers
             public string? CryptosoftPath { get; set; }
             public string? CryptosoftPublicKey { get; set; }
             public List<string>? EncryptedExtensions { get; set; }
+            public List<string>? PriorityExtensions { get; set; }
             public bool DarkMode { get; set; }
+            public long MaxParallelTransferSizeValue { get; set; }
+            public string? MaxParallelTransferSizeUnit { get; set; }
         }
     }
 }

@@ -1273,6 +1273,8 @@ public class MainViewModel : ViewModelBase
     {
         var config = ConfigurationManager.GetInstance().LoadConfiguration();
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+        _backupManager.UpdatePriorityExtensions(config.GetPriorityExtensions());
+        _backupManager.UpdateMaxParallelSize(config.GetMaxParallelTransferSizeValue(), config.GetMaxParallelTransferSizeUnit());
 
         // Refresh all translated labels on the main page
         RefreshHelpTranslations();

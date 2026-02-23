@@ -45,6 +45,81 @@ public class JobPauseEventArgs : EventArgs
 }
 
 /// <summary>
+/// Global byte-level throttle for concurrent file transfers across all parallel backup jobs.
+/// Limits the total bytes in-flight at any moment. A file can always start if nothing else
+/// is currently transferring, even if its size exceeds the configured limit.
+/// </summary>
+public class TransferThrottle
+{
+    private long _limitBytes; // 0 = unlimited
+    private long _bytesInFlight;
+    private readonly object _lock = new();
+
+    public bool HasLimit => _limitBytes > 0;
+
+    public void SetLimit(long bytes)
+    {
+        lock (_lock)
+        {
+            _limitBytes = Math.Max(0, bytes);
+            Monitor.PulseAll(_lock);
+        }
+    }
+
+    /// <summary>
+    /// From a list of pending file sizes, finds the FIRST file that fits under the limit
+    /// (or any file if nothing is currently in flight). Blocks until at least one file can start.
+    /// Marks the chosen file's bytes as in-flight and returns its index.
+    /// </summary>
+    public int AcquireFirstFitting(IReadOnlyList<long> pendingSizes)
+    {
+        lock (_lock)
+        {
+            while (true)
+            {
+                if (_limitBytes <= 0) // no limit configured
+                {
+                    _bytesInFlight += pendingSizes[0];
+                    return 0;
+                }
+
+                for (int i = 0; i < pendingSizes.Count; i++)
+                {
+                    // Allow any file when nothing is in flight (avoids deadlock on files > limit)
+                    if (_bytesInFlight == 0 || _bytesInFlight + pendingSizes[i] <= _limitBytes)
+                    {
+                        _bytesInFlight += pendingSizes[i];
+                        return i;
+                    }
+                }
+
+                Monitor.Wait(_lock); // wait for a Release() to pulse
+            }
+        }
+    }
+
+    /// <summary>Simple acquire for single-file transfers (not from TransferDirectory).</summary>
+    public void Acquire(long fileSize)
+    {
+        lock (_lock)
+        {
+            while (_limitBytes > 0 && _bytesInFlight > 0 && _bytesInFlight + fileSize > _limitBytes)
+                Monitor.Wait(_lock);
+            _bytesInFlight += fileSize;
+        }
+    }
+
+    public void Release(long bytes)
+    {
+        lock (_lock)
+        {
+            _bytesInFlight = Math.Max(0, _bytesInFlight - bytes);
+            Monitor.PulseAll(_lock);
+        }
+    }
+}
+
+/// <summary>
 /// Event arguments for file transfer progress
 /// </summary>
 public class FileProgressEventArgs : EventArgs
@@ -79,10 +154,17 @@ public class BackupManager
     private readonly StateWriter _stateWriter;
     private readonly string _jobsFilePath;
     private List<string> _blockedApplications;
+    private List<string> _priorityExtensions;
 
     /// <summary>Pause tokens keyed by jobId for running jobs.</summary>
     private readonly Dictionary<string, PauseToken> _pauseTokens = new();
     private readonly object _pauseTokensLock = new();
+
+    /// <summary>Ensures concurrent job completions don't corrupt jobs.json via simultaneous read-modify-write.</summary>
+    private readonly object _jobsFileLock = new();
+
+    /// <summary>Shared throttle passed to FileTransferService to cap total bytes in-flight across all parallel jobs.</summary>
+    private readonly TransferThrottle _throttle = new();
 
     /// <summary>Set to 1 when auto-pause is active (blocked app running), reset to 0 when cleared.</summary>
     private int _autoPauseFired;
@@ -100,7 +182,7 @@ public class BackupManager
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null, IEnumerable<string>? priorityExtensions = null)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
@@ -109,6 +191,9 @@ public class BackupManager
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
         _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+        _priorityExtensions = priorityExtensions?.ToList() ?? new List<string>();
+        _fileTransferService.SetPriorityExtensions(_priorityExtensions);
+        _fileTransferService.SetThrottle(_throttle);
         _jobsFilePath = string.IsNullOrWhiteSpace(jobsFilePath) ? GetDefaultJobsFilePath() : jobsFilePath;
 
         MigrateLegacyJobsFileIfNeeded();
@@ -266,6 +351,7 @@ public class BackupManager
             _stateWriter.UpdateJobState(job);
             _stateWriter.Flush();
             _fileTransferService.FlushLogger();
+            SaveJob(job);
         }
         catch (Exception ex)
         {
@@ -274,6 +360,7 @@ public class BackupManager
             _stateWriter.UpdateJobState(job);
             _stateWriter.Flush();
             _fileTransferService.FlushLogger();
+            SaveJob(job);
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
         finally
@@ -522,6 +609,32 @@ public class BackupManager
     }
 
     /// <summary>
+    /// Updates the ordered priority extensions list at runtime (e.g. after settings change).
+    /// </summary>
+    public void UpdatePriorityExtensions(IEnumerable<string>? priorityExtensions)
+    {
+        _priorityExtensions = priorityExtensions?.ToList() ?? new List<string>();
+        _fileTransferService.SetPriorityExtensions(_priorityExtensions);
+    }
+
+    /// <summary>
+    /// Updates the maximum parallel transfer size limit. 0 = unlimited.
+    /// The throttle is shared across all running jobs via FileTransferService.
+    /// </summary>
+    public void UpdateMaxParallelSize(long value, string unit)
+    {
+        if (value <= 0) { _throttle.SetLimit(0); return; }
+        long bytes = unit switch
+        {
+            "KB" => value * 1024L,
+            "MB" => value * 1024L * 1024L,
+            "TB" => value * 1024L * 1024L * 1024L * 1024L,
+            _    => value * 1024L * 1024L * 1024L   // "GB" default
+        };
+        _throttle.SetLimit(bytes);
+    }
+
+    /// <summary>
     /// Updates the logger instance used for recording backup operations.
     /// This allows changing the log format (JSON/XML) without restarting the application.
     /// </summary>
@@ -548,29 +661,33 @@ public class BackupManager
     {
         ArgumentNullException.ThrowIfNull(job);
 
-        try
+        lock (_jobsFileLock)
         {
-            var jobs = LoadJobsFromFile(_jobsFilePath);
-
-            // Find and remove existing job (search by ID)
-            var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
-            if (existingIndex >= 0)
+            try
             {
-                jobs[existingIndex] = job; // Replace instead of remove/add
+                var jobs = LoadJobsFromFile(_jobsFilePath);
+
+                // Find and remove existing job (search by ID)
+                var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
+                if (existingIndex >= 0)
+                {
+                    jobs[existingIndex] = job; // Replace instead of remove/add
+                }
+                else
+                {
+                    jobs.Add(job); // New job
+                }
+
+                SaveJobsToFile(_jobsFilePath, jobs);
+
+                // Reload jobs to sync _jobs list
+                _jobs.Clear();
+                _jobs.AddRange(jobs);
             }
-            else
+            catch (Exception ex)
             {
-                jobs.Add(job); // New job
+                throw new IOException($"Error saving job '{job.Id}' to jobs.json.", ex);
             }
-
-            SaveJobsToFile(_jobsFilePath, jobs);
-
-            // Reload jobs to sync _jobs list
-            LoadJobs();
-        }
-        catch (Exception ex)
-        {
-            throw new IOException($"Error saving job '{job.Id}' to jobs.json.", ex);
         }
     }
 

@@ -1605,6 +1605,166 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- === Priority Extensions Section === -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#22FF9800">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#FF9800" Data="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtPriorityExtensions}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtPriorityExtensionsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Add row: TextBox + Add button -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding NewPriorityExtension}"
+                                         Watermark="{Binding TxtPriorityExtensionsPlaceholder}"
+                                         CornerRadius="8 0 0 8"
+                                         Padding="12,10">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Return" Command="{Binding AddPriorityExtensionCommand}"/>
+                                    </TextBox.KeyBindings>
+                                </TextBox>
+                                <Button Grid.Column="1"
+                                        Command="{Binding AddPriorityExtensionCommand}"
+                                        Content="{Binding TxtPriorityExtensionsAdd}"
+                                        Background="#FF9800"
+                                        Foreground="White"
+                                        CornerRadius="0 8 8 0"
+                                        Padding="16,10"
+                                        VerticalAlignment="Stretch"
+                                        Cursor="Hand"/>
+                            </Grid>
+
+                            <!-- Ordered list -->
+                            <ItemsControl ItemsSource="{Binding PriorityExtensions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource HoverBackground}"
+                                                CornerRadius="8"
+                                                Padding="10,8"
+                                                Margin="0,0,0,4">
+                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                                <!-- Priority color badge -->
+                                                <Border Grid.Column="0"
+                                                        Background="#22FF9800"
+                                                        CornerRadius="6"
+                                                        Padding="8,4"
+                                                        Margin="0,0,10,0"
+                                                        VerticalAlignment="Center">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#FF9800" Data="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Border>
+                                                <!-- Extension name -->
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="14"
+                                                           FontFamily="Consolas,Courier New,monospace"
+                                                           Foreground="{DynamicResource TextPrimary}"/>
+                                                <!-- Move Up -->
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.MovePriorityExtensionUpCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Padding="6,4"
+                                                        Margin="4,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Move up"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                                <!-- Move Down -->
+                                                <Button Grid.Column="3"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.MovePriorityExtensionDownCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Padding="6,4"
+                                                        Margin="2,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Move down"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                                <!-- Remove -->
+                                                <Button Grid.Column="4"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.RemovePriorityExtensionCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Foreground="#F44336"
+                                                        Padding="6,4"
+                                                        Margin="2,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Remove"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#F44336" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- === Parallel Transfer Limit === -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="16">
+                            <!-- Header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="8"
+                                        Background="#1AFF9800">
+                                    <TextBlock Text="⚡" FontSize="18"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtMaxParallelSize}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtMaxParallelSizeDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <!-- Input row -->
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <NumericUpDown Value="{Binding MaxParallelTransferSizeValue}"
+                                               Minimum="0" Maximum="999999" Increment="1"
+                                               Width="130" Height="36" FormatString="0"/>
+                                <ComboBox SelectedIndex="{Binding MaxParallelTransferSizeUnitIndex}"
+                                          Width="80" Height="36" VerticalContentAlignment="Center">
+                                    <ComboBoxItem Content="KB"/>
+                                    <ComboBoxItem Content="MB"/>
+                                    <ComboBoxItem Content="GB"/>
+                                    <ComboBoxItem Content="TB"/>
+                                </ComboBox>
+                                <TextBlock Text="(0 = illimité)" VerticalAlignment="Center"
+                                           FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- === About Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="16">

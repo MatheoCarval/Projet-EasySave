@@ -32,6 +32,10 @@ public class SettingsViewModel : ViewModelBase
     private string _cryptosoftPublicKey = string.Empty;
     private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
+    private string _newPriorityExtension = string.Empty;
+    private long _maxParallelTransferSizeValue;
+    private int _maxParallelTransferSizeUnitIndex = 2; // 0=KB 1=MB 2=GB 3=TB
+    private static readonly string[] _sizeUnits = { "KB", "MB", "GB", "TB" };
     private string? _selectedDetectedApplication;
     private string _detectedAppsSearch = string.Empty;
     private bool _hasUnsavedChanges;
@@ -42,6 +46,7 @@ public class SettingsViewModel : ViewModelBase
         _configManager = ConfigurationManager.GetInstance();
         DetectedApplications = new ObservableCollection<string>();
         FilteredDetectedApplications = new ObservableCollection<string>();
+        PriorityExtensions = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
@@ -49,6 +54,10 @@ public class SettingsViewModel : ViewModelBase
         RefreshDetectedAppsCommand = new RelayCommand(RefreshDetectedApplications);
         AddDetectedAppCommand = new RelayCommand(AddSelectedDetectedApplication, () => !string.IsNullOrWhiteSpace(SelectedDetectedApplication));
         ClearDetectedAppsSearchCommand = new RelayCommand(() => DetectedAppsSearch = string.Empty);
+        AddPriorityExtensionCommand = new RelayCommand(AddPriorityExtension, () => !string.IsNullOrWhiteSpace(_newPriorityExtension));
+        RemovePriorityExtensionCommand = new RelayCommand<string>(RemovePriorityExtension);
+        MovePriorityExtensionUpCommand = new RelayCommand<string>(MovePriorityExtensionUp);
+        MovePriorityExtensionDownCommand = new RelayCommand<string>(MovePriorityExtensionDown);
     }
 
     #region Properties
@@ -169,6 +178,41 @@ public class SettingsViewModel : ViewModelBase
 
     public ObservableCollection<string> DetectedApplications { get; }
     public ObservableCollection<string> FilteredDetectedApplications { get; }
+    public ObservableCollection<string> PriorityExtensions { get; }
+
+    public string NewPriorityExtension
+    {
+        get => _newPriorityExtension;
+        set
+        {
+            if (SetProperty(ref _newPriorityExtension, value))
+                ((RelayCommand)AddPriorityExtensionCommand).RaiseCanExecuteChanged();
+        }
+    }
+
+    /// <summary>
+    /// Numeric value for the parallel transfer limit. 0 = unlimited.
+    /// </summary>
+    public long MaxParallelTransferSizeValue
+    {
+        get => _maxParallelTransferSizeValue;
+        set
+        {
+            if (SetProperty(ref _maxParallelTransferSizeValue, Math.Max(0, value)))
+                HasUnsavedChanges = true;
+        }
+    }
+
+    /// <summary>Selected unit index: 0=KB 1=MB 2=GB 3=TB</summary>
+    public int MaxParallelTransferSizeUnitIndex
+    {
+        get => _maxParallelTransferSizeUnitIndex;
+        set
+        {
+            if (SetProperty(ref _maxParallelTransferSizeUnitIndex, Math.Clamp(value, 0, 3)))
+                HasUnsavedChanges = true;
+        }
+    }
 
     public string DetectedAppsSearch
     {
@@ -242,6 +286,14 @@ public class SettingsViewModel : ViewModelBase
     public string TxtModalEncryptedExtensions => T("gui_modal_encrypted_extensions");
     public string TxtModalEncryptedExtensionsDesc => T("gui_modal_encrypted_extensions_desc");
     public string TxtModalEncryptedExtensionsPlaceholder => T("gui_modal_encrypted_extensions_placeholder");
+    public string TxtPriorityExtensions => T("gui_priority_extensions");
+    public string TxtPriorityExtensionsDesc => T("gui_priority_extensions_desc");
+    public string TxtPriorityExtensionsPlaceholder => T("gui_priority_extensions_placeholder");
+    public string TxtPriorityExtensionsAdd => T("gui_priority_extensions_add");
+    public string TxtPriorityExtensionsEmpty => T("gui_priority_extensions_empty");
+    public string TxtMaxParallelSize => T("gui_max_parallel_size");
+    public string TxtMaxParallelSizeDesc => T("gui_max_parallel_size_desc");
+    public string TxtMaxParallelSizeUnit => T("gui_max_parallel_size_unit");
     public string TxtBlockedApps => T("gui_blocked_apps");
     public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
     public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
@@ -283,6 +335,10 @@ public class SettingsViewModel : ViewModelBase
     public ICommand RefreshDetectedAppsCommand { get; }
     public ICommand AddDetectedAppCommand { get; }
     public ICommand ClearDetectedAppsSearchCommand { get; }
+    public ICommand AddPriorityExtensionCommand { get; }
+    public ICommand RemovePriorityExtensionCommand { get; }
+    public ICommand MovePriorityExtensionUpCommand { get; }
+    public ICommand MovePriorityExtensionDownCommand { get; }
 
     #endregion
 
@@ -331,6 +387,17 @@ public class SettingsViewModel : ViewModelBase
         _blockedApplicationsText = string.Join(Environment.NewLine, blockedApps);
         OnPropertyChanged(nameof(BlockedApplicationsText));
 
+        PriorityExtensions.Clear();
+        foreach (var ext in config.GetPriorityExtensions())
+            PriorityExtensions.Add(ext);
+
+        _maxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue();
+        var savedUnit = config.GetMaxParallelTransferSizeUnit();
+        _maxParallelTransferSizeUnitIndex = Array.IndexOf(_sizeUnits, savedUnit);
+        if (_maxParallelTransferSizeUnitIndex < 0) _maxParallelTransferSizeUnitIndex = 2; // fallback GB
+        OnPropertyChanged(nameof(MaxParallelTransferSizeValue));
+        OnPropertyChanged(nameof(MaxParallelTransferSizeUnitIndex));
+
         HasUnsavedChanges = false;
         SaveMessage = string.Empty;
     }
@@ -364,6 +431,8 @@ public class SettingsViewModel : ViewModelBase
             config.SetLogFormat(format);
             config.SetDarkMode(_isDarkTheme);
             config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
+            config.SetPriorityExtensions(PriorityExtensions);
+            config.SetMaxParallelTransferSize(_maxParallelTransferSizeValue, _sizeUnits[_maxParallelTransferSizeUnitIndex]);
             config.SetCryptosoftPath(_cryptosoftPath);
             config.SetCryptosoftPublicKey(_cryptosoftPublicKey);
             config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
@@ -444,6 +513,14 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtModalEncryptedExtensions));
         OnPropertyChanged(nameof(TxtModalEncryptedExtensionsDesc));
         OnPropertyChanged(nameof(TxtModalEncryptedExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtPriorityExtensions));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsDesc));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsAdd));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsEmpty));
+        OnPropertyChanged(nameof(TxtMaxParallelSize));
+        OnPropertyChanged(nameof(TxtMaxParallelSizeDesc));
+        OnPropertyChanged(nameof(TxtMaxParallelSizeUnit));
         OnPropertyChanged(nameof(TxtBlockedApps));
         OnPropertyChanged(nameof(TxtBlockedAppsDesc));
         OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
@@ -502,6 +579,46 @@ public class SettingsViewModel : ViewModelBase
             .Where(ext => !string.IsNullOrWhiteSpace(ext))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    private static string NormalizePriorityExtension(string ext)
+    {
+        ext = ext.Trim();
+        if (!ext.StartsWith('.')) ext = "." + ext;
+        return ext.ToLowerInvariant();
+    }
+
+    private void AddPriorityExtension()
+    {
+        var ext = NormalizePriorityExtension(_newPriorityExtension);
+        if (string.IsNullOrWhiteSpace(ext)) return;
+        if (!PriorityExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+        {
+            PriorityExtensions.Add(ext);
+            HasUnsavedChanges = true;
+        }
+        NewPriorityExtension = string.Empty;
+    }
+
+    private void RemovePriorityExtension(string? ext)
+    {
+        if (ext == null) return;
+        PriorityExtensions.Remove(ext);
+        HasUnsavedChanges = true;
+    }
+
+    private void MovePriorityExtensionUp(string? ext)
+    {
+        if (ext == null) return;
+        var idx = PriorityExtensions.IndexOf(ext);
+        if (idx > 0) { PriorityExtensions.Move(idx, idx - 1); HasUnsavedChanges = true; }
+    }
+
+    private void MovePriorityExtensionDown(string? ext)
+    {
+        if (ext == null) return;
+        var idx = PriorityExtensions.IndexOf(ext);
+        if (idx >= 0 && idx < PriorityExtensions.Count - 1) { PriorityExtensions.Move(idx, idx + 1); HasUnsavedChanges = true; }
     }
 
     private void RefreshDetectedApplications()
