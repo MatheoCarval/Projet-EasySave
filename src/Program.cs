@@ -169,6 +169,7 @@ public class Program
         var stateWriter = new StateWriter(statePath);
         var cryptageManager = new CryptageManager(
             config.GetCryptosoftPath(),
+            config.GetCryptosoftPublicKey(),
             config.GetEncryptedExtensions()
         );
         var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);

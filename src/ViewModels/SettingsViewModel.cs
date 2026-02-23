@@ -29,6 +29,7 @@ public class SettingsViewModel : ViewModelBase
     private string _logFilePath = string.Empty;
     private string _stateFilePath = string.Empty;
     private string _cryptosoftPath = string.Empty;
+    private string _cryptosoftPublicKey = string.Empty;
     private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
     private string? _selectedDetectedApplication;
@@ -133,6 +134,18 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public string CryptosoftPublicKey
+    {
+        get => _cryptosoftPublicKey;
+        set
+        {
+            if (SetProperty(ref _cryptosoftPublicKey, value))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+    }
+
     public string EncryptedExtensionsText
     {
         get => _encryptedExtensionsText;
@@ -226,6 +239,8 @@ public class SettingsViewModel : ViewModelBase
     public string TxtEncryptionDesc => T("gui_encryption_desc");
     public string TxtCryptosoftPath => T("gui_cryptosoft_path");
     public string TxtCryptosoftPathDesc => T("gui_cryptosoft_path_desc");
+    public string TxtCryptosoftPublicKey => T("gui_cryptosoft_public_key");
+    public string TxtCryptosoftPublicKeyDesc => T("gui_cryptosoft_public_key_desc");
     public string TxtEncryptedExtensions => T("gui_encrypted_extensions");
     public string TxtEncryptedExtensionsDesc => T("gui_encrypted_extensions_desc");
     public string TxtEncryptedExtensionsPlaceholder => T("gui_encrypted_extensions_placeholder");
@@ -334,6 +349,9 @@ public class SettingsViewModel : ViewModelBase
         _cryptosoftPath = config.GetCryptosoftPath();
         OnPropertyChanged(nameof(CryptosoftPath));
 
+        _cryptosoftPublicKey = config.GetCryptosoftPublicKey();
+        OnPropertyChanged(nameof(CryptosoftPublicKey));
+
         _encryptedExtensionsText = string.Join(Environment.NewLine, config.GetEncryptedExtensions());
         OnPropertyChanged(nameof(EncryptedExtensionsText));
 
@@ -389,6 +407,7 @@ public class SettingsViewModel : ViewModelBase
             config.SetDarkMode(_isDarkTheme);
             config.SetBlockedApplications(BlockedApplicationsList.ToList());
             config.SetCryptosoftPath(_cryptosoftPath);
+            config.SetCryptosoftPublicKey(_cryptosoftPublicKey);
             config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
             if (!string.IsNullOrWhiteSpace(logPath))
                 config.SetLogFilePath(logPath);

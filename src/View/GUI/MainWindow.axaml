@@ -1822,6 +1822,38 @@
                                 </Grid>
                             </StackPanel>
 
+                            <!-- Cryptosoft Public Key -->
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" Opacity="0.6">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding TxtCryptosoftPublicKey}" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding TxtCryptosoftPublicKeyDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding CryptosoftPublicKey}"
+                                             Watermark="/path/to/public.key"
+                                             CornerRadius="8 0 0 8"
+                                             Padding="12,10"/>
+                                    <Button Grid.Column="1"
+                                            Name="BrowseCryptosoftPublicKeyButton"
+                                            Click="BrowseCryptosoftPublicKey_Click"
+                                            Content="{Binding TxtBrowse}"
+                                            Background="{DynamicResource SidebarBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="0 8 8 0"
+                                            Padding="16,10"
+                                            VerticalAlignment="Stretch"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+
                             <!-- Encrypted Extensions -->
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -2394,7 +2426,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,Auto,*" Name="JournalJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
-                                <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="JournalJsonTitle" Text="" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="CopyJsonButton" Content="&#x1F4CB; Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"
@@ -2511,7 +2543,7 @@
                             BorderBrush="{DynamicResource ClickableCardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid RowDefinitions="Auto,Auto,*" Name="EtatJsonGrid">
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
-                                <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                                <TextBlock Grid.Column="0" Name="EtatJsonTitle" Text="" FontSize="16" FontWeight="Bold" 
                                            Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Name="EtatCopyJsonButton" Content="📋 Copier" 
                                         FontSize="12" Padding="8,4" Margin="0,0,8,0"

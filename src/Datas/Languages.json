@@ -141,6 +141,8 @@
     "gui_encryption_desc": "Configure file encryption after backup",
     "gui_cryptosoft_path": "Cryptosoft executable",
     "gui_cryptosoft_path_desc": "Path to the Cryptosoft executable",
+    "gui_cryptosoft_public_key": "Public key file",
+    "gui_cryptosoft_public_key_desc": "Path to the RSA public key (.key or .pem)",
     "gui_encrypted_extensions": "Encrypted extensions",
     "gui_encrypted_extensions_desc": "One per line (e.g., .txt, .docx)",
     "gui_encrypted_extensions_placeholder": ".txt\n.docx\n.pdf",
@@ -357,6 +359,7 @@
     "logs_tab_journal": "Logs",
     "logs_tab_state": "State",
     "logs_json_content": "JSON Content",
+    "logs_xml_content": "XML Content",
     "logs_select_date": "Select a date",
     "logs_select_job": "Select a job",
     "logs_copy": "\ud83d\udccb Copy",
@@ -440,6 +443,10 @@
     "gui_drop_hint": "or drag & drop files/folders here",
     "gui_notif_completed": "Backup completed successfully",
     "gui_notif_failed": "Backup failed"
+    "logs_no_logs_found": "No log file found",
+    "logs_read_error": "Read error: ",
+    "logs_save_xml": "Save XML file",
+    "logs_page_label": "Page"
   },
   "fr": {
     "app_title": "EasySave",
@@ -583,6 +590,8 @@
     "gui_encryption_desc": "Configurer le chiffrement apres sauvegarde",
     "gui_cryptosoft_path": "Exécutable Cryptosoft",
     "gui_cryptosoft_path_desc": "Chemin vers l'exécutable Cryptosoft",
+    "gui_cryptosoft_public_key": "Fichier de clé publique",
+    "gui_cryptosoft_public_key_desc": "Chemin vers la clé publique RSA (.key ou .pem)",
     "gui_encrypted_extensions": "Extensions chiffrées",
     "gui_encrypted_extensions_desc": "Une par ligne (ex : .txt, .docx)",
     "gui_encrypted_extensions_placeholder": ".txt\n.docx\n.pdf",
@@ -795,6 +804,7 @@
     "logs_tab_journal": "Journal",
     "logs_tab_state": "\u00c9tat",
     "logs_json_content": "Contenu du JSON",
+    "logs_xml_content": "Contenu du XML",
     "logs_select_date": "S\u00e9lectionnez une date",
     "logs_select_job": "S\u00e9lectionnez un job",
     "logs_copy": "\ud83d\udccb Copier",
@@ -878,5 +888,9 @@
     "gui_drop_hint": "ou glisser-déposer des fichiers/dossiers ici",
     "gui_notif_completed": "Sauvegarde terminée avec succès",
     "gui_notif_failed": "Échec de la sauvegarde"
+    "logs_no_logs_found": "Aucun fichier log trouv\u00e9",
+    "logs_read_error": "Erreur de lecture : ",
+    "logs_save_xml": "Enregistrer le fichier XML",
+    "logs_page_label": "Page"
   }
 }
