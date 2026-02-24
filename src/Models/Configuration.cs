@@ -20,6 +20,8 @@ namespace EasySave.Models
         private string CryptosoftPublicKey { get; set; }
         private List<string> EncryptedExtensions { get; set; }
         private bool DarkMode { get; set; }
+        private bool OnboardingCompleted { get; set; }
+        private string AccentColor { get; set; }
 
         public Configuration()
         {
@@ -32,6 +34,8 @@ namespace EasySave.Models
             CryptosoftPublicKey = string.Empty;
             EncryptedExtensions = new List<string>();
             DarkMode = false;
+            OnboardingCompleted = false;
+            AccentColor = "Blue";
         }
 
         // Getters
@@ -44,6 +48,8 @@ namespace EasySave.Models
         public string GetCryptosoftPublicKey() => CryptosoftPublicKey;
         public List<string> GetEncryptedExtensions() => new List<string>(EncryptedExtensions);
         public bool GetDarkMode() => DarkMode;
+        public bool GetOnboardingCompleted() => OnboardingCompleted;
+        public string GetAccentColor() => AccentColor;
 
         // Setters
         public void SetLanguage(string language)
@@ -114,6 +120,16 @@ namespace EasySave.Models
         public void SetDarkMode(bool darkMode)
         {
             DarkMode = darkMode;
+        }
+
+        public void SetOnboardingCompleted(bool completed)
+        {
+            OnboardingCompleted = completed;
+        }
+
+        public void SetAccentColor(string color)
+        {
+            AccentColor = string.IsNullOrWhiteSpace(color) ? "Blue" : color.Trim();
         }
 
         private static string NormalizeExtension(string extension)
@@ -234,7 +250,9 @@ namespace EasySave.Models
                 CryptosoftPath = string.Empty,
                 CryptosoftPublicKey = string.Empty,
                 EncryptedExtensions = new List<string>(),
-                DarkMode = false
+                DarkMode = false,
+                OnboardingCompleted = false,
+                AccentColor = "Blue"
             };
 
             // Retourne la sérialisation de la configuration par défaut au format JSON
@@ -276,6 +294,8 @@ namespace EasySave.Models
             public string CryptosoftPublicKey { get; set; } = string.Empty;
             public List<string> EncryptedExtensions { get; set; } = new();
             public bool DarkMode { get; set; }
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
         }
     }
 
