@@ -19,8 +19,6 @@ namespace Services.Writers
         private readonly Dictionary<string, StateEntry> _stateEntries;
         private readonly object _lock = new object();
         private readonly JsonSerializerOptions _jsonOptions;
-        private bool _dirty;
-        private Timer? _flushTimer;
 
         /// <summary>
         /// Initializes a new instance of StateWriter with the specified state file path. Creates directory if needed and loads existing state from disk.
@@ -56,50 +54,14 @@ namespace Services.Writers
             {
                 var stateEntry = StateEntry.FromBackupJob(job);
                 _stateEntries[job.Name] = stateEntry;
-                _dirty = true;
-                EnsureFlushTimer();
+                WriteStateToDisk();
             }
         }
 
         /// <summary>
-        /// Forces an immediate write to disk (call at job completion/error).
+        /// No-op kept for API compatibility — writes are now immediate in UpdateJobState.
         /// </summary>
-        public void Flush()
-        {
-            lock (_lock)
-            {
-                if (_dirty)
-                {
-                    WriteStateToDisk();
-                    _dirty = false;
-                }
-            }
-        }
-
-        private void EnsureFlushTimer()
-        {
-            if (_flushTimer == null)
-            {
-                _flushTimer = new Timer(_ =>
-                {
-                    try
-                    {
-                        lock (_lock)
-                        {
-                            if (_dirty)
-                            {
-                                WriteStateToDisk();
-                                _dirty = false;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"[StateWriter] Timer flush error: {ex.Message}");
-                    }
-                }, null, 500, 500);
-            }
-        }
+        public void Flush() { }
 
         /// <summary>
         /// Removes a job state entry by name and persists the change to disk.

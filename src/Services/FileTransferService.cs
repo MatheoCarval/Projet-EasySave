@@ -284,7 +284,6 @@ namespace EasySave.Services
                 job.RemainingFiles--;
                 job.RemainingSize -= fileSize;
                 job.UpdateProgress();
-                _stateWriter.UpdateJobState(job);
 
                 // Final event after file completes (always fires to ensure exact end state)
                 var now = DateTime.UtcNow;
