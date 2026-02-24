@@ -143,6 +143,7 @@ public class BackupJobViewModel : ViewModelBase
     public string? ErrorReason => _backupJob.ErrorReason;
 
     public bool HasError => _backupJob.BackupState == BackupState.ERROR && !string.IsNullOrEmpty(_backupJob.ErrorReason);
+    public bool IsPaused => _backupJob.BackupState == BackupState.PAUSED;
 
     public string ErrorReasonDisplay
     {
@@ -184,6 +185,7 @@ public class BackupJobViewModel : ViewModelBase
         OnPropertyChanged(nameof(LastExecutionDisplay));
         OnPropertyChanged(nameof(ErrorReason));
         OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(IsPaused));
         OnPropertyChanged(nameof(ErrorReasonDisplay));
         OnPropertyChanged(nameof(Progress));
         OnPropertyChanged(nameof(ProgressDisplay));

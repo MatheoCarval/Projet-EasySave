@@ -15,21 +15,9 @@ namespace Services.Writers
     /// </summary>
     public class StateWriter
     {
-        /// <summary>
-        /// The file path where backup job state information is persisted.
-        /// </summary>
         private readonly string _stateFilePath;
-        /// <summary>
-        /// In-memory cache of state entries indexed by job name.
-        /// </summary>
         private readonly Dictionary<string, StateEntry> _stateEntries;
-        /// <summary>
-        /// Lock object for thread-safe access to state entries.
-        /// </summary>
         private readonly object _lock = new object();
-        /// <summary>
-        /// JSON serialization options configured for pretty printing with camelCase property naming.
-        /// </summary>
         private readonly JsonSerializerOptions _jsonOptions;
 
         /// <summary>
@@ -66,10 +54,14 @@ namespace Services.Writers
             {
                 var stateEntry = StateEntry.FromBackupJob(job);
                 _stateEntries[job.Name] = stateEntry;
-
                 WriteStateToDisk();
             }
         }
+
+        /// <summary>
+        /// No-op kept for API compatibility — writes are now immediate in UpdateJobState.
+        /// </summary>
+        public void Flush() { }
 
         /// <summary>
         /// Removes a job state entry by name and persists the change to disk.

@@ -341,7 +341,7 @@
                         </Grid>
 
                         <!-- Dashboard Stats -->
-                        <Grid ColumnDefinitions="*,12,*,12,*,12,*" IsVisible="{Binding !HasNoJobs}">
+                        <Grid ColumnDefinitions="*,12,*,12,*,12,*,12,*" IsVisible="{Binding !HasNoJobs}">
                             <Border Grid.Column="0" Classes="Card" Padding="16,14" Cursor="Hand"
                                     Tapped="TotalCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
@@ -375,6 +375,22 @@
                                 </StackPanel>
                             </Border>
                             <Border Grid.Column="4" Classes="Card" Padding="16,14" Cursor="Hand"
+                                    Tapped="PausedCard_Tapped">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#22FF9800">
+                                        <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#FF9800" Data="M14,19H18V5H14M6,19H10V5H6V19Z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PausedJobsCount}" FontSize="22" FontWeight="Bold" Foreground="#FF9800"/>
+                                        <TextBlock Text="{Binding TxtPaused}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="6" Classes="Card" Padding="16,14" Cursor="Hand"
                                     Tapped="CompletedCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource AccentBlueBg}">
@@ -390,7 +406,7 @@
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="6" Classes="Card" Padding="16,14" Cursor="Hand"
+                            <Border Grid.Column="8" Classes="Card" Padding="16,14" Cursor="Hand"
                                     Tapped="ErrorCard_Tapped">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="10" Background="#22F44336">
@@ -879,18 +895,78 @@
                                                            Foreground="{DynamicResource TextSecondary}"/>
                                             </StackPanel>
 
-                                            <!-- Status Badge -->
-                                            <Border Grid.Column="2" Grid.Row="0"
-                                                    Padding="12,6"
-                                                    CornerRadius="16"
-                                                    Background="{Binding StateColor}"
-                                                    Margin="0,24,24,0"
-                                                    VerticalAlignment="Top">
-                                                <TextBlock Text="{Binding BackupStateDisplay}"
-                                                           FontSize="12"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="White"/>
-                                            </Border>
+                                            <!-- Status Badge + Play Button -->
+                                            <StackPanel Grid.Column="2" Grid.Row="0"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        Margin="0,20,24,0"
+                                                        VerticalAlignment="Top">
+                                                <!-- Play Button (hidden when paused) -->
+                                                <Button Width="36" Height="36"
+                                                        Padding="0"
+                                                        CornerRadius="18"
+                                                        Cursor="Hand"
+                                                        IsVisible="{Binding !IsPaused}"
+                                                        Command="{Binding $parent[Window].DataContext.PlayJobCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="{Binding $parent[Window].DataContext.TxtPlayJob}">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button">
+                                                            <Setter Property="Background" Value="#2196F3"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                        </Style>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="#1E88E5"/>
+                                                        </Style>
+                                                        <Style Selector="Button:pressed">
+                                                            <Setter Property="Background" Value="#1565C0"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                    <Viewbox Width="16" Height="16">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="White" Data="M8 5v14l11-7z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                                <!-- Resume Button (visible only when paused) -->
+                                                <Button Width="36" Height="36"
+                                                        Padding="0"
+                                                        CornerRadius="18"
+                                                        Cursor="Hand"
+                                                        IsVisible="{Binding IsPaused}"
+                                                        Command="{Binding $parent[Window].DataContext.ResumeJobCommand}"
+                                                        CommandParameter="{Binding Id}"
+                                                        ToolTip.Tip="Reprendre">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button">
+                                                            <Setter Property="Background" Value="#FF9800"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                        </Style>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="#FB8C00"/>
+                                                        </Style>
+                                                        <Style Selector="Button:pressed">
+                                                            <Setter Property="Background" Value="#E65100"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                    <Viewbox Width="16" Height="16">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="White" Data="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+
+                                                <!-- Status Badge -->
+                                                <Border Padding="12,6"
+                                                        CornerRadius="16"
+                                                        Background="{Binding StateColor}"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding BackupStateDisplay}"
+                                                               FontSize="12"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White"/>
+                                                </Border>
+                                            </StackPanel>
 
                                             <!-- Error Reason Banner (visible only when ERROR) -->
                                             <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"
@@ -1874,6 +1950,166 @@
                                          MinHeight="70"
                                          CornerRadius="8"
                                          Padding="12,10"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- === Priority Extensions Section === -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="20">
+                            <!-- Section header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="10" Background="#22FF9800">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#FF9800" Data="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtPriorityExtensions}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtPriorityExtensionsDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Add row: TextBox + Add button -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding NewPriorityExtension}"
+                                         Watermark="{Binding TxtPriorityExtensionsPlaceholder}"
+                                         CornerRadius="8 0 0 8"
+                                         Padding="12,10">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Return" Command="{Binding AddPriorityExtensionCommand}"/>
+                                    </TextBox.KeyBindings>
+                                </TextBox>
+                                <Button Grid.Column="1"
+                                        Command="{Binding AddPriorityExtensionCommand}"
+                                        Content="{Binding TxtPriorityExtensionsAdd}"
+                                        Background="#FF9800"
+                                        Foreground="White"
+                                        CornerRadius="0 8 8 0"
+                                        Padding="16,10"
+                                        VerticalAlignment="Stretch"
+                                        Cursor="Hand"/>
+                            </Grid>
+
+                            <!-- Ordered list -->
+                            <ItemsControl ItemsSource="{Binding PriorityExtensions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource HoverBackground}"
+                                                CornerRadius="8"
+                                                Padding="10,8"
+                                                Margin="0,0,0,4">
+                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                                <!-- Priority color badge -->
+                                                <Border Grid.Column="0"
+                                                        Background="#22FF9800"
+                                                        CornerRadius="6"
+                                                        Padding="8,4"
+                                                        Margin="0,0,10,0"
+                                                        VerticalAlignment="Center">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#FF9800" Data="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Border>
+                                                <!-- Extension name -->
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="14"
+                                                           FontFamily="Consolas,Courier New,monospace"
+                                                           Foreground="{DynamicResource TextPrimary}"/>
+                                                <!-- Move Up -->
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.MovePriorityExtensionUpCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Padding="6,4"
+                                                        Margin="4,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Move up"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                                <!-- Move Down -->
+                                                <Button Grid.Column="3"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.MovePriorityExtensionDownCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Padding="6,4"
+                                                        Margin="2,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Move down"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="{DynamicResource TextSecondary}" Data="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                                <!-- Remove -->
+                                                <Button Grid.Column="4"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.RemovePriorityExtensionCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Foreground="#F44336"
+                                                        Padding="6,4"
+                                                        Margin="2,0,0,0"
+                                                        CornerRadius="6"
+                                                        ToolTip.Tip="Remove"
+                                                        Cursor="Hand">
+                                                    <Viewbox Width="14" Height="14">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#F44336" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- === Parallel Transfer Limit === -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="16">
+                            <!-- Header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="8"
+                                        Background="#1AFF9800">
+                                    <TextBlock Text="⚡" FontSize="18"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtMaxParallelSize}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtMaxParallelSizeDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <!-- Input row -->
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <NumericUpDown Value="{Binding MaxParallelTransferSizeValue}"
+                                               Minimum="0" Maximum="999999" Increment="1"
+                                               Width="130" Height="36" FormatString="0"/>
+                                <ComboBox SelectedIndex="{Binding MaxParallelTransferSizeUnitIndex}"
+                                          Width="80" Height="36" VerticalContentAlignment="Center">
+                                    <ComboBoxItem Content="KB"/>
+                                    <ComboBoxItem Content="MB"/>
+                                    <ComboBoxItem Content="GB"/>
+                                    <ComboBoxItem Content="TB"/>
+                                </ComboBox>
+                                <TextBlock Text="(0 = illimité)" VerticalAlignment="Center"
+                                           FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -3629,10 +3865,42 @@
             </Border>
         </Panel>
 
+        <!-- Floating button - shown when popup is closed but progress data exists -->
+        <Button IsVisible="{Binding HasProgressData}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,24,24"
+                Width="56" Height="56"
+                CornerRadius="28"
+                Padding="0"
+                Cursor="Hand"
+                ZIndex="100"
+                Command="{Binding ReopenProgressCommand}"
+                ToolTip.Tip="Show backup progress">
+            <Button.Styles>
+                <Style Selector="Button">
+                    <Setter Property="Background" Value="#2196F3"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Style>
+                <Style Selector="Button:pointerover">
+                    <Setter Property="Background" Value="#1E88E5"/>
+                </Style>
+                <Style Selector="Button:pressed">
+                    <Setter Property="Background" Value="#1565C0"/>
+                </Style>
+            </Button.Styles>
+            <Viewbox Width="24" Height="24">
+                <Canvas Width="24" Height="24">
+                    <Path Fill="White" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                </Canvas>
+            </Viewbox>
+        </Button>
+
         <!-- Progress Popup -->
         <Panel IsVisible="{Binding IsProgressPopupOpen}" Background="#EE000000">
             <Border Background="{DynamicResource PopupBackground}"
-                    Width="600"
+                    Width="650"
+                    MaxHeight="700"
                     CornerRadius="12"
                     Padding="0"
                     HorizontalAlignment="Center"
@@ -3646,6 +3914,37 @@
                             IsVisible="{Binding !ProgressViewModel.IsCompleted}">
                         <StackPanel>
                             <!-- Blue accent line -->
+                            <Border Height="4" CornerRadius="12,12,0,0" Background="#2196F3"/>
+                            <Grid Margin="24,16,24,16">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                                    <Viewbox Width="22" Height="22" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#2196F3" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="{Binding TxtProgressTitle}"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="#2196F3"/>
+                                </StackPanel>
+                                <!-- Dismiss X button -->
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Width="30" Height="30" Padding="0" CornerRadius="15"
+                                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                        Command="{Binding DismissProgressCommand}"
+                                        ToolTip.Tip="Minimize">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#20FFFFFF"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
+                            </Grid>
                             <Border Height="4" CornerRadius="12,12,0,0" Background="{DynamicResource AccentBlue}"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
                                 <Viewbox Width="22" Height="22" VerticalAlignment="Center">
@@ -3669,51 +3968,44 @@
                         <StackPanel>
                             <!-- Green accent line -->
                             <Border Height="4" CornerRadius="12,12,0,0" Background="#4CAF50"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
-                                <Viewbox Width="24" Height="24" VerticalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Fill="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                    </Canvas>
-                                </Viewbox>
-                                <TextBlock Text="{Binding TxtProgressComplete}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="#4CAF50"/>
-                            </StackPanel>
+                            <Grid Margin="24,16,24,16">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                                    <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="{Binding TxtProgressComplete}"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="#4CAF50"/>
+                                </StackPanel>
+                                <!-- Close X button -->
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Width="30" Height="30" Padding="0" CornerRadius="15"
+                                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                        Command="{Binding CloseProgressCommand}">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#20FFFFFF"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Fill="{DynamicResource TextSecondary}" Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
+                            </Grid>
                             <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,0,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Content -->
-                    <StackPanel Margin="24,20" Spacing="20">
+                    <!-- ═══ Jobs Content ═══ -->
+                    <StackPanel Margin="24,20" Spacing="16">
 
-                        <!-- Job Name -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="{Binding TxtProgressJobName}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondary}"/>
-                            <TextBlock Text="{Binding ProgressViewModel.JobName}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextPrimary}"/>
-                        </StackPanel>
-
-                        <!-- Current File -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="{Binding TxtProgressCurrentFile}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondary}"/>
-                            <TextBlock Text="{Binding ProgressViewModel.CurrentFile}"
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextSecondary}"
-                                       TextTrimming="CharacterEllipsis"
-                                       TextWrapping="NoWrap"/>
-                        </StackPanel>
-
-                        <!-- Progress Bar -->
-                        <StackPanel Spacing="12">
+                        <!-- Overall Progress -->
+                        <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding TxtProgressProgress}"
@@ -3722,13 +4014,12 @@
                                            Foreground="{DynamicResource TextSecondary}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1"
-                                           Text="{Binding ProgressViewModel.ProgressPercentage, StringFormat='{}{0}%'}"
+                                           Text="{Binding ProgressViewModel.OverallProgressPercentage, StringFormat='{}{0}%'}"
                                            FontWeight="Bold"
                                            FontSize="18"
                                            Foreground="{DynamicResource AccentBlueLight}"/>
                             </Grid>
-
-                            <ProgressBar Value="{Binding ProgressViewModel.ProgressPercentage}"
+                            <ProgressBar Value="{Binding ProgressViewModel.OverallProgressPercentage}"
                                          Minimum="0"
                                          Maximum="100"
                                          Height="8"
@@ -3736,66 +4027,148 @@
                                          Background="{DynamicResource ProgressBarBg}"/>
                         </StackPanel>
 
-                        <!-- Stats -->
-                        <Grid ColumnDefinitions="*,*">
-                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0">
-                                <TextBlock Text="{Binding TxtProgressFiles}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock Text="{Binding ProgressViewModel.FilesDisplay}"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"/>
-                            </StackPanel>
+                        <!-- Jobs List -->
+                        <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding ProgressViewModel.Jobs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource InputBackground}"
+                                                CornerRadius="10"
+                                                Padding="16,14"
+                                                Margin="0,0,0,10"
+                                                BorderBrush="{DynamicResource ClickableCardBorder}"
+                                                BorderThickness="1">
+                                            <StackPanel Spacing="10">
+                                                <!-- Job name + status icon + percentage -->
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <Viewbox Grid.Column="0" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                             IsVisible="{Binding IsCompleted}">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                    <Viewbox Grid.Column="0" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                             IsVisible="{Binding HasError}">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Fill="#F44336" Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding JobName}"
+                                                               FontSize="15"
+                                                               FontWeight="Bold"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding ProgressPercentage, StringFormat='{}{0}%'}"
+                                                               FontWeight="Bold"
+                                                               FontSize="16"
+                                                               Foreground="{DynamicResource AccentBlueLight}"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
 
-                            <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
-                                <TextBlock Text="{Binding TxtProgressSize}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock Text="{Binding ProgressViewModel.SizeDisplay}"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"/>
-                            </StackPanel>
-                        </Grid>
+                                                <!-- Progress bar: blue when running, orange when paused -->
+                                                <ProgressBar Value="{Binding ProgressPercentage}"
+                                                             Minimum="0" Maximum="100" Height="7"
+                                                             Foreground="{DynamicResource AccentBlueLight}"
+                                                             Background="{DynamicResource ProgressBarBg}"
+                                                             IsVisible="{Binding !IsPaused}"/>
+                                                <ProgressBar Value="{Binding ProgressPercentage}"
+                                                             Minimum="0" Maximum="100" Height="7"
+                                                             Foreground="#FF9800"
+                                                             Background="{DynamicResource ProgressBarBg}"
+                                                             IsVisible="{Binding IsPaused}"/>
 
-                        <!-- Speed & Time -->
-                        <Grid ColumnDefinitions="*,*,*">
-                            <StackPanel Grid.Column="0" Spacing="4">
-                                <TextBlock Text="{Binding TxtProgressElapsed}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock Text="{Binding ProgressViewModel.ElapsedTimeDisplay}"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"/>
-                            </StackPanel>
+                                                <!-- Pause / Resume row (only while job is not done) -->
+                                                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !IsCompleted}">
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
+                                                                IsVisible="{Binding IsPaused}" VerticalAlignment="Center">
+                                                        <Path Data="M14,19H18V5H14M6,19H10V5H6V19Z"
+                                                              Width="9" Height="12" Stretch="Uniform"
+                                                              Fill="#FF9800"/>
+                                                        <TextBlock Text="En pause"
+                                                                   FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="#FF9800"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1"
+                                                            IsVisible="{Binding CanPause}"
+                                                            FontSize="11" Height="26" Padding="10,0"
+                                                            CornerRadius="6"
+                                                            Background="#1A2196F3"
+                                                            Foreground="{DynamicResource AccentBlueLight}"
+                                                            BorderThickness="1"
+                                                            BorderBrush="{DynamicResource AccentBlueLight}"
+                                                            Cursor="Hand"
+                                                            Command="{Binding $parent[Window].DataContext.PauseJobCommand}"
+                                                            CommandParameter="{Binding JobId}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                                            <Path Data="M14,19H18V5H14M6,19H10V5H6V19Z"
+                                                                  Width="9" Height="11" Stretch="Uniform"
+                                                                  Fill="{DynamicResource AccentBlueLight}"/>
+                                                            <TextBlock Text="Pause" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Grid.Column="1"
+                                                            IsVisible="{Binding CanResume}"
+                                                            FontSize="11" Height="26" Padding="10,0"
+                                                            CornerRadius="6"
+                                                            Background="#1A4CAF50"
+                                                            Foreground="#4CAF50"
+                                                            BorderThickness="1"
+                                                            BorderBrush="#4CAF50"
+                                                            Cursor="Hand"
+                                                            Command="{Binding $parent[Window].DataContext.ResumeJobCommand}"
+                                                            CommandParameter="{Binding JobId}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                                            <Path Data="M8,5.14V19.14L19,12.14L8,5.14Z"
+                                                                  Width="10" Height="11" Stretch="Uniform"
+                                                                  Fill="#4CAF50"/>
+                                                            <TextBlock Text="Reprendre" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
 
-                            <StackPanel Grid.Column="1" Spacing="4" Margin="12,0">
-                                <TextBlock Text="{Binding TxtProgressSpeed}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock Text="{Binding ProgressViewModel.TransferSpeedDisplay}"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"/>
-                            </StackPanel>
+                                                <!-- Current file -->
+                                                <TextBlock Text="{Binding CurrentFile}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           TextWrapping="NoWrap"
+                                                           IsVisible="{Binding !IsCompleted}"/>
 
-                            <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0">
-                                <TextBlock Text="{Binding TxtProgressRemaining}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock Text="{Binding ProgressViewModel.EstimatedTimeDisplay}"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"/>
-                            </StackPanel>
-                        </Grid>
+                                                <!-- Stats row: files | size | speed | time -->
+                                                <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding !IsCompleted}">
+                                                    <StackPanel Grid.Column="0" Spacing="2">
+                                                        <TextBlock Text="Files" FontSize="10" Foreground="{DynamicResource TextTertiary}"/>
+                                                        <TextBlock Text="{Binding FilesDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <TextBlock Text="Size" FontSize="10" Foreground="{DynamicResource TextTertiary}"/>
+                                                        <TextBlock Text="{Binding SizeDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Spacing="2">
+                                                        <TextBlock Text="Speed" FontSize="10" Foreground="{DynamicResource TextTertiary}"/>
+                                                        <TextBlock Text="{Binding SpeedDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3" Spacing="2">
+                                                        <TextBlock Text="ETA" FontSize="10" Foreground="{DynamicResource TextTertiary}"/>
+                                                        <TextBlock Text="{Binding EstimatedDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Error message -->
+                                                <TextBlock Text="{Binding ErrorMessage}"
+                                                           IsVisible="{Binding HasError}"
+                                                           FontSize="11"
+                                                           Foreground="#F44336"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
 
                         <!-- Close Button -->
                         <Button Classes="PrimaryButton"

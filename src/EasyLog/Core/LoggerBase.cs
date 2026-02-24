@@ -27,9 +27,10 @@ public abstract class LoggerBase : ILogger
     /// </summary>
     protected readonly object _lock = new object();
 
-    /// <summary>
-    /// Initializes a new instance of the LoggerBase class with an output path and logging format. Ensures the output directory exists.
-    /// </summary>
+    private readonly List<object> _pendingEntries = new();
+    private System.Threading.Timer? _flushTimer;
+    private const int FlushIntervalMs = 500;
+
     protected LoggerBase(string outputPath, LogFormat format = LogFormat.JSON)
     {
         _outputPath = outputPath;
@@ -81,36 +82,50 @@ public abstract class LoggerBase : ILogger
 
         lock (_lock)
         {
+            _pendingEntries.Add(data);
+            EnsureFlushTimer();
+        }
+    }
+
+    private void EnsureFlushTimer()
+    {
+        if (_flushTimer == null)
+        {
+            _flushTimer = new System.Threading.Timer(_ =>
+            {
+                try { Flush(); }
+                catch (Exception ex) { Console.Error.WriteLine($"[Logger] Timer flush error: {ex.Message}"); }
+            }, null, FlushIntervalMs, FlushIntervalMs);
+        }
+    }
+
+    private void FlushPending<T>() where T : class
+    {
+        var formatter = GetFormatter<T>();
+
+        var existingContent = ReadFromFile(_outputPath);
+        var existingData = new List<T>();
+
+        if (!string.IsNullOrWhiteSpace(existingContent))
+        {
             try
             {
-                var formatter = GetFormatter<T>();
-
-                var existingContent = ReadFromFile(_outputPath);
-                var existingData = new List<T>();
-
-                if (!string.IsNullOrWhiteSpace(existingContent))
-                {
-                    try
-                    {
-                        existingData = formatter.ParseCollection(existingContent).ToList();
-                    }
-                    catch
-                    {
-                        existingData = new List<T>();
-                    }
-                }
-
-                existingData.Add(data);
-
-                string formattedContent = formatter.FormatCollection(existingData);
-
-                WriteToFile(formattedContent, _outputPath);
+                existingData = formatter.ParseCollection(existingContent).ToList();
             }
-            catch (Exception ex)
+            catch
             {
-                throw new LoggerException($"Error logging data of type {typeof(T).Name}", ex);
+                existingData = new List<T>();
             }
         }
+
+        foreach (var entry in _pendingEntries)
+        {
+            if (entry is T typed)
+                existingData.Add(typed);
+        }
+
+        string formattedContent = formatter.FormatCollection(existingData);
+        WriteToFile(formattedContent, _outputPath);
     }
 
     /// <summary>
@@ -203,6 +218,35 @@ public abstract class LoggerBase : ILogger
     /// </summary>
     public virtual void Flush()
     {
+        lock (_lock)
+        {
+            if (_pendingEntries.Count == 0)
+                return;
+
+            try
+            {
+                // Determine the type from the first entry and flush all
+                var firstEntry = _pendingEntries[0];
+                var entryType = firstEntry.GetType();
+
+                // Use reflection to call FlushPending<T> with the correct type
+                // Must use typeof(LoggerBase) because FlushPending is private on the base class
+                var method = typeof(LoggerBase).GetMethod("FlushPending",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var generic = method?.MakeGenericMethod(entryType);
+                generic?.Invoke(this, null);
+
+                _pendingEntries.Clear();
+            }
+            catch (System.Reflection.TargetInvocationException ex)
+            {
+                Console.Error.WriteLine($"[Logger] Flush error: {ex.InnerException?.Message ?? ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[Logger] Flush error: {ex.Message}");
+            }
+        }
     }
 
     /// <summary>

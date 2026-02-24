@@ -98,6 +98,8 @@ public class MainViewModel : ViewModelBase
 
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
+        _backupManager.JobAutoPaused += OnJobAutoPaused;
+        _backupManager.JobAutoResumed += OnJobAutoResumed;
 
         // Commands
         AddBackupCommand = new RelayCommand(OpenAddModal);
@@ -120,6 +122,8 @@ public class MainViewModel : ViewModelBase
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
         ExecuteEditingJobCommand = new RelayCommand(ExecuteEditingJob, () => _editingBackupJob != null);
         CloseProgressCommand = new RelayCommand(CloseProgress);
+        DismissProgressCommand = new RelayCommand(DismissProgress);
+        ReopenProgressCommand = new RelayCommand(ReopenProgress);
         ShowExecuteOrderCommand = new RelayCommand(ShowExecuteOrder, () => BackupJobs.Any(j => j.IsSelected));
         CancelExecuteOrderCommand = new RelayCommand(() => IsExecuteOrderOpen = false);
         ConfirmExecuteOrderCommand = new RelayCommand(ConfirmExecuteOrder);
@@ -132,6 +136,7 @@ public class MainViewModel : ViewModelBase
         FilterErrorJobsCommand = new RelayCommand(FilterErrorJobs);
         FilterAllJobsCommand = new RelayCommand(FilterAllJobs);
         FilterActiveJobsCommand = new RelayCommand(FilterActiveJobs);
+        FilterPausedJobsCommand = new RelayCommand(FilterPausedJobs);
         FilterCompletedJobsCommand = new RelayCommand(FilterCompletedJobs);
         DeselectAllCommand = new RelayCommand(DeselectAll);
         SelectAllCommand = new RelayCommand(ToggleSelectAll);
@@ -145,6 +150,9 @@ public class MainViewModel : ViewModelBase
         DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
         PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
         NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
+        PlayJobCommand = new RelayCommand<BackupJobViewModel>(PlayJob);
+        PauseJobCommand = new RelayCommand<string>(PauseJob);
+        ResumeJobCommand = new RelayCommand<string>(ResumeJob);
         SetCardViewCommand = new RelayCommand(() => IsCompactView = false);
         SetCompactViewCommand = new RelayCommand(() => IsCompactView = true);
         SetPageSize5Command = new RelayCommand(() => PageSize = 5);
@@ -349,8 +357,17 @@ public class MainViewModel : ViewModelBase
     public bool IsProgressPopupOpen
     {
         get => _isProgressPopupOpen;
-        set => SetProperty(ref _isProgressPopupOpen, value);
+        set
+        {
+            if (SetProperty(ref _isProgressPopupOpen, value))
+                OnPropertyChanged(nameof(HasProgressData));
+        }
     }
+
+    /// <summary>
+    /// True when popup is closed but there is progress data to show (running or completed)
+    /// </summary>
+    public bool HasProgressData => !IsProgressPopupOpen && _progressViewModel.Jobs.Count > 0;
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
 
@@ -385,6 +402,7 @@ public class MainViewModel : ViewModelBase
     public string TxtErrorReasonLabel => T("gui_error_popup_reason");
     public string TxtLastExecution => T("gui_last_execution");
     public string TxtProgress => T("gui_progress");
+    public string TxtPlayJob => T("gui_play_job");
     public string TxtBackupTasks => T("gui_backup_tasks");
     public string TxtManageSubtitle => T("gui_manage_subtitle");
     public string TxtTotal => T("gui_total");
@@ -612,9 +630,11 @@ public class MainViewModel : ViewModelBase
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
     public int ActiveJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ACTIVE);
+    public int PausedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.PAUSED);
     public int CompletedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.COMPLETED);
     public int ErrorJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ERROR);
     public bool HasActiveOrErrorJobs => BackupJobs.Any(j => j.BackupState == BackupState.ACTIVE || j.BackupState == BackupState.ERROR);
+    public string TxtPaused => T("gui_filter_paused");
 
     // Toast notification
     public string ToastMessage
@@ -724,6 +744,8 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenEditModalForJobCommand { get; }
     public ICommand ExecuteEditingJobCommand { get; }
     public ICommand CloseProgressCommand { get; }
+    public ICommand DismissProgressCommand { get; }
+    public ICommand ReopenProgressCommand { get; }
     public ICommand ShowExecuteOrderCommand { get; }
     public ICommand CancelExecuteOrderCommand { get; }
     public ICommand ConfirmExecuteOrderCommand { get; }
@@ -746,9 +768,13 @@ public class MainViewModel : ViewModelBase
     public ICommand FilterErrorJobsCommand { get; }
     public ICommand FilterAllJobsCommand { get; }
     public ICommand FilterActiveJobsCommand { get; }
+    public ICommand FilterPausedJobsCommand { get; }
     public ICommand FilterCompletedJobsCommand { get; }
     public ICommand PreviousPageCommand { get; }
     public ICommand NextPageCommand { get; }
+    public ICommand PlayJobCommand { get; }
+    public ICommand PauseJobCommand { get; }
+    public ICommand ResumeJobCommand { get; }
     public ICommand NextOnboardingStepCommand { get; }
     public ICommand PrevOnboardingStepCommand { get; }
     public ICommand SkipOnboardingCommand { get; }
@@ -983,33 +1009,36 @@ public class MainViewModel : ViewModelBase
     {
         IsExecuteOrderOpen = false;
         var orderedJobs = ExecuteOrderJobs.ToList();
-        for (int i = 0; i < orderedJobs.Count; i++)
+        if (orderedJobs.Count == 0) return;
+
+        AddJobsToProgress(orderedJobs);
+
+        var tasks = orderedJobs.Select(job => Task.Run(() =>
         {
-            var job = orderedJobs[i];
-            var isLastJob = i == orderedJobs.Count - 1;
+            var jobId = job.Id;
             try
             {
-                ShowProgressPopup(job.Name);
-                var jobId = job.Id;
-                var jobToRefresh = job;
-                await Task.Run(() => _backupManager.ExecuteJob(jobId));
-                jobToRefresh.RefreshDisplay();
-                if (isLastJob)
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.IsCompleted = true;
-                    ReloadBackupJobs();
-                }
+                    _progressViewModel.MarkJobCompleted(jobId);
+                    job.RefreshDisplay();
+                });
             }
             catch (Exception ex)
             {
-                HideProgressPopup();
-                job.RefreshDisplay();
-                ReloadBackupJobs();
-                if (!HandleBlockedAppException(ex))
-                    ShowErrorPopup(job.Name, ex);
-                break;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    job.RefreshDisplay();
+                    HandleBlockedAppException(ex);
+                });
             }
-        }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+        ReloadBackupJobs();
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
     private void ViewLogs()
@@ -1248,99 +1277,153 @@ public class MainViewModel : ViewModelBase
     private async void ExecuteBackup()
     {
         if (SelectedBackupJob == null) return;
+        LaunchSingleJob(SelectedBackupJob);
+    }
 
-        var jobId = SelectedBackupJob.Id;
-        var jobToRefresh = SelectedBackupJob;
+    private void PlayJob(BackupJobViewModel? job)
+    {
+        if (job == null) return;
+        LaunchSingleJob(job);
+    }
 
-        try
+    /// <summary>
+    /// Launches a single job using the same multi-job pattern so it can coexist with other running jobs.
+    /// </summary>
+    private void LaunchSingleJob(BackupJobViewModel jobVm)
+    {
+        var jobId = jobVm.Id;
+        AddJobsToProgress(new[] { jobVm });
+
+        _ = Task.Run(() =>
         {
-            ShowProgressPopup(SelectedBackupJob.Name);
+            try
+            {
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobCompleted(jobId);
+                    jobVm.RefreshDisplay();
+                    ReloadBackupJobs();
+                });
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    jobVm.RefreshDisplay();
+                    ReloadBackupJobs();
+                    HandleBlockedAppException(ex);
+                });
+            }
+        });
+    }
 
-            // Execute on background thread to keep UI responsive
-            await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-            // Back on UI thread after await - refresh and mark as completed
-            jobToRefresh.RefreshDisplay();
-            _progressViewModel.IsCompleted = true;
-            ReloadBackupJobs();
-        }
-        catch (Exception ex)
+    /// <summary>
+    /// Manually pauses a running job (called from pause button in popup).
+    /// </summary>
+    private void PauseJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.PauseJob(jobId);
+        Dispatcher.UIThread.Post(() =>
         {
-            HideProgressPopup();
-            jobToRefresh.RefreshDisplay();
-            ReloadBackupJobs();
-            if (!HandleBlockedAppException(ex))
-                ShowErrorPopup(jobToRefresh.Name, ex);
-        }
+            _progressViewModel.MarkJobPaused(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Resumes a manually or auto-paused job.
+    /// </summary>
+    private void ResumeJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.ResumeJob(jobId);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.MarkJobResumed(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-pauses all running jobs because a blocked application started.
+    /// </summary>
+    private void OnJobAutoPaused(object? sender, JobPauseEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in e.JobIds)
+            {
+                _progressViewModel.MarkJobPaused(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast($"{T("gui_toast_paused_blocked")} ({string.Join(", ", e.BlockedApps)})");
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-resumes all paused jobs because the blocked application stopped.
+    /// </summary>
+    private void OnJobAutoResumed(object? sender, List<string> resumedIds)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in resumedIds)
+            {
+                _progressViewModel.MarkJobResumed(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast(T("gui_toast_resumed"));
+        });
     }
 
     private async void ExecuteSelected()
     {
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
-        for (int i = 0; i < selectedJobs.Count; i++)
-        {
-            var job = selectedJobs[i];
-            var isLastJob = i == selectedJobs.Count - 1;
+        if (selectedJobs.Count == 0) return;
 
+        AddJobsToProgress(selectedJobs);
+
+        var tasks = selectedJobs.Select(job => Task.Run(() =>
+        {
+            var jobId = job.Id;
             try
             {
-                ShowProgressPopup(job.Name);
-
-                var jobId = job.Id;
-                var jobToRefresh = job;
-
-                // Execute on background thread
-                await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-                // Back on UI thread after await - refresh
-                jobToRefresh.RefreshDisplay();
-
-                // Only mark as completed on the last job
-                if (isLastJob)
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.IsCompleted = true;
-                    ReloadBackupJobs();
-                }
+                    _progressViewModel.MarkJobCompleted(jobId);
+                    job.RefreshDisplay();
+                });
             }
             catch (Exception ex)
             {
-                HideProgressPopup();
-                job.RefreshDisplay();
-                ReloadBackupJobs();
-                if (!HandleBlockedAppException(ex))
-                    ShowErrorPopup(job.Name, ex);
-                break;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    job.RefreshDisplay();
+                    HandleBlockedAppException(ex);
+                });
             }
-        }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+        ReloadBackupJobs();
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
-    private async void ExecuteEditingJob()
+    private void ExecuteEditingJob()
     {
         if (_editingBackupJob == null) return;
-
-        var jobId = _editingBackupJob.Id;
-        var jobToRefresh = _editingBackupJob;
-
-        try
-        {
-            ShowProgressPopup(_editingBackupJob.Name);
-
-            // Execute on background thread
-            await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-            // Back on UI thread after await - refresh and mark as completed
-            jobToRefresh.RefreshDisplay();
-            _progressViewModel.IsCompleted = true;
-            ReloadBackupJobs();
-        }
-        catch (Exception ex)
-        {
-            HideProgressPopup();
-            jobToRefresh.RefreshDisplay();
-            ReloadBackupJobs();
-            if (!HandleBlockedAppException(ex))
-                ShowErrorPopup(jobToRefresh.Name, ex);
-        }
+        LaunchSingleJob(_editingBackupJob);
     }
 
     private void AddSourcePath()
@@ -1576,18 +1659,45 @@ public class MainViewModel : ViewModelBase
             job.IsSelected = selectAll;
     }
 
-    private void ShowProgressPopup(string jobName)
+    /// <summary>
+    /// Adds one or more jobs to the progress popup. If completed jobs from a previous run exist, clears them first.
+    /// Never resets while jobs are still running.
+    /// </summary>
+    private void AddJobsToProgress(IList<BackupJobViewModel> jobs)
     {
-        _progressViewModel.Reset();
-        _progressViewModel.JobName = jobName;
-        _progressViewModel.StartTracking();
+        // Clear finished data from previous run, but keep running jobs
+        if (_progressViewModel.Jobs.Count > 0 && _progressViewModel.AllCompleted)
+        {
+            _progressViewModel.Reset();
+        }
+
+        foreach (var job in jobs)
+        {
+            // Don't add duplicates (same job launched twice)
+            if (_progressViewModel.Jobs.All(j => j.JobId != job.Id))
+                _progressViewModel.AddJob(job.Id, job.Name);
+        }
+
+        _progressViewModel.IsCompleted = false;
         IsProgressPopupOpen = true;
     }
 
-    private void HideProgressPopup()
+    /// <summary>
+    /// Dismisses the popup without stopping backups - they continue in background
+    /// </summary>
+    private void DismissProgress()
     {
         IsProgressPopupOpen = false;
-        _progressViewModel.Reset();
+        OnPropertyChanged(nameof(HasProgressData));
+    }
+
+    /// <summary>
+    /// Reopens the progress popup to see ongoing backup progress
+    /// </summary>
+    private void ReopenProgress()
+    {
+        IsProgressPopupOpen = true;
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
     /// <summary>
@@ -1597,6 +1707,8 @@ public class MainViewModel : ViewModelBase
     {
         var config = ConfigurationManager.GetInstance().LoadConfiguration();
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+        _backupManager.UpdatePriorityExtensions(config.GetPriorityExtensions());
+        _backupManager.UpdateMaxParallelSize(config.GetMaxParallelTransferSizeValue(), config.GetMaxParallelTransferSizeUnit());
 
         // Refresh all translated labels on the main page
         RefreshHelpTranslations();
@@ -1661,6 +1773,14 @@ public class MainViewModel : ViewModelBase
         ApplyFilter(resetPage: true);
     }
 
+    private void FilterPausedJobs()
+    {
+        _selectedStates.Clear();
+        _selectedStates.Add("PAUSED");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
     private void FilterCompletedJobs()
     {
         _selectedStates.Clear();
@@ -1713,16 +1833,18 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     private string GetErrorReason(Exception ex)
     {
-        // Dig into inner exception for the real cause
-        var inner = ex.InnerException ?? ex;
-
-        if (inner is DirectoryNotFoundException)
-            return T("gui_error_path_not_found");
-        if (inner is UnauthorizedAccessException)
-            return T("gui_error_access_denied");
-        if (inner is IOException)
-            return T("gui_error_io");
-
+        // Walk the full exception chain to find the root cause
+        Exception? current = ex;
+        while (current != null)
+        {
+            if (current is DirectoryNotFoundException)
+                return T("gui_error_path_not_found");
+            if (current is UnauthorizedAccessException)
+                return T("gui_error_access_denied");
+            if (current is IOException)
+                return T("gui_error_io");
+            current = current.InnerException;
+        }
         return T("gui_execution_error");
     }
 
@@ -1744,9 +1866,10 @@ public class MainViewModel : ViewModelBase
     private void CloseProgress()
     {
         // Windows system notification
-        NotificationService.NotifyBackupCompleted(_progressViewModel.JobName);
+        var completedName = _progressViewModel.Jobs.FirstOrDefault()?.JobName ?? string.Empty;
+        NotificationService.NotifyBackupCompleted(completedName);
         ShowToast(T("gui_toast_completed"));
-        HideProgressPopup();
+        DismissProgress(); // just hide, keep data so user can reopen
         NotifyStats();
     }
 
@@ -1754,6 +1877,7 @@ public class MainViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(TotalJobsCount));
         OnPropertyChanged(nameof(ActiveJobsCount));
+        OnPropertyChanged(nameof(PausedJobsCount));
         OnPropertyChanged(nameof(CompletedJobsCount));
         OnPropertyChanged(nameof(ErrorJobsCount));
         OnPropertyChanged(nameof(HasActiveOrErrorJobs));
@@ -1779,13 +1903,19 @@ public class MainViewModel : ViewModelBase
         // Update UI on the UI thread
         Dispatcher.UIThread.Post(() =>
         {
-            _progressViewModel.JobName = e.JobName;
-            _progressViewModel.CurrentFile = e.CurrentFile;
-            _progressViewModel.TotalFiles = e.TotalFiles;
-            _progressViewModel.FilesProcessed = e.FilesProcessed;
-            _progressViewModel.ProgressPercentage = e.ProgressPercentage;
-            _progressViewModel.TotalSize = e.TotalSize;
-            _progressViewModel.ProcessedSize = e.TotalSize - e.RemainingSize;
+            // Route progress to the correct job item
+            _progressViewModel.UpdateJobProgress(
+                e.JobId,
+                e.CurrentFile,
+                e.TotalFiles,
+                e.FilesProcessed,
+                e.ProgressPercentage,
+                e.TotalSize,
+                e.TotalSize - e.RemainingSize);
+
+            // Also update the card on the home page in real-time
+            var card = BackupJobs.FirstOrDefault(j => j.Id == e.JobId);
+            card?.RefreshDisplay();
         });
     }
 
