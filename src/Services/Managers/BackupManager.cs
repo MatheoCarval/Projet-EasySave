@@ -629,7 +629,7 @@ public class BackupManager
             "KB" => value * 1024L,
             "MB" => value * 1024L * 1024L,
             "TB" => value * 1024L * 1024L * 1024L * 1024L,
-            _    => value * 1024L * 1024L * 1024L   // "GB" default
+            _ => value * 1024L * 1024L * 1024L   // "GB" default
         };
         _throttle.SetLimit(bytes);
     }
