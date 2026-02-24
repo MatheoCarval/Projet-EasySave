@@ -78,8 +78,7 @@ namespace EasySave.Services.Managers
                 PriorityExtensions = config.GetPriorityExtensions(),
                 DarkMode = config.GetDarkMode(),
                 MaxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue(),
-                MaxParallelTransferSizeUnit = config.GetMaxParallelTransferSizeUnit()
-                DarkMode = config.GetDarkMode(),
+                MaxParallelTransferSizeUnit = config.GetMaxParallelTransferSizeUnit(),
                 OnboardingCompleted = config.GetOnboardingCompleted(),
                 AccentColor = config.GetAccentColor()
             };

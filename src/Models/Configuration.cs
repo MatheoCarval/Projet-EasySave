@@ -157,6 +157,8 @@ namespace EasySave.Models
         {
             MaxParallelTransferSizeValue = Math.Max(0, value);
             MaxParallelTransferSizeUnit = unit is "KB" or "MB" or "GB" or "TB" ? unit : "GB";
+        }
+
         public void SetOnboardingCompleted(bool completed)
         {
             OnboardingCompleted = completed;
@@ -288,8 +290,7 @@ namespace EasySave.Models
                 PriorityExtensions = new List<string>(),
                 DarkMode = false,
                 MaxParallelTransferSizeValue = 0,
-                MaxParallelTransferSizeUnit = "GB"
-                DarkMode = false,
+                MaxParallelTransferSizeUnit = "GB",
                 OnboardingCompleted = false,
                 AccentColor = "Blue"
             };

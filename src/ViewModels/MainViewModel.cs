@@ -1139,7 +1139,6 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsHomeActive));
     }
 
-    private void ExecuteBackup()
     private void OnScheduledTaskChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Sync BackupJobId when job name changes via ComboBox
@@ -1867,7 +1866,8 @@ public class MainViewModel : ViewModelBase
     private void CloseProgress()
     {
         // Windows system notification
-        NotificationService.NotifyBackupCompleted(_progressViewModel.JobName);
+        var completedName = _progressViewModel.Jobs.FirstOrDefault()?.JobName ?? string.Empty;
+        NotificationService.NotifyBackupCompleted(completedName);
         ShowToast(T("gui_toast_completed"));
         DismissProgress(); // just hide, keep data so user can reopen
         NotifyStats();
