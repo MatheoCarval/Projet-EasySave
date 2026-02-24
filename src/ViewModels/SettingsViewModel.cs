@@ -40,6 +40,7 @@ public class SettingsViewModel : ViewModelBase
     private string _detectedAppsSearch = string.Empty;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
+    private int _accentColorIndex;
 
     public SettingsViewModel()
     {
@@ -47,6 +48,7 @@ public class SettingsViewModel : ViewModelBase
         DetectedApplications = new ObservableCollection<string>();
         FilteredDetectedApplications = new ObservableCollection<string>();
         PriorityExtensions = new ObservableCollection<string>();
+        BlockedApplicationsList = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
@@ -58,6 +60,7 @@ public class SettingsViewModel : ViewModelBase
         RemovePriorityExtensionCommand = new RelayCommand<string>(RemovePriorityExtension);
         MovePriorityExtensionUpCommand = new RelayCommand<string>(MovePriorityExtensionUp);
         MovePriorityExtensionDownCommand = new RelayCommand<string>(MovePriorityExtensionDown);
+        RemoveBlockedAppCommand = new RelayCommand<string>(RemoveBlockedApplication);
     }
 
     #region Properties
@@ -213,6 +216,8 @@ public class SettingsViewModel : ViewModelBase
                 HasUnsavedChanges = true;
         }
     }
+    public ObservableCollection<string> BlockedApplicationsList { get; }
+    public bool HasBlockedApps => BlockedApplicationsList.Count > 0;
 
     public string DetectedAppsSearch
     {
@@ -326,6 +331,28 @@ public class SettingsViewModel : ViewModelBase
     public string OSInfo => $"{Environment.OSVersion.Platform} {Environment.OSVersion.Version}";
     public string Architecture => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
 
+    // Accent color names (must match indices)
+    public static readonly string[] AccentColorNames = { "Blue", "Purple", "Green", "Orange", "Red", "Teal" };
+    public static readonly string[] AccentColorValues = { "#2196F3", "#9C27B0", "#4CAF50", "#FF9800", "#F44336", "#009688" };
+    public static readonly string[] AccentColorHovers = { "#1976D2", "#7B1FA2", "#388E3C", "#F57C00", "#D32F2F", "#00796B" };
+    public static readonly string[] AccentColorLights = { "#64B5F6", "#CE93D8", "#81C784", "#FFB74D", "#EF9A9A", "#80CBC4" };
+
+    public int AccentColorIndex
+    {
+        get => _accentColorIndex;
+        set
+        {
+            if (SetProperty(ref _accentColorIndex, value))
+            {
+                HasUnsavedChanges = true;
+                // Apply accent color live
+                ApplyAccentColor(value);
+            }
+        }
+    }
+
+    public string TxtAccentColor => T("gui_accent_color");
+
     #endregion
 
     #region Commands
@@ -339,6 +366,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand RemovePriorityExtensionCommand { get; }
     public ICommand MovePriorityExtensionUpCommand { get; }
     public ICommand MovePriorityExtensionDownCommand { get; }
+    public ICommand RemoveBlockedAppCommand { get; }
 
     #endregion
 
@@ -397,6 +425,19 @@ public class SettingsViewModel : ViewModelBase
         if (_maxParallelTransferSizeUnitIndex < 0) _maxParallelTransferSizeUnitIndex = 2; // fallback GB
         OnPropertyChanged(nameof(MaxParallelTransferSizeValue));
         OnPropertyChanged(nameof(MaxParallelTransferSizeUnitIndex));
+        BlockedApplicationsList.Clear();
+        foreach (var app in blockedApps)
+        {
+            if (!string.IsNullOrWhiteSpace(app))
+                BlockedApplicationsList.Add(app);
+        }
+        OnPropertyChanged(nameof(HasBlockedApps));
+
+        // Accent color
+        var accentName = config.GetAccentColor();
+        _accentColorIndex = Array.IndexOf(AccentColorNames, accentName);
+        if (_accentColorIndex < 0) _accentColorIndex = 0;
+        OnPropertyChanged(nameof(AccentColorIndex));
 
         HasUnsavedChanges = false;
         SaveMessage = string.Empty;
@@ -433,6 +474,7 @@ public class SettingsViewModel : ViewModelBase
             config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
             config.SetPriorityExtensions(PriorityExtensions);
             config.SetMaxParallelTransferSize(_maxParallelTransferSizeValue, _sizeUnits[_maxParallelTransferSizeUnitIndex]);
+            config.SetBlockedApplications(BlockedApplicationsList.ToList());
             config.SetCryptosoftPath(_cryptosoftPath);
             config.SetCryptosoftPublicKey(_cryptosoftPublicKey);
             config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
@@ -440,6 +482,7 @@ public class SettingsViewModel : ViewModelBase
                 config.SetLogFilePath(logPath);
             if (!string.IsNullOrWhiteSpace(statePath))
                 config.SetStateFilePath(statePath);
+            config.SetAccentColor(AccentColorNames[_accentColorIndex]);
             _configManager.SaveConfiguration(config);
 
             // Apply theme live
@@ -652,11 +695,10 @@ public class SettingsViewModel : ViewModelBase
             return;
         }
 
-        var items = ParseBlockedApplications(_blockedApplicationsText);
-        if (!items.Contains(SelectedDetectedApplication, StringComparer.OrdinalIgnoreCase))
+        if (!BlockedApplicationsList.Contains(SelectedDetectedApplication, StringComparer.OrdinalIgnoreCase))
         {
-            items.Add(SelectedDetectedApplication);
-            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+            BlockedApplicationsList.Add(SelectedDetectedApplication);
+            SyncBlockedTextFromList();
         }
     }
 
@@ -667,12 +709,33 @@ public class SettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(processName)) return;
 
-        var items = ParseBlockedApplications(_blockedApplicationsText);
-        if (!items.Contains(processName, StringComparer.OrdinalIgnoreCase))
+        if (!BlockedApplicationsList.Contains(processName, StringComparer.OrdinalIgnoreCase))
         {
-            items.Add(processName);
-            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+            BlockedApplicationsList.Add(processName);
+            SyncBlockedTextFromList();
         }
+    }
+
+    /// <summary>
+    /// Removes a process name from the blocked applications list.
+    /// </summary>
+    private void RemoveBlockedApplication(string? processName)
+    {
+        if (!string.IsNullOrWhiteSpace(processName) && BlockedApplicationsList.Remove(processName))
+        {
+            SyncBlockedTextFromList();
+        }
+    }
+
+    /// <summary>
+    /// Sync the hidden text field from the list (for Save compatibility).
+    /// </summary>
+    private void SyncBlockedTextFromList()
+    {
+        _blockedApplicationsText = string.Join(Environment.NewLine, BlockedApplicationsList);
+        OnPropertyChanged(nameof(BlockedApplicationsText));
+        OnPropertyChanged(nameof(HasBlockedApps));
+        HasUnsavedChanges = true;
     }
 
     /// <summary>
@@ -736,4 +799,43 @@ public class SettingsViewModel : ViewModelBase
     }
 
     #endregion
+
+    /// <summary>
+    /// Applies the accent color to the application's dynamic resources at runtime.
+    /// </summary>
+    public static void ApplyAccentColor(int index)
+    {
+        if (index < 0 || index >= AccentColorValues.Length) index = 0;
+        var app = Application.Current;
+        if (app == null) return;
+
+        var primary = Avalonia.Media.Color.Parse(AccentColorValues[index]);
+        var hover = Avalonia.Media.Color.Parse(AccentColorHovers[index]);
+        var light = Avalonia.Media.Color.Parse(AccentColorLights[index]);
+
+        // Update both Light and Dark theme dictionaries
+        if (app.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Light, out var lightDict) && lightDict is Avalonia.Controls.ResourceDictionary ld)
+        {
+            ld["AccentBlue"] = new Avalonia.Media.SolidColorBrush(primary);
+            ld["AccentBlueHover"] = new Avalonia.Media.SolidColorBrush(hover);
+            ld["AccentBlueLight"] = new Avalonia.Media.SolidColorBrush(light);
+            ld["AccentBlueBg"] = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromArgb(34, primary.R, primary.G, primary.B));
+            ld["SidebarIconHover"] = new Avalonia.Media.SolidColorBrush(primary);
+            ld["ClickableCardHoverBorder"] = new Avalonia.Media.SolidColorBrush(primary);
+        }
+        if (app.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Dark, out var darkDict) && darkDict is Avalonia.Controls.ResourceDictionary dd)
+        {
+            dd["AccentBlue"] = new Avalonia.Media.SolidColorBrush(primary);
+            dd["AccentBlueHover"] = new Avalonia.Media.SolidColorBrush(hover);
+            dd["AccentBlueLight"] = new Avalonia.Media.SolidColorBrush(light);
+            dd["AccentBlueBg"] = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromArgb(34, primary.R, primary.G, primary.B));
+            dd["SidebarIconHover"] = new Avalonia.Media.SolidColorBrush(light);
+            dd["ClickableCardHoverBorder"] = new Avalonia.Media.SolidColorBrush(primary);
+        }
+
+        // Force re-render by toggling theme variant
+        var current = app.RequestedThemeVariant;
+        app.RequestedThemeVariant = current == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
+        app.RequestedThemeVariant = current;
+    }
 }

@@ -79,6 +79,9 @@ namespace EasySave.Services.Managers
                 DarkMode = config.GetDarkMode(),
                 MaxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue(),
                 MaxParallelTransferSizeUnit = config.GetMaxParallelTransferSizeUnit()
+                DarkMode = config.GetDarkMode(),
+                OnboardingCompleted = config.GetOnboardingCompleted(),
+                AccentColor = config.GetAccentColor()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -127,6 +130,8 @@ namespace EasySave.Services.Managers
             config.SetPriorityExtensions(template.PriorityExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
             config.SetMaxParallelTransferSize(template.MaxParallelTransferSizeValue, template.MaxParallelTransferSizeUnit ?? "GB");
+            config.SetOnboardingCompleted(template.OnboardingCompleted);
+            config.SetAccentColor(template.AccentColor ?? "Blue");
 
             return config;
         }
@@ -158,6 +163,8 @@ namespace EasySave.Services.Managers
             public bool DarkMode { get; set; }
             public long MaxParallelTransferSizeValue { get; set; }
             public string? MaxParallelTransferSizeUnit { get; set; }
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
         }
     }
 }

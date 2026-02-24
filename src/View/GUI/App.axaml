@@ -21,6 +21,7 @@
                     <SolidColorBrush x:Key="AccentBlue" Color="#2196F3"/>
                     <SolidColorBrush x:Key="AccentBlueHover" Color="#1976D2"/>
                     <SolidColorBrush x:Key="AccentBlueLight" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="AccentBlueBg" Color="#222196F3"/>
                     <SolidColorBrush x:Key="SecondaryBtnHover" Color="#E3F2FD"/>
                     <SolidColorBrush x:Key="BorderSubtle" Color="#E0E0E0"/>
                     <SolidColorBrush x:Key="InputBackground" Color="White"/>
@@ -61,6 +62,7 @@
                     <SolidColorBrush x:Key="AccentBlue" Color="#2196F3"/>
                     <SolidColorBrush x:Key="AccentBlueHover" Color="#1E88E5"/>
                     <SolidColorBrush x:Key="AccentBlueLight" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="AccentBlueBg" Color="#222196F3"/>
                     <SolidColorBrush x:Key="SecondaryBtnHover" Color="#1A237E20"/>
                     <SolidColorBrush x:Key="BorderSubtle" Color="#3A3A3A"/>
                     <SolidColorBrush x:Key="InputBackground" Color="#2A2A2A"/>

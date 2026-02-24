@@ -25,6 +25,8 @@ namespace EasySave.Models
         private long MaxParallelTransferSizeValue { get; set; }
         /// <summary>Unit for the parallel transfer limit: "KB", "MB", "GB", "TB".</summary>
         private string MaxParallelTransferSizeUnit { get; set; }
+        private bool OnboardingCompleted { get; set; }
+        private string AccentColor { get; set; }
 
         public Configuration()
         {
@@ -40,6 +42,8 @@ namespace EasySave.Models
             DarkMode = false;
             MaxParallelTransferSizeValue = 0;
             MaxParallelTransferSizeUnit = "GB";
+            OnboardingCompleted = false;
+            AccentColor = "Blue";
         }
 
         // Getters
@@ -55,6 +59,8 @@ namespace EasySave.Models
         public bool GetDarkMode() => DarkMode;
         public long GetMaxParallelTransferSizeValue() => MaxParallelTransferSizeValue;
         public string GetMaxParallelTransferSizeUnit() => MaxParallelTransferSizeUnit;
+        public bool GetOnboardingCompleted() => OnboardingCompleted;
+        public string GetAccentColor() => AccentColor;
 
         // Setters
         public void SetLanguage(string language)
@@ -151,6 +157,14 @@ namespace EasySave.Models
         {
             MaxParallelTransferSizeValue = Math.Max(0, value);
             MaxParallelTransferSizeUnit = unit is "KB" or "MB" or "GB" or "TB" ? unit : "GB";
+        public void SetOnboardingCompleted(bool completed)
+        {
+            OnboardingCompleted = completed;
+        }
+
+        public void SetAccentColor(string color)
+        {
+            AccentColor = string.IsNullOrWhiteSpace(color) ? "Blue" : color.Trim();
         }
 
         private static string NormalizeExtension(string extension)
@@ -275,6 +289,9 @@ namespace EasySave.Models
                 DarkMode = false,
                 MaxParallelTransferSizeValue = 0,
                 MaxParallelTransferSizeUnit = "GB"
+                DarkMode = false,
+                OnboardingCompleted = false,
+                AccentColor = "Blue"
             };
 
             // Retourne la sérialisation de la configuration par défaut au format JSON
@@ -319,6 +336,8 @@ namespace EasySave.Models
             public bool DarkMode { get; set; }
             public long MaxParallelTransferSizeValue { get; set; }
             public string MaxParallelTransferSizeUnit { get; set; } = "GB";
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
         }
     }
 
