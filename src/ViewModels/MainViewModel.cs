@@ -1036,7 +1036,7 @@ public class MainViewModel : ViewModelBase
                 _backupManager.ExecuteJob(jobId);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.MarkJobCompleted(jobId);
+                    _progressViewModel.MarkJobCompleted(jobId, job.EncryptedFilesCount);
                     job.RefreshDisplay();
                 });
             }
@@ -1316,7 +1316,7 @@ public class MainViewModel : ViewModelBase
                 _backupManager.ExecuteJob(jobId);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.MarkJobCompleted(jobId);
+                    _progressViewModel.MarkJobCompleted(jobId, jobVm.EncryptedFilesCount);
                     jobVm.RefreshDisplay();
                     ReloadBackupJobs();
                 });
@@ -1415,7 +1415,7 @@ public class MainViewModel : ViewModelBase
                 _backupManager.ExecuteJob(jobId);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.MarkJobCompleted(jobId);
+                    _progressViewModel.MarkJobCompleted(jobId, job.EncryptedFilesCount);
                     job.RefreshDisplay();
                 });
             }
@@ -1763,6 +1763,7 @@ public class MainViewModel : ViewModelBase
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
         _backupManager.UpdatePriorityExtensions(config.GetPriorityExtensions());
         _backupManager.UpdateMaxParallelSize(config.GetMaxParallelTransferSizeValue(), config.GetMaxParallelTransferSizeUnit());
+        _backupManager.UpdateCryptageManager(config.GetCryptosoftPath(), config.GetCryptosoftPublicKey(), config.GetEncryptedExtensions());
 
         // Rebuild logger (format or remote settings may have changed)
         var logPath = config.GetLogFilePath();

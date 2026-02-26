@@ -1059,19 +1059,32 @@
                                                   Margin="0,12,24,0">
                                                 <TextBlock Grid.Column="0" Text="{Binding $parent[Window].DataContext.TxtLastExecution}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding LastExecutionDisplay}" Foreground="{DynamicResource TextPrimary}" Margin="8,0,0,0"/>
-                                                <!-- Disk space pill -->
-                                                <Border Grid.Column="3" IsVisible="{Binding HasDiskSpace}"
-                                                        Background="{DynamicResource InputBackground}"
-                                                        CornerRadius="10" Padding="8,3">
-                                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                                        <Viewbox Width="12" Height="12" VerticalAlignment="Center">
-                                                            <Canvas Width="24" Height="24">
-                                                                <Path Fill="{DynamicResource TextTertiary}" Data="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"/>
-                                                            </Canvas>
-                                                        </Viewbox>
-                                                        <TextBlock Text="{Binding DiskSpaceDisplay}" FontSize="11" Foreground="{DynamicResource TextTertiary}" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </Border>
+                                                <!-- Disk space pill + Encrypted files badge -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
+                                                    <!-- Encrypted files badge (visible only when files were encrypted) -->
+                                                    <Border IsVisible="{Binding HasEncryptedFiles}"
+                                                            Background="#1A4CAF50"
+                                                            CornerRadius="10" Padding="8,3">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="🔒" FontSize="10" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding EncryptedFilesDisplay}" FontSize="11"
+                                                                       Foreground="#4CAF50" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <!-- Disk space pill -->
+                                                    <Border IsVisible="{Binding HasDiskSpace}"
+                                                            Background="{DynamicResource InputBackground}"
+                                                            CornerRadius="10" Padding="8,3">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <Viewbox Width="12" Height="12" VerticalAlignment="Center">
+                                                                <Canvas Width="24" Height="24">
+                                                                    <Path Fill="{DynamicResource TextTertiary}" Data="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"/>
+                                                                </Canvas>
+                                                            </Viewbox>
+                                                            <TextBlock Text="{Binding DiskSpaceDisplay}" FontSize="11" Foreground="{DynamicResource TextTertiary}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
                                             </Grid>
 
                                             <!-- Progress Bar -->
@@ -4307,6 +4320,21 @@
                                                         <TextBlock Text="{Binding EstimatedDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
                                                     </StackPanel>
                                                 </Grid>
+
+                                                <!-- Encrypted files summary -->
+                                                <Border IsVisible="{Binding HasEncryptedFiles}"
+                                                        Background="#1A4CAF50"
+                                                        CornerRadius="8" Padding="10,5"
+                                                        HorizontalAlignment="Left">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock Text="🔒" FontSize="12" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding EncryptedFilesDisplay}"
+                                                                   FontSize="12"
+                                                                   Foreground="#4CAF50"
+                                                                   FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
 
                                                 <!-- Error message -->
                                                 <TextBlock Text="{Binding ErrorMessage}"

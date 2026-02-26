@@ -636,6 +636,14 @@ public class BackupManager
     }
 
     /// <summary>
+    /// Updates the CryptageManager with new encryption settings (called after settings save).
+    /// </summary>
+    public void UpdateCryptageManager(string cryptosoftPath, string publicKeyPath, IEnumerable<string> encryptedExtensions)
+    {
+        _fileTransferService.UpdateCryptageManager(cryptosoftPath, publicKeyPath, encryptedExtensions);
+    }
+
+    /// <summary>
     /// Updates the logger instance used for recording backup operations.
     /// This allows changing the log format (JSON/XML) without restarting the application.
     /// </summary>

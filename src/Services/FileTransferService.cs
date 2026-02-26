@@ -30,7 +30,7 @@ namespace EasySave.Services
         /// <summary>
         /// Manager responsible for encryption of files after transfer.
         /// </summary>
-        private readonly CryptageManager _cryptageManager;
+        private CryptageManager _cryptageManager;
 
         /// <summary>
         /// Ordered list of priority extensions (first = highest priority). Files with these extensions
@@ -78,6 +78,15 @@ namespace EasySave.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateWriter = stateWriter ?? throw new ArgumentNullException(nameof(stateWriter));
             _cryptageManager = cryptageManager ?? new CryptageManager(string.Empty, string.Empty, Array.Empty<string>());
+        }
+
+        /// <summary>
+        /// Recreates the CryptageManager with updated settings (path, key, extensions).
+        /// Called when the user saves new encryption settings.
+        /// </summary>
+        public void UpdateCryptageManager(string cryptosoftPath, string publicKeyPath, IEnumerable<string> encryptedExtensions)
+        {
+            _cryptageManager = new CryptageManager(cryptosoftPath, publicKeyPath, encryptedExtensions);
         }
 
         /// <summary>

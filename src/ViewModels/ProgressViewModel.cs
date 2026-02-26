@@ -24,6 +24,7 @@ public class JobProgressItem : ViewModelBase
     private bool _isPaused;
     private string _errorMessage = string.Empty;
     private DateTime _startTime;
+    private int _encryptedFilesCount;
 
     public string JobId
     {
@@ -135,6 +136,25 @@ public class JobProgressItem : ViewModelBase
 
     public bool CanPause => !IsCompleted && !HasError && !IsPaused;
     public bool CanResume => !IsCompleted && !HasError && IsPaused;
+
+    public int EncryptedFilesCount
+    {
+        get => _encryptedFilesCount;
+        set
+        {
+            if (SetProperty(ref _encryptedFilesCount, value))
+            {
+                OnPropertyChanged(nameof(EncryptedFilesDisplay));
+                OnPropertyChanged(nameof(HasEncryptedFiles));
+            }
+        }
+    }
+
+    public string EncryptedFilesDisplay => _encryptedFilesCount > 0
+        ? $"{_encryptedFilesCount} fichier(s) chiffré(s)"
+        : string.Empty;
+
+    public bool HasEncryptedFiles => _encryptedFilesCount > 0;
 
     public string ErrorMessage
     {
@@ -256,13 +276,14 @@ public class ProgressViewModel : ViewModelBase
     /// <summary>
     /// Marks a job as completed and updates aggregate properties
     /// </summary>
-    public void MarkJobCompleted(string jobId)
+    public void MarkJobCompleted(string jobId, int encryptedFilesCount = 0)
     {
         var job = Jobs.FirstOrDefault(j => j.JobId == jobId);
         if (job != null)
         {
             job.IsCompleted = true;
             job.ProgressPercentage = 100;
+            job.EncryptedFilesCount = encryptedFilesCount;
             OnPropertyChanged(nameof(CompletedJobsCount));
             OnPropertyChanged(nameof(AllCompleted));
             OnPropertyChanged(nameof(OverallProgressPercentage));

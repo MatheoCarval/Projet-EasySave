@@ -179,7 +179,7 @@ public class Program
         );
         var fileTransferService = new FileTransferService(logger, stateWriter, cryptageManager);
 
-        _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications());
+        _backupManager = new BackupManager(fileTransferService, stateWriter, config.GetBlockedApplications(), null, config.GetPriorityExtensions());
     }
 
     /// <summary>
