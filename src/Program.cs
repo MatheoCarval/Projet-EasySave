@@ -1,6 +1,7 @@
 using EasySave.Services;
 using EasySave.Services.Managers;
 using EasySave.View.Console;
+using EasySave.View.GUI;
 using Services.Managers;
 using EasyLog.Abstractions;
 using EasyLog.Loggers;
@@ -28,6 +29,7 @@ public class Program
     /// Manages backup job execution and coordination.
     /// </summary>
     private static BackupManager? _backupManager;
+    private static RemoteLogger? _remoteLogger;
     /// <summary>
     /// Manages application configuration including language and log format settings.
     /// </summary>
@@ -162,9 +164,12 @@ public class Program
         EnsureDirectoryForFile(logPath);
         EnsureDirectoryForFile(statePath);
 
-        ILogger logger = config.GetLogFormat() == LogFormat.XML
+        ILogger localLogger = config.GetLogFormat() == LogFormat.XML
             ? new DailyXmlLogger(logPath)
             : new DailyJsonLogger(logPath);
+
+        ILogger logger = BuildLogger(localLogger, config);
+        _remoteLogger = logger as RemoteLogger;
 
         var stateWriter = new StateWriter(statePath);
         var cryptageManager = new CryptageManager(
@@ -333,9 +338,8 @@ public class Program
     /// <param name="darkMode">True for dark theme, false for light theme</param>
     private static void LaunchUI(bool darkMode = true)
     {
-        //var consoleUI = new ConsoleUI(_localizationService!, _backupManager!);
-        //consoleUI.Start();
-        EasySave.View.GUI.GUILauncher.Launch(_localizationService!, _backupManager!, darkMode);
+        App.RemoteLogger = _remoteLogger;
+        GUILauncher.Launch(_localizationService!, _backupManager!, darkMode);
     }
 
     /// <summary>
@@ -354,6 +358,25 @@ public class Program
             : trimmed;
 
         return normalized.ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Wraps the local logger with RemoteLogger when a URL and API key are configured.
+    /// Falls back transparently to the local logger if the server is unavailable.
+    /// </summary>
+    private static ILogger BuildLogger(ILogger localLogger, Models.Configuration config)
+    {
+        var mode = config.GetLogStorageMode();
+        if (mode == LogStorageMode.Local)
+            return localLogger;
+
+        var url = config.GetRemoteLoggingUrl();
+        var apiKey = config.GetRemoteLoggingApiKey();
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
+            return localLogger;
+
+        bool alsoWriteLocal = mode == LogStorageMode.Both;
+        return new RemoteLogger(localLogger, url, apiKey, alsoWriteLocal);
     }
 
     private static void EnsureDirectoryForFile(string filePath)

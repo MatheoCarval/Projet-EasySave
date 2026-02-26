@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,17 +12,15 @@
         Background="#FFFFFF">
 
     <Window.Styles>
-        <!-- Hover effects for job items -->
         <Style Selector="Border.JobItem:pointerover">
             <Setter Property="Background" Value="#22FFFFFF"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        
-        <!-- Style for TabControl -->
+
         <Style Selector="TabControl">
             <Setter Property="Background" Value="#FAFAFA"/>
         </Style>
-        
+
         <Style Selector="TabItem">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="Foreground" Value="#666666"/>
@@ -30,81 +28,169 @@
             <Setter Property="Padding" Value="20,15"/>
             <Setter Property="Height" Value="60"/>
         </Style>
-        
+
         <Style Selector="TabItem:selected">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="#333333"/>
             <Setter Property="Background" Value="#F0F0F0"/>
         </Style>
-        
+
         <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
             <Setter Property="Background" Value="#2196F3"/>
             <Setter Property="Height" Value="3"/>
         </Style>
+
+        <!-- Source filter buttons -->
+        <Style Selector="Button.filter-btn">
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="Button.filter-btn.selected">
+            <Setter Property="Background" Value="#1A2196F3"/>
+            <Setter Property="BorderBrush" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="#2196F3"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
     </Window.Styles>
 
     <Grid ColumnDefinitions="100,*">
-        
+
         <!-- Left Sidebar -->
         <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
             <StackPanel VerticalAlignment="Top" Margin="0,60,0,0">
-                
-                <!-- Logs Button (Active) -->
-                <Button Background="#E3F2FD" BorderThickness="0" Height="60" Width="100" 
+                <Button Background="#E3F2FD" BorderThickness="0" Height="60" Width="100"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                     <TextBlock Text="Logs" FontSize="14" FontWeight="Bold" Foreground="#2196F3"/>
                 </Button>
-                
-                <!-- Paramètres Button -->
                 <Button Background="Transparent" BorderThickness="0" Height="60" Width="100"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                     <TextBlock Text="Paramètres" FontSize="14" Foreground="#666666"/>
                 </Button>
-                
             </StackPanel>
         </Border>
 
-        <!-- Main Content Area with TabControl -->
+        <!-- Main Content Area -->
         <TabControl Grid.Column="1" Background="White">
-            
+
             <!-- Journal Tab -->
             <TabItem Header="Journal">
                 <Grid Background="#FAFAFA">
                     <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel Margin="20">
-                            
-                            <TextBlock Text="Historique" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Foreground="#333"/>
+                        <StackPanel Margin="20" Spacing="0">
 
-                            <!-- Log Entries List -->
+                            <!-- Title + Refresh -->
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                                <TextBlock Grid.Column="0" Text="Historique"
+                                           FontSize="20" FontWeight="Bold" Foreground="#333"
+                                           VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="↺ Actualiser"
+                                        Command="{Binding RefreshCommand}"
+                                        Padding="12,6" CornerRadius="8"
+                                        Background="Transparent"
+                                        BorderBrush="#E0E0E0" BorderThickness="1.5"
+                                        Foreground="#666666" FontSize="12"/>
+                            </Grid>
+
+                            <!-- Source filter bar -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                                <Button Content="Tous"
+                                        Classes="filter-btn"
+                                        Classes.selected="{Binding IsFilterAll}"
+                                        Command="{Binding FilterAllCommand}"/>
+                                <Button Content="📁 Local"
+                                        Classes="filter-btn"
+                                        Classes.selected="{Binding IsFilterLocal}"
+                                        Command="{Binding FilterLocalCommand}"/>
+                                <Button Content="📡 Distant"
+                                        Classes="filter-btn"
+                                        Classes.selected="{Binding IsFilterRemote}"
+                                        Command="{Binding FilterRemoteCommand}"
+                                        IsVisible="{Binding IsRemoteConfigured}"/>
+                            </StackPanel>
+
+                            <!-- Remote loading indicator -->
+                            <Border Background="#1A2196F3" CornerRadius="8" Padding="12,8"
+                                    Margin="0,0,0,10"
+                                    IsVisible="{Binding IsLoadingRemote}">
+                                <TextBlock Text="📡 Chargement des logs distants…"
+                                           FontSize="12" Foreground="#2196F3"/>
+                            </Border>
+
+                            <!-- Local status / info message -->
+                            <Border CornerRadius="8" Padding="12,8"
+                                    Margin="0,0,0,10"
+                                    IsVisible="{Binding LocalStatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <Border.Background>
+                                    <SolidColorBrush Color="#F5F5F5"/>
+                                </Border.Background>
+                                <TextBlock Text="{Binding LocalStatusMessage}"
+                                           FontSize="12" Foreground="#666666"/>
+                            </Border>
+
+                            <!-- Remote status / error message -->
+                            <Border CornerRadius="8" Padding="12,8"
+                                    Margin="0,0,0,10"
+                                    IsVisible="{Binding RemoteStatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <Border.Background>
+                                    <!-- Green tint for success, orange for error -->
+                                    <SolidColorBrush Color="#F5F5F5"/>
+                                </Border.Background>
+                                <TextBlock Text="{Binding RemoteStatusMessage}"
+                                           FontSize="12" Foreground="#666666"/>
+                            </Border>
+
+                            <!-- Log entries list -->
                             <ItemsControl ItemsSource="{Binding LogEntries}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Expander HorizontalAlignment="Stretch" Margin="0,0,0,10" Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
-                                        
-                                            <!-- Expander Header -->
+                                        <Expander HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                                                  Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
+
+                                            <!-- Header row -->
                                             <Expander.Header>
-                                                <StackPanel Orientation="Horizontal" Margin="10,5">
-                                                    <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0" Foreground="Black"/>
-                                                    <TextBlock Text="{Binding Timestamp}" FontWeight="Bold" Margin="0,0,15,0" Foreground="Black"/>
-                                                    <TextBlock Text="{Binding BackupName}" Foreground="#666666" FontSize="12"/>
+                                                <StackPanel Orientation="Horizontal" Margin="10,5" Spacing="0">
+                                                    <TextBlock Text="▼" FontSize="12" Margin="0,0,10,0"
+                                                               Foreground="Black" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Timestamp}" FontWeight="Bold"
+                                                               Margin="0,0,15,0" Foreground="Black"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding BackupName}" Foreground="#666666"
+                                                               FontSize="12" Margin="0,0,10,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <!-- Source badge -->
+                                                    <Border CornerRadius="4" Padding="6,2"
+                                                            Background="{Binding SourceBadgeBg}"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding SourceLabel}"
+                                                                   FontSize="10" FontWeight="SemiBold"
+                                                                   Foreground="{Binding SourceBadgeFg}"/>
+                                                    </Border>
                                                 </StackPanel>
                                             </Expander.Header>
 
-                                            <!-- Expander Content -->
+                                            <!-- Detail content -->
                                             <Expander.Content>
-                                                <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,0" Padding="15" Background="#FAFAFA">
+                                                <Border BorderBrush="#CCCCCC" BorderThickness="1"
+                                                        Padding="15" Background="#FAFAFA">
                                                     <StackPanel>
-                                                        <TextBlock Text="Détails (JSON):" FontWeight="Bold" Margin="0,0,0,10" Foreground="#333"/>
-                                                        
-                                                        <ScrollViewer Height="200" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+                                                        <TextBlock Text="Détails (JSON):" FontWeight="Bold"
+                                                                   Margin="0,0,0,10" Foreground="#333"/>
+                                                        <ScrollViewer Height="200"
+                                                                      VerticalScrollBarVisibility="Visible"
+                                                                      HorizontalScrollBarVisibility="Disabled">
                                                             <StackPanel Margin="5">
                                                                 <TextBlock Text="{}{" FontFamily="Consolas" FontSize="11" Foreground="#333"/>
-                                                                
+
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="  &quot;Source&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
                                                                     <TextBlock Text="{Binding SourcePath}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
                                                                 </StackPanel>
-                                                                
+
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="  &quot;Target&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
                                                                     <TextBlock Text="{Binding TargetPath}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
@@ -119,14 +205,14 @@
                                                                     <TextBlock Text="  &quot;Time&quot;: " FontFamily="Consolas" FontSize="11" Foreground="#666"/>
                                                                     <TextBlock Text="{Binding TransferTimeDisplay}" FontFamily="Consolas" FontSize="11" Foreground="#0066CC"/>
                                                                 </StackPanel>
-                                                                
+
                                                                 <TextBlock Text="{}}" FontFamily="Consolas" FontSize="11" Foreground="#333"/>
                                                             </StackPanel>
                                                         </ScrollViewer>
                                                     </StackPanel>
                                                 </Border>
                                             </Expander.Content>
-                                        
+
                                         </Expander>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -136,20 +222,19 @@
                     </ScrollViewer>
                 </Grid>
             </TabItem>
-            
+
             <!-- Etat Tab -->
             <TabItem Header="Etat">
                 <Grid Background="#FAFAFA" ColumnDefinitions="300,*">
-                    
-                    <!-- Left Panel - Job List (bound to ViewModel) -->
-                    <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Padding="15">
+
+                    <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0"
+                            BorderThickness="0,0,1,0" Padding="15">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding StateJobs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="White" Margin="0,5" 
-                                                Padding="10" CornerRadius="5"
-                                                Classes="JobItem"
+                                        <Border Background="White" Margin="0,5" Padding="10"
+                                                CornerRadius="5" Classes="JobItem"
                                                 PointerPressed="JobItem_Clicked">
                                             <StackPanel Orientation="Horizontal" Height="40">
                                                 <TextBlock Text="●" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
@@ -162,39 +247,31 @@
                         </ScrollViewer>
                     </Border>
 
-                    <!-- Right Panel - JSON Content (bound to ViewModel) -->
-                    <Border Grid.Column="1" Background="White" Margin="20" Padding="20" 
+                    <Border Grid.Column="1" Background="White" Margin="20" Padding="20"
                             BorderBrush="#E0E0E0" BorderThickness="1">
                         <Grid RowDefinitions="Auto,*">
-                            
-                            <!-- Header -->
-                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold" 
+                            <TextBlock Grid.Row="0" Text="Contenu du JSON" FontSize="16" FontWeight="Bold"
                                        Margin="0,0,0,15" Foreground="#333333"/>
-                            
-                            <!-- Placeholder when no job selected -->
                             <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1"
                                     IsVisible="{Binding !HasSelectedJob}">
-                                <TextBlock Text="Sélectionnez un job" 
+                                <TextBlock Text="Sélectionnez un job"
                                            FontSize="14" Foreground="#999999"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            
-                            <!-- JSON content when a job is selected -->
                             <ScrollViewer Grid.Row="1" IsVisible="{Binding HasSelectedJob}"
                                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                                <Border Background="WhiteSmoke" Padding="15" 
+                                <Border Background="WhiteSmoke" Padding="15"
                                         BorderBrush="LightGray" BorderThickness="1" CornerRadius="8">
                                     <TextBlock FontFamily="Consolas" FontSize="13" Foreground="Black"
                                                TextWrapping="Wrap" Text="{Binding SelectedJobJson}"/>
                                 </Border>
                             </ScrollViewer>
-                            
                         </Grid>
                     </Border>
 
                 </Grid>
             </TabItem>
-            
+
         </TabControl>
 
     </Grid>

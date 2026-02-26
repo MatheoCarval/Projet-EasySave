@@ -31,6 +31,12 @@ public class App : Application
     public static bool IsDarkMode { get; set; } = false;
 
     /// <summary>
+    /// The active RemoteLogger instance, if remote logging is configured.
+    /// Set by Program.cs at startup and updated by MainViewModel on settings save.
+    /// </summary>
+    public static RemoteLogger? RemoteLogger { get; set; }
+
+    /// <summary>
     /// Logs an unhandled exception to crash.log in the EasySave AppData folder.
     /// </summary>
     public static void LogCrash(string context, Exception ex)
