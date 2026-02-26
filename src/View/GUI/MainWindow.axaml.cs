@@ -981,8 +981,8 @@ public partial class MainWindow : Window
     /// </summary>
     private void UpdateSourceFilterButtons(int activeFilter)
     {
-        var allBtn    = this.FindControl<Button>("FilterAllBtn");
-        var localBtn  = this.FindControl<Button>("FilterLocalBtn");
+        var allBtn = this.FindControl<Button>("FilterAllBtn");
+        var localBtn = this.FindControl<Button>("FilterLocalBtn");
         var remoteBtn = this.FindControl<Button>("FilterRemoteBtn");
 
         void Set(Button? btn, bool active)
@@ -999,8 +999,8 @@ public partial class MainWindow : Window
             }
         }
 
-        Set(allBtn,    activeFilter == 0);
-        Set(localBtn,  activeFilter == 1);
+        Set(allBtn, activeFilter == 0);
+        Set(localBtn, activeFilter == 1);
         Set(remoteBtn, activeFilter == 2);
     }
 

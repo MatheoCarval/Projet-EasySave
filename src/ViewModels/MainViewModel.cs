@@ -64,7 +64,7 @@ public class MainViewModel : ViewModelBase
         private set => SetProperty(ref _remoteLogStatus, value);
     }
     public bool IsRemoteLogSuccess => !string.IsNullOrEmpty(_remoteLogStatus) && !_isRemoteLogError;
-    public bool IsRemoteLogError   => !string.IsNullOrEmpty(_remoteLogStatus) && _isRemoteLogError;
+    public bool IsRemoteLogError => !string.IsNullOrEmpty(_remoteLogStatus) && _isRemoteLogError;
 
     /// <summary>
     /// Callback to open a folder picker dialog. Set by the View (MainWindow) to decouple ViewModel from UI.

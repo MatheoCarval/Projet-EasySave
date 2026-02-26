@@ -142,7 +142,7 @@ public class RemoteLogger : ILogger
             var payload = new
             {
                 fileName,
-                message  = $"[EasySave] {entry.BackupName} — {Path.GetFileName(entry.TargetPath)}",
+                message = $"[EasySave] {entry.BackupName} — {Path.GetFileName(entry.TargetPath)}",
                 rawPayload,
                 payloadFormat = "json"
             };

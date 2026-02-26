@@ -178,7 +178,7 @@ public class RemoteLogClient
 
             int id = el.TryGetProperty("id", out var idEl) ? idEl.GetInt32() : 0;
             string? fileName = el.TryGetProperty("fileName", out var fn) ? fn.GetString() : null;
-            string? message  = el.TryGetProperty("message",  out var msg) ? msg.GetString() : null;
+            string? message = el.TryGetProperty("message", out var msg) ? msg.GetString() : null;
 
             DateTime? ts = null;
             if (el.TryGetProperty("timestamp", out var tsEl) && tsEl.ValueKind != JsonValueKind.Null)
@@ -186,11 +186,11 @@ public class RemoteLogClient
 
             return new RemoteLogEntry
             {
-                Id              = id,
-                FileName        = fileName ?? string.Empty,
-                Message         = message  ?? string.Empty,
+                Id = id,
+                FileName = fileName ?? string.Empty,
+                Message = message ?? string.Empty,
                 ServerTimestamp = ts,
-                BackupEntry     = backupEntry
+                BackupEntry = backupEntry
             };
         }
         catch { return null; }
@@ -205,7 +205,7 @@ public class RemoteLogEntry
 {
     public int Id { get; init; }
     public string FileName { get; init; } = string.Empty;
-    public string Message  { get; init; } = string.Empty;
+    public string Message { get; init; } = string.Empty;
     public DateTime? ServerTimestamp { get; init; }
     public BackupLogEntry? BackupEntry { get; init; }
 }
