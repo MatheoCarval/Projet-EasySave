@@ -64,6 +64,30 @@
         <Style Selector="Border.LogTab:pointerover">
             <Setter Property="Background" Value="{DynamicResource SidebarHover}"/>
         </Style>
+
+        <!-- Log source filter buttons (Tous / Local / Distant) -->
+        <Style Selector="Button.LogSourceFilter">
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ClickableCardBorder}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.LogSourceFilter.LogSourceFilterActive">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.LogSourceFilter:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SidebarHover}"/>
+        </Style>
+        <Style Selector="Button.LogSourceFilter.LogSourceFilterActive:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentBlueHover}"/>
+        </Style>
         
         <!-- === Date/Job Item Styles === -->
         <Style Selector="Border.JobItem">
@@ -328,6 +352,18 @@
                                 <TextBlock Text="{Binding TxtManageSubtitle}"
                                            FontSize="14"
                                            Foreground="{DynamicResource TextSecondary}"/>
+
+                                <!-- Remote log status badge -->
+                                <Border Background="#1A4CAF50" CornerRadius="10" Padding="10,4"
+                                        IsVisible="{Binding IsRemoteLogSuccess}">
+                                    <TextBlock Text="{Binding RemoteLogStatus}"
+                                               FontSize="11" Foreground="#4CAF50"/>
+                                </Border>
+                                <Border Background="#1AFF5722" CornerRadius="10" Padding="10,4"
+                                        IsVisible="{Binding IsRemoteLogError}">
+                                    <TextBlock Text="{Binding RemoteLogStatus}"
+                                               FontSize="11" Foreground="#FF5722"/>
+                                </Border>
                             </StackPanel>
 
                             <!-- Logo -->
@@ -2114,6 +2150,101 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- === Remote Logging === -->
+                    <Border Classes="Card" Padding="24" CornerRadius="14">
+                        <StackPanel Spacing="16">
+                            <!-- Header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="8"
+                                        Background="#1A2196F3">
+                                    <TextBlock Text="📡" FontSize="18"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TxtRemoteLogging}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding TxtRemoteLoggingDesc}" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Storage mode selector -->
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{Binding TxtLogStorageMode}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                <ComboBox SelectedIndex="{Binding LogStorageModeIndex, Mode=TwoWay}"
+                                          Height="36" MinWidth="260">
+                                    <ComboBoxItem Content="{Binding TxtLogStorageModeLocal}"/>
+                                    <ComboBoxItem Content="{Binding TxtLogStorageModeRemote}"/>
+                                    <ComboBoxItem Content="{Binding TxtLogStorageModeBoth}"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- Server config (hidden when Local only) -->
+                            <StackPanel Spacing="16" IsVisible="{Binding IsRemoteEnabled}">
+
+                                <!-- Server URL -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="{Binding TxtRemoteLoggingUrl}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBox Text="{Binding RemoteLoggingUrl}"
+                                             Watermark="{Binding TxtRemoteLoggingUrlPlaceholder}"
+                                             Height="36"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Button Content="Tester la connexion"
+                                                Command="{Binding TestConnectionCommand}"
+                                                Height="32" Padding="12,0"
+                                                IsEnabled="{Binding !IsTestingConnection}"/>
+                                        <TextBlock Text="{Binding ConnectionTestStatus}"
+                                                   Foreground="{Binding ConnectionTestColor}"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding ConnectionTestStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Enrollment row (shown when no API key yet) -->
+                                <StackPanel Spacing="6" IsVisible="{Binding !HasApiKey}">
+                                    <TextBlock Text="{Binding TxtRemoteLoggingEnrollmentKey}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBox Text="{Binding EnrollmentKey}"
+                                                 Watermark="one-time enrollment key"
+                                                 Height="36" Width="260"/>
+                                        <Button Content="{Binding TxtRemoteLoggingEnroll}"
+                                                Command="{Binding EnrollCommand}"
+                                                Height="36" Padding="16,0"
+                                                IsEnabled="{Binding !IsEnrolling}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- API key badge (shown when enrolled) -->
+                                <StackPanel Spacing="6" IsVisible="{Binding HasApiKey}">
+                                    <TextBlock Text="{Binding TxtRemoteLoggingApiKey}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Border Background="#1A4CAF50" CornerRadius="6" Padding="10,4">
+                                            <TextBlock Text="{Binding TxtRemoteLoggingEnrolledBadge}"
+                                                       FontSize="12" Foreground="#4CAF50" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding RemoteLoggingApiKey}"
+                                                   FontSize="11" Foreground="{DynamicResource TextSecondary}"
+                                                   VerticalAlignment="Center" Opacity="0.5"
+                                                   MaxWidth="180" TextTrimming="CharacterEllipsis"/>
+                                        <Button Content="↺"
+                                                Command="{Binding ClearApiKeyCommand}"
+                                                Height="28" Width="28" Padding="0"
+                                                ToolTip.Tip="Re-enroll / reset API key"
+                                                FontSize="14"
+                                                Background="Transparent"
+                                                Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Status message -->
+                                <TextBlock Text="{Binding RemoteLoggingStatus}"
+                                           IsVisible="{Binding RemoteLoggingStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                           FontSize="12" Foreground="{DynamicResource TextSecondary}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- === About Section  ===  -->
                     <Border Classes="Card" Padding="24" CornerRadius="14">
                         <StackPanel Spacing="16">
@@ -2509,7 +2640,7 @@
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!-- Logs Panel -->
             <!-- ═══════════════════════════════════════════════════════════════ -->
-            <Grid Grid.Column="1" IsVisible="{Binding IsLogsOpen}" RowDefinitions="Auto,*">
+            <Grid Grid.Column="1" IsVisible="{Binding IsLogsOpen}" RowDefinitions="Auto,Auto,*">
                 <Grid.Transitions>
                     <Transitions>
                         <DoubleTransition Property="Opacity" Duration="0:0:0.35" Easing="CubicEaseOut"/>
@@ -2542,8 +2673,40 @@
                     </Grid>
                 </Border>
 
+                <!-- Source filter bar (Journal tab only) -->
+                <Border Grid.Row="1" Name="JournalSourceFilterBar"
+                        Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource ClickableCardBorder}"
+                        BorderThickness="0,0,0,1"
+                        Padding="16,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Source :" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   VerticalAlignment="Center"/>
+                        <Button Name="FilterAllBtn"
+                                Content="Tous"
+                                Classes="LogSourceFilter LogSourceFilterActive"
+                                Click="FilterAll_Clicked"/>
+                        <Button Name="FilterLocalBtn"
+                                Content="📁 Local"
+                                Classes="LogSourceFilter"
+                                Click="FilterLocal_Clicked"/>
+                        <Button Name="FilterRemoteBtn"
+                                Content="📡 Distant"
+                                Classes="LogSourceFilter"
+                                Click="FilterRemote_Clicked"/>
+                        <!-- Remote status label -->
+                        <TextBlock Name="RemoteDatesLoadingIndicator"
+                                   FontSize="11" FontStyle="Italic"
+                                   Foreground="{DynamicResource AccentBlue}"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0"
+                                   IsVisible="False"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Journalier Content -->
-                <Grid Grid.Row="1" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
+                <Grid Grid.Row="2" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
                       Name="JournalierContent">
                     <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
@@ -2716,7 +2879,7 @@
                 </Grid>
 
                 <!-- Etat Content -->
-                <Grid Grid.Row="1" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
+                <Grid Grid.Row="2" Background="{DynamicResource AppBackground}" ColumnDefinitions="300,*"
                       Name="EtatContent" IsVisible="False">
                     <Border Grid.Column="0" Background="{DynamicResource CardBackground}" 
                             BorderBrush="{DynamicResource ClickableCardBorder}" 
@@ -3914,18 +4077,18 @@
                             IsVisible="{Binding !ProgressViewModel.IsCompleted}">
                         <StackPanel>
                             <!-- Blue accent line -->
-                            <Border Height="4" CornerRadius="12,12,0,0" Background="#2196F3"/>
+                            <Border Height="4" CornerRadius="12,12,0,0" Background="{DynamicResource AccentBlue}"/>
                             <Grid Margin="24,16,24,16">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                                     <Viewbox Width="22" Height="22" VerticalAlignment="Center">
                                         <Canvas Width="24" Height="24">
-                                            <Path Fill="#2196F3" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                            <Path Fill="{DynamicResource AccentBlue}" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
                                         </Canvas>
                                     </Viewbox>
                                     <TextBlock Text="{Binding TxtProgressTitle}"
                                                FontSize="20"
                                                FontWeight="Bold"
-                                               Foreground="#2196F3"/>
+                                               Foreground="{DynamicResource AccentBlue}"/>
                                 </StackPanel>
                                 <!-- Dismiss X button -->
                                 <Button HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -3945,18 +4108,6 @@
                                     </Viewbox>
                                 </Button>
                             </Grid>
-                            <Border Height="4" CornerRadius="12,12,0,0" Background="{DynamicResource AccentBlue}"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
-                                <Viewbox Width="22" Height="22" VerticalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Fill="{DynamicResource AccentBlue}" Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-                                    </Canvas>
-                                </Viewbox>
-                                <TextBlock Text="{Binding TxtProgressTitle}"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           Foreground="{DynamicResource AccentBlue}"/>
-                            </StackPanel>
                             <Border Height="1" Background="{DynamicResource ClickableCardBorder}" Margin="0,0,0,0"/>
                         </StackPanel>
                     </Border>

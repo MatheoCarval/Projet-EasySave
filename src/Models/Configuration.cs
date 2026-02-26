@@ -1,4 +1,5 @@
 using EasyLog.Enums;
+using Models.Enums;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -27,6 +28,12 @@ namespace EasySave.Models
         private string MaxParallelTransferSizeUnit { get; set; }
         private bool OnboardingCompleted { get; set; }
         private string AccentColor { get; set; }
+        /// <summary>Base URL of the CryptoSoft Manager API. Empty = remote logging disabled.</summary>
+        private string RemoteLoggingUrl { get; set; }
+        /// <summary>Agent API key obtained after enrollment. Empty = not enrolled.</summary>
+        private string RemoteLoggingApiKey { get; set; }
+        /// <summary>Where backup log entries are persisted: Local, Remote, or Both.</summary>
+        private LogStorageMode LogStorageMode { get; set; }
 
         public Configuration()
         {
@@ -44,6 +51,9 @@ namespace EasySave.Models
             MaxParallelTransferSizeUnit = "GB";
             OnboardingCompleted = false;
             AccentColor = "Blue";
+            RemoteLoggingUrl = string.Empty;
+            RemoteLoggingApiKey = string.Empty;
+            LogStorageMode = LogStorageMode.Local;
         }
 
         // Getters
@@ -61,6 +71,9 @@ namespace EasySave.Models
         public string GetMaxParallelTransferSizeUnit() => MaxParallelTransferSizeUnit;
         public bool GetOnboardingCompleted() => OnboardingCompleted;
         public string GetAccentColor() => AccentColor;
+        public string GetRemoteLoggingUrl() => RemoteLoggingUrl;
+        public string GetRemoteLoggingApiKey() => RemoteLoggingApiKey;
+        public LogStorageMode GetLogStorageMode() => LogStorageMode;
 
         // Setters
         public void SetLanguage(string language)
@@ -157,6 +170,21 @@ namespace EasySave.Models
         {
             MaxParallelTransferSizeValue = Math.Max(0, value);
             MaxParallelTransferSizeUnit = unit is "KB" or "MB" or "GB" or "TB" ? unit : "GB";
+        }
+
+        public void SetRemoteLoggingUrl(string url)
+        {
+            RemoteLoggingUrl = url?.Trim() ?? string.Empty;
+        }
+
+        public void SetRemoteLoggingApiKey(string key)
+        {
+            RemoteLoggingApiKey = key?.Trim() ?? string.Empty;
+        }
+
+        public void SetLogStorageMode(LogStorageMode mode)
+        {
+            LogStorageMode = mode;
         }
 
         public void SetOnboardingCompleted(bool completed)
@@ -292,7 +320,10 @@ namespace EasySave.Models
                 MaxParallelTransferSizeValue = 0,
                 MaxParallelTransferSizeUnit = "GB",
                 OnboardingCompleted = false,
-                AccentColor = "Blue"
+                AccentColor = "Blue",
+                RemoteLoggingUrl = string.Empty,
+                RemoteLoggingApiKey = string.Empty,
+                LogStorageMode = (int)LogStorageMode.Local
             };
 
             // Retourne la sérialisation de la configuration par défaut au format JSON
@@ -339,6 +370,9 @@ namespace EasySave.Models
             public string MaxParallelTransferSizeUnit { get; set; } = "GB";
             public bool OnboardingCompleted { get; set; }
             public string AccentColor { get; set; } = "Blue";
+            public string RemoteLoggingUrl { get; set; } = string.Empty;
+            public string RemoteLoggingApiKey { get; set; } = string.Empty;
+            public int LogStorageMode { get; set; } = 0;
         }
     }
 

@@ -15,6 +15,7 @@ using EasyLog.Enums;
 using EasyLog.Loggers;
 using Avalonia.Threading;
 using EasySave.Models;
+using EasySave.View.GUI;
 
 namespace EasySave.ViewModels;
 
@@ -57,6 +58,14 @@ public class MainViewModel : ViewModelBase
     public ObservableCollection<ScheduledTask> ScheduledTasks { get; } = new();
     public SettingsViewModel SettingsVM { get; }
 
+    public string RemoteLogStatus
+    {
+        get => _remoteLogStatus;
+        private set => SetProperty(ref _remoteLogStatus, value);
+    }
+    public bool IsRemoteLogSuccess => !string.IsNullOrEmpty(_remoteLogStatus) && !_isRemoteLogError;
+    public bool IsRemoteLogError   => !string.IsNullOrEmpty(_remoteLogStatus) && _isRemoteLogError;
+
     /// <summary>
     /// Callback to open a folder picker dialog. Set by the View (MainWindow) to decouple ViewModel from UI.
     /// Returns the selected folder path or null if cancelled.
@@ -82,6 +91,12 @@ public class MainViewModel : ViewModelBase
 
     // Progress tracking
     private readonly ProgressViewModel _progressViewModel;
+
+    // Remote log status (displayed in header when remote logging is active)
+    private RemoteLogger? _activeRemoteLogger;
+    private int _remoteSentCount;
+    private string _remoteLogStatus = string.Empty;
+    private bool _isRemoteLogError;
 
     public MainViewModel(BackupManager backupManager)
     {
@@ -1703,12 +1718,76 @@ public class MainViewModel : ViewModelBase
     /// <summary>
     /// Called when settings are saved — reload blocked applications and logger format into BackupManager immediately.
     /// </summary>
+    /// <summary>
+    /// Subscribes to the given RemoteLogger's StatusCallback so the UI shows live send status.
+    /// Pass null to detach (e.g. when switching back to local-only mode).
+    /// </summary>
+    public void BindRemoteLogger(RemoteLogger? logger)
+    {
+        if (_activeRemoteLogger != null)
+            _activeRemoteLogger.StatusCallback = null;
+
+        _activeRemoteLogger = logger;
+        _remoteSentCount = 0;
+        _isRemoteLogError = false;
+        RemoteLogStatus = string.Empty;
+        OnPropertyChanged(nameof(IsRemoteLogSuccess));
+        OnPropertyChanged(nameof(IsRemoteLogError));
+
+        if (logger == null) return;
+
+        logger.StatusCallback = (success, error) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                _isRemoteLogError = !success;
+                if (success)
+                {
+                    _remoteSentCount++;
+                    RemoteLogStatus = $"📡 {_remoteSentCount} log(s) envoyé(s)  ·  {DateTime.Now:HH:mm:ss}";
+                }
+                else
+                {
+                    var shortErr = error?.Split('\n')[0] ?? "connexion";
+                    RemoteLogStatus = $"📡 Erreur : {shortErr}";
+                }
+                OnPropertyChanged(nameof(IsRemoteLogSuccess));
+                OnPropertyChanged(nameof(IsRemoteLogError));
+            });
+        };
+    }
+
     private void OnSettingsSaved(object? sender, EventArgs e)
     {
         var config = ConfigurationManager.GetInstance().LoadConfiguration();
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
         _backupManager.UpdatePriorityExtensions(config.GetPriorityExtensions());
         _backupManager.UpdateMaxParallelSize(config.GetMaxParallelTransferSizeValue(), config.GetMaxParallelTransferSizeUnit());
+
+        // Rebuild logger (format or remote settings may have changed)
+        var logPath = config.GetLogFilePath();
+        if (string.IsNullOrWhiteSpace(logPath))
+            logPath = config.GetDefaultLogPath();
+
+        ILogger localLogger = config.GetLogFormat() == EasyLog.Enums.LogFormat.XML
+            ? new DailyXmlLogger(logPath)
+            : new DailyJsonLogger(logPath);
+
+        var mode = config.GetLogStorageMode();
+        ILogger effectiveLogger = localLogger;
+        if (mode != LogStorageMode.Local)
+        {
+            var remoteUrl = config.GetRemoteLoggingUrl();
+            var remoteKey = config.GetRemoteLoggingApiKey();
+            if (!string.IsNullOrWhiteSpace(remoteUrl) && !string.IsNullOrWhiteSpace(remoteKey))
+                effectiveLogger = new RemoteLogger(localLogger, remoteUrl, remoteKey, mode == LogStorageMode.Both);
+        }
+
+        var newRemoteLogger = effectiveLogger as RemoteLogger;
+        App.RemoteLogger = newRemoteLogger;
+        BindRemoteLogger(newRemoteLogger);
+
+        _backupManager.UpdateLogger(effectiveLogger);
 
         // Refresh all translated labels on the main page
         RefreshHelpTranslations();
@@ -1924,7 +2003,7 @@ public class MainViewModel : ViewModelBase
     // ── Help screen translated labels ──
     public string T(string key)
     {
-        try { return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? key; }
+        try { return App.LocalizationService?.GetTextTranslated(key) ?? key; }
         catch { return key; }
     }
 

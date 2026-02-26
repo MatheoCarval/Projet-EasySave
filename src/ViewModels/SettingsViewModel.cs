@@ -4,10 +4,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using EasyLog.Enums;
 using EasySave.Services;
 using EasySave.Services.Managers;
+using Models.Enums;
 using Avalonia;
 using Avalonia.Styling;
 
@@ -41,6 +44,15 @@ public class SettingsViewModel : ViewModelBase
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
     private int _accentColorIndex;
+    private string _remoteLoggingUrl = string.Empty;
+    private string _remoteLoggingApiKey = string.Empty;
+    private string _enrollmentKey = string.Empty;
+    private string _remoteLoggingStatus = string.Empty;
+    private bool _isEnrolling;
+    private int _logStorageModeIndex = 0; // 0=Local, 1=Remote, 2=Both
+    private bool _isTestingConnection;
+    private string _connectionTestStatus = string.Empty;
+    private string _connectionTestColor = "#9E9E9E";
 
     public SettingsViewModel()
     {
@@ -61,6 +73,9 @@ public class SettingsViewModel : ViewModelBase
         MovePriorityExtensionUpCommand = new RelayCommand<string>(MovePriorityExtensionUp);
         MovePriorityExtensionDownCommand = new RelayCommand<string>(MovePriorityExtensionDown);
         RemoveBlockedAppCommand = new RelayCommand<string>(RemoveBlockedApplication);
+        EnrollCommand = new RelayCommand(async () => await EnrollAsync(), () => !_isEnrolling && !string.IsNullOrWhiteSpace(_remoteLoggingUrl) && !string.IsNullOrWhiteSpace(_enrollmentKey));
+        ClearApiKeyCommand = new RelayCommand(ClearApiKey);
+        TestConnectionCommand = new RelayCommand(async () => await TestConnectionAsync(), () => !_isTestingConnection && !string.IsNullOrWhiteSpace(_remoteLoggingUrl));
     }
 
     #region Properties
@@ -353,6 +368,105 @@ public class SettingsViewModel : ViewModelBase
 
     public string TxtAccentColor => T("gui_accent_color");
 
+    public string RemoteLoggingUrl
+    {
+        get => _remoteLoggingUrl;
+        set { if (SetProperty(ref _remoteLoggingUrl, value)) { HasUnsavedChanges = true; ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); } }
+    }
+
+    public string RemoteLoggingApiKey
+    {
+        get => _remoteLoggingApiKey;
+        set => SetProperty(ref _remoteLoggingApiKey, value);
+    }
+
+    public string EnrollmentKey
+    {
+        get => _enrollmentKey;
+        set { if (SetProperty(ref _enrollmentKey, value)) ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public string RemoteLoggingStatus
+    {
+        get => _remoteLoggingStatus;
+        set => SetProperty(ref _remoteLoggingStatus, value);
+    }
+
+    public bool IsEnrolling
+    {
+        get => _isEnrolling;
+        set { if (SetProperty(ref _isEnrolling, value)) ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public bool HasApiKey => !string.IsNullOrWhiteSpace(_remoteLoggingApiKey);
+
+    public bool IsTestingConnection
+    {
+        get => _isTestingConnection;
+        set { if (SetProperty(ref _isTestingConnection, value)) ((RelayCommand)TestConnectionCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public string ConnectionTestStatus
+    {
+        get => _connectionTestStatus;
+        set => SetProperty(ref _connectionTestStatus, value);
+    }
+
+    public string ConnectionTestColor
+    {
+        get => _connectionTestColor;
+        set => SetProperty(ref _connectionTestColor, value);
+    }
+
+    // Log storage mode (0=Local, 1=Remote only, 2=Both)
+    public int LogStorageModeIndex
+    {
+        get => _logStorageModeIndex;
+        set
+        {
+            if (SetProperty(ref _logStorageModeIndex, value))
+            {
+                HasUnsavedChanges = true;
+                OnPropertyChanged(nameof(IsLocalOnly));
+                OnPropertyChanged(nameof(IsRemoteOnly));
+                OnPropertyChanged(nameof(IsBothMode));
+                OnPropertyChanged(nameof(IsRemoteEnabled));
+            }
+        }
+    }
+    public bool IsLocalOnly
+    {
+        get => _logStorageModeIndex == 0;
+        set { if (value) LogStorageModeIndex = 0; }
+    }
+    public bool IsRemoteOnly
+    {
+        get => _logStorageModeIndex == 1;
+        set { if (value) LogStorageModeIndex = 1; }
+    }
+    public bool IsBothMode
+    {
+        get => _logStorageModeIndex == 2;
+        set { if (value) LogStorageModeIndex = 2; }
+    }
+    /// <summary>Controls visibility of the server URL + enrollment section.</summary>
+    public bool IsRemoteEnabled => _logStorageModeIndex > 0;
+
+    // Translated labels for remote logging
+    public string TxtLogStorageMode => T("gui_log_storage_mode");
+    public string TxtLogStorageModeLocal => T("gui_log_storage_mode_local");
+    public string TxtLogStorageModeRemote => T("gui_log_storage_mode_remote");
+    public string TxtLogStorageModeBoth => T("gui_log_storage_mode_both");
+    public string TxtRemoteLogging => T("gui_remote_logging");
+    public string TxtRemoteLoggingDesc => T("gui_remote_logging_desc");
+    public string TxtRemoteLoggingUrl => T("gui_remote_logging_url");
+    public string TxtRemoteLoggingUrlPlaceholder => T("gui_remote_logging_url_placeholder");
+    public string TxtRemoteLoggingApiKey => T("gui_remote_logging_api_key");
+    public string TxtRemoteLoggingEnrollmentKey => T("gui_remote_logging_enrollment_key");
+    public string TxtRemoteLoggingEnroll => T("gui_remote_logging_enroll");
+    public string TxtRemoteLoggingStatus => T("gui_remote_logging_status");
+    public string TxtRemoteLoggingEnrolledBadge => T("gui_remote_logging_enrolled_badge");
+
     #endregion
 
     #region Commands
@@ -367,6 +481,9 @@ public class SettingsViewModel : ViewModelBase
     public ICommand MovePriorityExtensionUpCommand { get; }
     public ICommand MovePriorityExtensionDownCommand { get; }
     public ICommand RemoveBlockedAppCommand { get; }
+    public ICommand EnrollCommand { get; }
+    public ICommand ClearApiKeyCommand { get; }
+    public ICommand TestConnectionCommand { get; }
 
     #endregion
 
@@ -439,6 +556,24 @@ public class SettingsViewModel : ViewModelBase
         if (_accentColorIndex < 0) _accentColorIndex = 0;
         OnPropertyChanged(nameof(AccentColorIndex));
 
+        // Remote logging
+        _logStorageModeIndex = (int)config.GetLogStorageMode();
+        _remoteLoggingUrl = config.GetRemoteLoggingUrl();
+        _remoteLoggingApiKey = config.GetRemoteLoggingApiKey();
+        _enrollmentKey = string.Empty;
+        _remoteLoggingStatus = string.Empty;
+        OnPropertyChanged(nameof(LogStorageModeIndex));
+        OnPropertyChanged(nameof(IsLocalOnly));
+        OnPropertyChanged(nameof(IsRemoteOnly));
+        OnPropertyChanged(nameof(IsBothMode));
+        OnPropertyChanged(nameof(IsRemoteEnabled));
+        OnPropertyChanged(nameof(RemoteLoggingUrl));
+        OnPropertyChanged(nameof(RemoteLoggingApiKey));
+        OnPropertyChanged(nameof(EnrollmentKey));
+        OnPropertyChanged(nameof(RemoteLoggingStatus));
+        OnPropertyChanged(nameof(HasApiKey));
+        ((RelayCommand?)EnrollCommand)?.RaiseCanExecuteChanged();
+
         HasUnsavedChanges = false;
         SaveMessage = string.Empty;
     }
@@ -483,6 +618,9 @@ public class SettingsViewModel : ViewModelBase
             if (!string.IsNullOrWhiteSpace(statePath))
                 config.SetStateFilePath(statePath);
             config.SetAccentColor(AccentColorNames[_accentColorIndex]);
+            config.SetRemoteLoggingUrl(_remoteLoggingUrl);
+            config.SetRemoteLoggingApiKey(_remoteLoggingApiKey);
+            config.SetLogStorageMode((LogStorageMode)_logStorageModeIndex);
             _configManager.SaveConfiguration(config);
 
             // Apply theme live
@@ -590,6 +728,19 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtAboutLicense));
         OnPropertyChanged(nameof(TxtAboutLicenseValue));
         OnPropertyChanged(nameof(TxtAboutArchitecture));
+        OnPropertyChanged(nameof(TxtLogStorageMode));
+        OnPropertyChanged(nameof(TxtLogStorageModeLocal));
+        OnPropertyChanged(nameof(TxtLogStorageModeRemote));
+        OnPropertyChanged(nameof(TxtLogStorageModeBoth));
+        OnPropertyChanged(nameof(TxtRemoteLogging));
+        OnPropertyChanged(nameof(TxtRemoteLoggingDesc));
+        OnPropertyChanged(nameof(TxtRemoteLoggingUrl));
+        OnPropertyChanged(nameof(TxtRemoteLoggingUrlPlaceholder));
+        OnPropertyChanged(nameof(TxtRemoteLoggingApiKey));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnrollmentKey));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnroll));
+        OnPropertyChanged(nameof(TxtRemoteLoggingStatus));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnrolledBadge));
     }
 
     private static List<string> ParseBlockedApplications(string? text)
@@ -796,6 +947,92 @@ public class SettingsViewModel : ViewModelBase
         }
 
         return result.ToList();
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        var url = _remoteLoggingUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        IsTestingConnection = true;
+        ConnectionTestStatus = "Connexion en cours...";
+        ConnectionTestColor = "#9E9E9E";
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+            // On teste juste la joignabilité — sans auth.
+            // N'importe quelle réponse HTTP prouve que le serveur est accessible.
+            var response = await http.GetAsync(url.TrimEnd('/'));
+            var code = (int)response.StatusCode;
+
+            ConnectionTestStatus = $"✓ Serveur accessible (HTTP {code})";
+            ConnectionTestColor = "#4CAF50";
+        }
+        catch (TaskCanceledException)
+        {
+            ConnectionTestStatus = "✗ Délai dépassé — serveur inaccessible";
+            ConnectionTestColor = "#F44336";
+        }
+        catch (HttpRequestException ex)
+        {
+            ConnectionTestStatus = $"✗ Connexion impossible : {ex.Message}";
+            ConnectionTestColor = "#F44336";
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestStatus = $"✗ Erreur : {ex.Message}";
+            ConnectionTestColor = "#F44336";
+        }
+        finally
+        {
+            IsTestingConnection = false;
+        }
+    }
+
+    private void ClearApiKey()
+    {
+        _remoteLoggingApiKey = string.Empty;
+        RemoteLoggingStatus = string.Empty;
+        OnPropertyChanged(nameof(RemoteLoggingApiKey));
+        OnPropertyChanged(nameof(HasApiKey));
+        HasUnsavedChanges = true;
+    }
+
+    private async Task EnrollAsync()
+    {
+        var url = _remoteLoggingUrl?.Trim();
+        var key = _enrollmentKey?.Trim();
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(key)) return;
+
+        IsEnrolling = true;
+        RemoteLoggingStatus = T("gui_remote_logging_enrolling");
+
+        var (success, apiKey, error) = await RemoteLogger.EnrollAsync(url, key, Environment.MachineName);
+
+        if (success && apiKey != null)
+        {
+            _remoteLoggingApiKey = apiKey;
+            OnPropertyChanged(nameof(RemoteLoggingApiKey));
+            OnPropertyChanged(nameof(HasApiKey));
+
+            // Persist immediately
+            var config = _configManager.LoadConfiguration();
+            config.SetRemoteLoggingUrl(url);
+            config.SetRemoteLoggingApiKey(apiKey);
+            _configManager.SaveConfiguration(config);
+
+            EnrollmentKey = string.Empty;
+            RemoteLoggingStatus = T("gui_remote_logging_enrolled_ok");
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            RemoteLoggingStatus = $"{T("gui_remote_logging_enroll_error")}: {error}";
+        }
+
+        IsEnrolling = false;
     }
 
     #endregion
