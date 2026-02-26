@@ -267,6 +267,8 @@ namespace EasySave.Services
 
                 stopwatch.Stop();
                 long encryptionTime = _cryptageManager.EncryptIfNeeded(targetFile, job);
+                if (encryptionTime > 0)
+                    job.EncryptedFilesCount++;
 
                 var logEntry = new BackupLogEntry
                 {

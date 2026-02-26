@@ -304,6 +304,7 @@ public class BackupManager
             // Calculate totals in a single pass
             job.TotalFiles = 0;
             job.TotalSize = 0;
+            job.EncryptedFilesCount = 0;
             job.BackupState = BackupState.ACTIVE;
 
             foreach (var sourcePath in job.SourcePath)

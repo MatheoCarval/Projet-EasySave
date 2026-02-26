@@ -12,6 +12,9 @@ namespace Services.Managers
     /// </summary>
     public class CryptageManager
     {
+        // CryptoSoft is mono-instance: only one process can run at a time across all parallel jobs.
+        private static readonly SemaphoreSlim _cryptosoftLock = new(1, 1);
+
         private readonly string _cryptosoftPath;
         private readonly string _publicKeyPath;
         private readonly HashSet<string> _encryptedExtensions;
@@ -52,7 +55,15 @@ namespace Services.Managers
                 return 0;
             }
 
-            return EncryptFile(filePath);
+            _cryptosoftLock.Wait();
+            try
+            {
+                return EncryptFile(filePath);
+            }
+            finally
+            {
+                _cryptosoftLock.Release();
+            }
         }
 
         /// <summary>

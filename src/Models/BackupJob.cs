@@ -79,6 +79,13 @@ namespace Models
         public List<string> EncryptedExtensions { get; set; }
 
         /// <summary>
+        /// Number of files actually encrypted during the current (or last) execution.
+        /// Reset to 0 at the start of each new execution. Not persisted to jobs.json.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int EncryptedFilesCount { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of BackupJob with default values; required for JSON deserialization.
         /// </summary>
         public BackupJob()

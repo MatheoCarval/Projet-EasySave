@@ -257,7 +257,7 @@
                     </Grid>
 
                     <!-- Scheduler Button -->
-                    <Grid x:Name="SidebarSchedulerBtn" Grid.Row="2" Margin="12,8">
+                    <Grid x:Name="SidebarSchedulerBtn" Grid.Row="2" Margin="12,8" IsVisible="False">
                         <Button Classes="SidebarButton"
                                 Command="{Binding OpenSchedulerCommand}"
                                 ToolTip.Tip="{Binding TxtTooltipScheduler}">
@@ -2391,7 +2391,7 @@
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!-- Scheduler Panel -->
             <!-- ═══════════════════════════════════════════════════════════════ -->
-            <ScrollViewer Grid.Column="1" Padding="32" IsVisible="{Binding IsSchedulerOpen}" Classes="PageContent">
+            <ScrollViewer Grid.Column="1" Padding="32" IsVisible="False" Classes="PageContent">
                 <StackPanel Spacing="24" MaxWidth="800">
 
                     <!-- Header with icon + stats -->

@@ -169,6 +169,16 @@ public class BackupJobViewModel : ViewModelBase
 
     public string ProgressDisplay => $"{_backupJob.Progress:F0}%";
 
+    /// <summary>Number of files encrypted during the current or last execution.</summary>
+    public int EncryptedFilesCount => _backupJob.EncryptedFilesCount;
+
+    /// <summary>Display string shown only when at least one file was encrypted.</summary>
+    public string EncryptedFilesDisplay => _backupJob.EncryptedFilesCount > 0
+        ? $"{_backupJob.EncryptedFilesCount} fichier(s) chiffré(s)"
+        : string.Empty;
+
+    public bool HasEncryptedFiles => _backupJob.EncryptedFilesCount > 0;
+
     public BackupJob GetBackupJob() => _backupJob;
 
     public void RefreshDisplay()
@@ -191,6 +201,9 @@ public class BackupJobViewModel : ViewModelBase
         OnPropertyChanged(nameof(ProgressDisplay));
         OnPropertyChanged(nameof(DiskSpaceDisplay));
         OnPropertyChanged(nameof(HasDiskSpace));
+        OnPropertyChanged(nameof(EncryptedFilesCount));
+        OnPropertyChanged(nameof(EncryptedFilesDisplay));
+        OnPropertyChanged(nameof(HasEncryptedFiles));
     }
 
     private static string T(string key)
