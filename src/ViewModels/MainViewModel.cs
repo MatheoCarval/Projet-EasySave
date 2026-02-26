@@ -8,11 +8,14 @@ using Models;
 using Models.Enums;
 using Models.Entries;
 using Services.Managers;
+using EasySave.Services;
 using EasySave.Services.Managers;
 using EasyLog.Abstractions;
 using EasyLog.Enums;
 using EasyLog.Loggers;
 using Avalonia.Threading;
+using EasySave.Models;
+using EasySave.View.GUI;
 
 namespace EasySave.ViewModels;
 
@@ -38,14 +41,30 @@ public class MainViewModel : ViewModelBase
     private bool _isSettingsOpen;
     private bool _isHelpOpen;
     private bool _isLogsOpen;
+    private bool _isSchedulerOpen;
     private string _logsMessage = string.Empty;
     private string _toastMessage = string.Empty;
     private bool _isToastVisible;
     private DispatcherTimer? _toastTimer;
+    private bool _isCompactView;
+
+    // Onboarding tutorial
+    private bool _isOnboardingActive;
+    private int _onboardingStep; // 0 = welcome, 1-5 = sidebar steps
+    private const int OnboardingTotalSteps = 6; // 0=welcome + 5 sidebar
 
     public ObservableCollection<BackupJobViewModel> ExecuteOrderJobs { get; } = new();
     public ObservableCollection<BackupLogEntry> LogEntries { get; } = new();
+    public ObservableCollection<ScheduledTask> ScheduledTasks { get; } = new();
     public SettingsViewModel SettingsVM { get; }
+
+    public string RemoteLogStatus
+    {
+        get => _remoteLogStatus;
+        private set => SetProperty(ref _remoteLogStatus, value);
+    }
+    public bool IsRemoteLogSuccess => !string.IsNullOrEmpty(_remoteLogStatus) && !_isRemoteLogError;
+    public bool IsRemoteLogError => !string.IsNullOrEmpty(_remoteLogStatus) && _isRemoteLogError;
 
     /// <summary>
     /// Callback to open a folder picker dialog. Set by the View (MainWindow) to decouple ViewModel from UI.
@@ -64,13 +83,20 @@ public class MainViewModel : ViewModelBase
     private readonly HashSet<string> _selectedStates = new(StringComparer.OrdinalIgnoreCase) { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
     private int _currentPage = 1;
     private int _filteredCount;
-    private const int PageSize = 5;
+    private int _pageSize = 5;
+    private static readonly int[] PageSizeOptions = { 5, 10, 20, 30 };
 
     private static readonly string[] AllTypes = { "COMPLETE", "DIFFERENTIAL" };
     private static readonly string[] AllStates = { "ACTIVE", "PAUSED", "COMPLETED", "ERROR", "PENDING" };
 
     // Progress tracking
     private readonly ProgressViewModel _progressViewModel;
+
+    // Remote log status (displayed in header when remote logging is active)
+    private RemoteLogger? _activeRemoteLogger;
+    private int _remoteSentCount;
+    private string _remoteLogStatus = string.Empty;
+    private bool _isRemoteLogError;
 
     public MainViewModel(BackupManager backupManager)
     {
@@ -87,6 +113,8 @@ public class MainViewModel : ViewModelBase
 
         // Subscribe to progress events
         _backupManager.FileTransferred += OnFileTransferred;
+        _backupManager.JobAutoPaused += OnJobAutoPaused;
+        _backupManager.JobAutoResumed += OnJobAutoResumed;
 
         // Commands
         AddBackupCommand = new RelayCommand(OpenAddModal);
@@ -109,6 +137,8 @@ public class MainViewModel : ViewModelBase
         OpenEditModalForJobCommand = new RelayCommand<BackupJobViewModel>(OpenEditModalForJob);
         ExecuteEditingJobCommand = new RelayCommand(ExecuteEditingJob, () => _editingBackupJob != null);
         CloseProgressCommand = new RelayCommand(CloseProgress);
+        DismissProgressCommand = new RelayCommand(DismissProgress);
+        ReopenProgressCommand = new RelayCommand(ReopenProgress);
         ShowExecuteOrderCommand = new RelayCommand(ShowExecuteOrder, () => BackupJobs.Any(j => j.IsSelected));
         CancelExecuteOrderCommand = new RelayCommand(() => IsExecuteOrderOpen = false);
         ConfirmExecuteOrderCommand = new RelayCommand(ConfirmExecuteOrder);
@@ -121,6 +151,7 @@ public class MainViewModel : ViewModelBase
         FilterErrorJobsCommand = new RelayCommand(FilterErrorJobs);
         FilterAllJobsCommand = new RelayCommand(FilterAllJobs);
         FilterActiveJobsCommand = new RelayCommand(FilterActiveJobs);
+        FilterPausedJobsCommand = new RelayCommand(FilterPausedJobs);
         FilterCompletedJobsCommand = new RelayCommand(FilterCompletedJobs);
         DeselectAllCommand = new RelayCommand(DeselectAll);
         SelectAllCommand = new RelayCommand(ToggleSelectAll);
@@ -134,9 +165,31 @@ public class MainViewModel : ViewModelBase
         DismissToastCommand = new RelayCommand(() => { IsToastVisible = false; _toastTimer?.Stop(); });
         PreviousPageCommand = new RelayCommand(PreviousPage, () => CanGoToPreviousPage);
         NextPageCommand = new RelayCommand(NextPage, () => CanGoToNextPage);
+        PlayJobCommand = new RelayCommand<BackupJobViewModel>(PlayJob);
+        PauseJobCommand = new RelayCommand<string>(PauseJob);
+        ResumeJobCommand = new RelayCommand<string>(ResumeJob);
+        SetCardViewCommand = new RelayCommand(() => IsCompactView = false);
+        SetCompactViewCommand = new RelayCommand(() => IsCompactView = true);
+        SetPageSize5Command = new RelayCommand(() => PageSize = 5);
+        SetPageSize10Command = new RelayCommand(() => PageSize = 10);
+        SetPageSize20Command = new RelayCommand(() => PageSize = 20);
+        SetPageSize30Command = new RelayCommand(() => PageSize = 30);
+        OpenSchedulerCommand = new RelayCommand(OpenScheduler);
+        AddScheduleCommand = new RelayCommand(AddSchedule, () => BackupJobs.Count > 0);
+        DeleteScheduleCommand = new RelayCommand<ScheduledTask>(DeleteSchedule);
+        ToggleScheduleCommand = new RelayCommand<ScheduledTask>(ToggleSchedule);
+
+        // Onboarding commands
+        NextOnboardingStepCommand = new RelayCommand(NextOnboardingStep);
+        PrevOnboardingStepCommand = new RelayCommand(PrevOnboardingStep);
+        SkipOnboardingCommand = new RelayCommand(SkipOnboarding);
 
         // Load real data from BackupManager
         LoadBackupJobs();
+        LoadSchedules();
+
+        // Check if onboarding should be shown
+        CheckOnboarding();
     }
 
     #region Properties
@@ -249,7 +302,33 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    public int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_filteredCount / PageSize));
+    public int PageSize
+    {
+        get => _pageSize;
+        set
+        {
+            if (SetProperty(ref _pageSize, value))
+            {
+                OnPropertyChanged(nameof(IsPageSize5));
+                OnPropertyChanged(nameof(IsPageSize10));
+                OnPropertyChanged(nameof(IsPageSize20));
+                OnPropertyChanged(nameof(IsPageSize30));
+                ApplyFilter(resetPage: true);
+            }
+        }
+    }
+
+    public bool IsPageSize5 => _pageSize == 5;
+    public bool IsPageSize10 => _pageSize == 10;
+    public bool IsPageSize20 => _pageSize == 20;
+    public bool IsPageSize30 => _pageSize == 30;
+
+    public ICommand SetPageSize5Command { get; }
+    public ICommand SetPageSize10Command { get; }
+    public ICommand SetPageSize20Command { get; }
+    public ICommand SetPageSize30Command { get; }
+
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_filteredCount / _pageSize));
 
     public bool CanGoToPreviousPage => CurrentPage > 1;
 
@@ -261,11 +340,13 @@ public class MainViewModel : ViewModelBase
         {
             if (_filteredCount == 0)
                 return 0;
-            int start = (CurrentPage - 1) * PageSize + 1;
-            int end = Math.Min(CurrentPage * PageSize, _filteredCount);
+            int start = (CurrentPage - 1) * _pageSize + 1;
+            int end = Math.Min(CurrentPage * _pageSize, _filteredCount);
             return end - start + 1;
         }
     }
+
+    public string TxtPerPage => T("gui_per_page");
 
     public bool IsFilterOpen
     {
@@ -291,8 +372,17 @@ public class MainViewModel : ViewModelBase
     public bool IsProgressPopupOpen
     {
         get => _isProgressPopupOpen;
-        set => SetProperty(ref _isProgressPopupOpen, value);
+        set
+        {
+            if (SetProperty(ref _isProgressPopupOpen, value))
+                OnPropertyChanged(nameof(HasProgressData));
+        }
     }
+
+    /// <summary>
+    /// True when popup is closed but there is progress data to show (running or completed)
+    /// </summary>
+    public bool HasProgressData => !IsProgressPopupOpen && _progressViewModel.Jobs.Count > 0;
 
     public ProgressViewModel ProgressViewModel => _progressViewModel;
 
@@ -327,6 +417,7 @@ public class MainViewModel : ViewModelBase
     public string TxtErrorReasonLabel => T("gui_error_popup_reason");
     public string TxtLastExecution => T("gui_last_execution");
     public string TxtProgress => T("gui_progress");
+    public string TxtPlayJob => T("gui_play_job");
     public string TxtBackupTasks => T("gui_backup_tasks");
     public string TxtManageSubtitle => T("gui_manage_subtitle");
     public string TxtTotal => T("gui_total");
@@ -347,6 +438,25 @@ public class MainViewModel : ViewModelBase
     public string TxtTooltipLogs => T("gui_tooltip_logs");
     public string TxtTooltipSettings => T("gui_tooltip_settings");
     public string TxtTooltipHelp => T("gui_tooltip_help");
+    public string TxtTooltipScheduler => T("gui_tooltip_scheduler");
+
+    // Scheduler text bindings
+    public string TxtSchedulerTitle => T("gui_scheduler_title");
+    public string TxtSchedulerEmpty => T("gui_scheduler_empty");
+    public string TxtSchedulerEmptyDesc => T("gui_scheduler_empty_desc");
+    public string TxtSchedulerAdd => T("gui_scheduler_add");
+    public string TxtSchedulerJob => T("gui_scheduler_job");
+    public string TxtSchedulerDate => T("gui_scheduler_date");
+    public string TxtSchedulerTime => T("gui_scheduler_time");
+    public string TxtSchedulerEnabled => T("gui_scheduler_enabled");
+    public string TxtSchedulerDisabled => T("gui_scheduler_disabled");
+    public string TxtSchedulerScheduledFor => T("gui_scheduler_scheduled_for");
+    public string TxtSchedulerOverdue => T("gui_scheduler_overdue");
+    public string TxtSchedulerNoJobs => T("gui_scheduler_no_jobs");
+
+    // Onboarding text bindings
+    public string TxtOnboardingSkip => T("onboarding_skip");
+    public string TxtOnboardingPrev => T("onboarding_prev");
 
     // Filter panel
     public string TxtFilters => T("gui_filters");
@@ -442,6 +552,15 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isSettingsOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
+                if (value)
+                {
+                    _isHelpOpen = false;
+                    OnPropertyChanged(nameof(IsHelpOpen));
+                    _isLogsOpen = false;
+                    OnPropertyChanged(nameof(IsLogsOpen));
+                    _isSchedulerOpen = false;
+                    OnPropertyChanged(nameof(IsSchedulerOpen));
+                }
             }
         }
     }
@@ -454,6 +573,15 @@ public class MainViewModel : ViewModelBase
             if (SetProperty(ref _isHelpOpen, value))
             {
                 OnPropertyChanged(nameof(IsHomeActive));
+                if (value)
+                {
+                    _isSettingsOpen = false;
+                    OnPropertyChanged(nameof(IsSettingsOpen));
+                    _isLogsOpen = false;
+                    OnPropertyChanged(nameof(IsLogsOpen));
+                    _isSchedulerOpen = false;
+                    OnPropertyChanged(nameof(IsSchedulerOpen));
+                }
             }
         }
     }
@@ -461,7 +589,43 @@ public class MainViewModel : ViewModelBase
     public bool IsLogsOpen
     {
         get => _isLogsOpen;
-        set => SetProperty(ref _isLogsOpen, value);
+        set
+        {
+            if (SetProperty(ref _isLogsOpen, value))
+            {
+                OnPropertyChanged(nameof(IsHomeActive));
+                if (value)
+                {
+                    _isSettingsOpen = false;
+                    OnPropertyChanged(nameof(IsSettingsOpen));
+                    _isHelpOpen = false;
+                    OnPropertyChanged(nameof(IsHelpOpen));
+                    _isSchedulerOpen = false;
+                    OnPropertyChanged(nameof(IsSchedulerOpen));
+                }
+            }
+        }
+    }
+
+    public bool IsSchedulerOpen
+    {
+        get => _isSchedulerOpen;
+        set
+        {
+            if (SetProperty(ref _isSchedulerOpen, value))
+            {
+                OnPropertyChanged(nameof(IsHomeActive));
+                if (value)
+                {
+                    _isSettingsOpen = false;
+                    OnPropertyChanged(nameof(IsSettingsOpen));
+                    _isHelpOpen = false;
+                    OnPropertyChanged(nameof(IsHelpOpen));
+                    _isLogsOpen = false;
+                    OnPropertyChanged(nameof(IsLogsOpen));
+                }
+            }
+        }
     }
 
     public string LogsMessage
@@ -476,14 +640,16 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _deleteConfirmMessage, value);
     }
 
-    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen && !IsLogsOpen;
+    public bool IsHomeActive => !IsSettingsOpen && !IsHelpOpen && !IsLogsOpen && !IsSchedulerOpen;
 
     // Dashboard stats
     public int TotalJobsCount => BackupJobs.Count;
     public int ActiveJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ACTIVE);
+    public int PausedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.PAUSED);
     public int CompletedJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.COMPLETED);
     public int ErrorJobsCount => BackupJobs.Count(j => j.BackupState == BackupState.ERROR);
     public bool HasActiveOrErrorJobs => BackupJobs.Any(j => j.BackupState == BackupState.ACTIVE || j.BackupState == BackupState.ERROR);
+    public string TxtPaused => T("gui_filter_paused");
 
     // Toast notification
     public string ToastMessage
@@ -497,6 +663,77 @@ public class MainViewModel : ViewModelBase
         get => _isToastVisible;
         set => SetProperty(ref _isToastVisible, value);
     }
+
+    // ── Onboarding properties ──
+    public bool IsOnboardingActive
+    {
+        get => _isOnboardingActive;
+        set
+        {
+            if (SetProperty(ref _isOnboardingActive, value))
+            {
+                OnPropertyChanged(nameof(OnboardingTitle));
+                OnPropertyChanged(nameof(OnboardingDescription));
+                OnPropertyChanged(nameof(OnboardingStepLabel));
+                OnPropertyChanged(nameof(IsOnboardingWelcome));
+                OnPropertyChanged(nameof(ShowOnboardingPrev));
+                OnPropertyChanged(nameof(OnboardingNextLabel));
+            }
+        }
+    }
+
+    public int OnboardingStep
+    {
+        get => _onboardingStep;
+        set
+        {
+            if (SetProperty(ref _onboardingStep, value))
+            {
+                OnPropertyChanged(nameof(OnboardingTitle));
+                OnPropertyChanged(nameof(OnboardingDescription));
+                OnPropertyChanged(nameof(OnboardingStepLabel));
+                OnPropertyChanged(nameof(IsOnboardingWelcome));
+                OnPropertyChanged(nameof(ShowOnboardingPrev));
+                OnPropertyChanged(nameof(OnboardingNextLabel));
+                OnPropertyChanged(nameof(OnboardingDot0));
+                OnPropertyChanged(nameof(OnboardingDot1));
+                OnPropertyChanged(nameof(OnboardingDot2));
+                OnPropertyChanged(nameof(OnboardingDot3));
+                OnPropertyChanged(nameof(OnboardingDot4));
+                OnPropertyChanged(nameof(OnboardingDot5));
+            }
+        }
+    }
+
+    public string OnboardingTitle => _onboardingStep == 0
+        ? T("onboarding_welcome_title")
+        : T($"onboarding_step{_onboardingStep}_title");
+
+    public string OnboardingDescription => _onboardingStep == 0
+        ? T("onboarding_welcome_desc")
+        : T($"onboarding_step{_onboardingStep}_desc");
+
+    public string OnboardingStepLabel =>
+        $"{_onboardingStep + 1} {T("onboarding_step_of")} {OnboardingTotalSteps}";
+
+    public bool IsOnboardingWelcome => _onboardingStep == 0;
+    public bool ShowOnboardingPrev => _onboardingStep > 0;
+
+    public string OnboardingNextLabel =>
+        _onboardingStep >= OnboardingTotalSteps - 1 ? T("onboarding_done") : T("onboarding_next");
+
+    // Step dots (active/inactive)
+    public bool OnboardingDot0 => _onboardingStep == 0;
+    public bool OnboardingDot1 => _onboardingStep == 1;
+    public bool OnboardingDot2 => _onboardingStep == 2;
+    public bool OnboardingDot3 => _onboardingStep == 3;
+    public bool OnboardingDot4 => _onboardingStep == 4;
+    public bool OnboardingDot5 => _onboardingStep == 5;
+
+    /// <summary>
+    /// Event raised when onboarding step changes, so code-behind can reposition spotlight
+    /// </summary>
+    public event Action<int>? OnboardingStepChanged;
 
     #endregion
 
@@ -522,6 +759,8 @@ public class MainViewModel : ViewModelBase
     public ICommand OpenEditModalForJobCommand { get; }
     public ICommand ExecuteEditingJobCommand { get; }
     public ICommand CloseProgressCommand { get; }
+    public ICommand DismissProgressCommand { get; }
+    public ICommand ReopenProgressCommand { get; }
     public ICommand ShowExecuteOrderCommand { get; }
     public ICommand CancelExecuteOrderCommand { get; }
     public ICommand ConfirmExecuteOrderCommand { get; }
@@ -544,9 +783,49 @@ public class MainViewModel : ViewModelBase
     public ICommand FilterErrorJobsCommand { get; }
     public ICommand FilterAllJobsCommand { get; }
     public ICommand FilterActiveJobsCommand { get; }
+    public ICommand FilterPausedJobsCommand { get; }
     public ICommand FilterCompletedJobsCommand { get; }
     public ICommand PreviousPageCommand { get; }
     public ICommand NextPageCommand { get; }
+    public ICommand PlayJobCommand { get; }
+    public ICommand PauseJobCommand { get; }
+    public ICommand ResumeJobCommand { get; }
+    public ICommand NextOnboardingStepCommand { get; }
+    public ICommand PrevOnboardingStepCommand { get; }
+    public ICommand SkipOnboardingCommand { get; }
+    public ICommand SetCardViewCommand { get; }
+    public ICommand SetCompactViewCommand { get; }
+    public ICommand OpenSchedulerCommand { get; }
+    public ICommand AddScheduleCommand { get; }
+    public ICommand DeleteScheduleCommand { get; }
+    public ICommand ToggleScheduleCommand { get; }
+
+    /// <summary>
+    /// List of job names for the scheduler ComboBox
+    /// </summary>
+    public List<string> SchedulerJobNames => BackupJobs.Select(j => j.Name).ToList();
+
+    public bool IsCompactView
+    {
+        get => _isCompactView;
+        set
+        {
+            if (SetProperty(ref _isCompactView, value))
+            {
+                OnPropertyChanged(nameof(ShowPagination));
+                ApplyFilter(resetPage: true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Pagination is only visible in card (detailed) view when there are jobs.
+    /// </summary>
+    public bool ShowPagination => !IsCompactView && !HasNoJobs;
+
+    public string TxtCompactView => T("gui_compact_view");
+    public string TxtCardView => T("gui_card_view");
+    public string TxtDropHint => T("gui_drop_hint");
 
     #endregion
 
@@ -745,33 +1024,36 @@ public class MainViewModel : ViewModelBase
     {
         IsExecuteOrderOpen = false;
         var orderedJobs = ExecuteOrderJobs.ToList();
-        for (int i = 0; i < orderedJobs.Count; i++)
+        if (orderedJobs.Count == 0) return;
+
+        AddJobsToProgress(orderedJobs);
+
+        var tasks = orderedJobs.Select(job => Task.Run(() =>
         {
-            var job = orderedJobs[i];
-            var isLastJob = i == orderedJobs.Count - 1;
+            var jobId = job.Id;
             try
             {
-                ShowProgressPopup(job.Name);
-                var jobId = job.Id;
-                var jobToRefresh = job;
-                await Task.Run(() => _backupManager.ExecuteJob(jobId));
-                jobToRefresh.RefreshDisplay();
-                if (isLastJob)
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.IsCompleted = true;
-                    ReloadBackupJobs();
-                }
+                    _progressViewModel.MarkJobCompleted(jobId, job.EncryptedFilesCount);
+                    job.RefreshDisplay();
+                });
             }
             catch (Exception ex)
             {
-                HideProgressPopup();
-                job.RefreshDisplay();
-                ReloadBackupJobs();
-                if (!HandleBlockedAppException(ex))
-                    ShowErrorPopup(job.Name, ex);
-                break;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    job.RefreshDisplay();
+                    HandleBlockedAppException(ex);
+                });
             }
-        }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+        ReloadBackupJobs();
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
     private void ViewLogs()
@@ -785,6 +1067,7 @@ public class MainViewModel : ViewModelBase
     private void OpenSettings()
     {
         SettingsVM.LoadSettings();
+        IsSettingsOpen = true;
         _isSettingsOpen = true;
         _isHelpOpen = false;
         _isLogsOpen = false;
@@ -793,6 +1076,7 @@ public class MainViewModel : ViewModelBase
 
     private void OpenHelp()
     {
+        IsHelpOpen = true;
         _isSettingsOpen = false;
         _isHelpOpen = true;
         _isLogsOpen = false;
@@ -805,6 +1089,56 @@ public class MainViewModel : ViewModelBase
         _isSettingsOpen = false;
         _isHelpOpen = false;
         _isLogsOpen = false;
+        _isSchedulerOpen = false;
+        OnPropertyChanged(nameof(IsSettingsOpen));
+        OnPropertyChanged(nameof(IsHelpOpen));
+        OnPropertyChanged(nameof(IsLogsOpen));
+        OnPropertyChanged(nameof(IsSchedulerOpen));
+        OnPropertyChanged(nameof(IsHomeActive));
+    }
+
+    #region Scheduler
+
+    private void OpenScheduler()
+    {
+        IsSchedulerOpen = true;
+    }
+
+    private void AddSchedule()
+    {
+        if (BackupJobs.Count == 0) return;
+        var first = BackupJobs[0];
+        // Default: tomorrow at 09:00
+        var tomorrow = DateTime.Now.Date.AddDays(1).AddHours(9);
+        var task = new ScheduledTask
+        {
+            BackupJobId = first.Id,
+            BackupJobName = first.Name,
+            IsEnabled = true,
+            ScheduledDateTime = tomorrow
+        };
+        task.PropertyChanged += OnScheduledTaskChanged;
+        ScheduledTasks.Add(task);
+        OnPropertyChanged(nameof(HasScheduledTasks));
+        OnPropertyChanged(nameof(ScheduleStats));
+        SaveSchedules();
+    }
+
+    private void DeleteSchedule(ScheduledTask? task)
+    {
+        if (task == null) return;
+        task.PropertyChanged -= OnScheduledTaskChanged;
+        ScheduledTasks.Remove(task);
+        OnPropertyChanged(nameof(HasScheduledTasks));
+        OnPropertyChanged(nameof(ScheduleStats));
+        SaveSchedules();
+    }
+
+    private void ToggleSchedule(ScheduledTask? task)
+    {
+        if (task == null) return;
+        task.IsEnabled = !task.IsEnabled;
+        OnPropertyChanged(nameof(ScheduleStats));
         NotifyNavigationChanged();
     }
 
@@ -820,102 +1154,291 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsHomeActive));
     }
 
-    private async void ExecuteBackup()
+    private void OnScheduledTaskChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (SelectedBackupJob == null) return;
+        // Sync BackupJobId when job name changes via ComboBox
+        if (e.PropertyName == nameof(ScheduledTask.BackupJobName) && sender is ScheduledTask task)
+        {
+            var job = BackupJobs.FirstOrDefault(j => j.Name == task.BackupJobName);
+            if (job != null && task.BackupJobId != job.Id)
+                task.BackupJobId = job.Id;
+        }
+        SaveSchedules();
+    }
 
-        var jobId = SelectedBackupJob.Id;
-        var jobToRefresh = SelectedBackupJob;
+    public bool HasScheduledTasks => ScheduledTasks.Count > 0;
+
+    public string ScheduleStats
+    {
+        get
+        {
+            var total = ScheduledTasks.Count;
+            var active = ScheduledTasks.Count(t => t.IsEnabled);
+            return $"{active}/{total}";
+        }
+    }
+
+    private void SaveSchedules()
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "EasySave", "schedules.json");
+            var json = System.Text.Json.JsonSerializer.Serialize(ScheduledTasks.ToList(),
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            System.IO.File.WriteAllText(path, json);
+        }
+        catch { }
+    }
+
+    private void LoadSchedules()
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "EasySave", "schedules.json");
+            if (!System.IO.File.Exists(path)) return;
+            var json = System.IO.File.ReadAllText(path);
+            var tasks = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<ScheduledTask>>(json);
+            if (tasks != null)
+            {
+                foreach (var t in tasks)
+                {
+                    t.PropertyChanged += OnScheduledTaskChanged;
+                    ScheduledTasks.Add(t);
+                }
+            }
+            OnPropertyChanged(nameof(HasScheduledTasks));
+            OnPropertyChanged(nameof(ScheduleStats));
+        }
+        catch { }
+    }
+
+    #endregion
+
+    #region Onboarding
+
+    private void CheckOnboarding()
+    {
+        try
+        {
+            var config = ConfigurationManager.GetInstance().LoadConfiguration();
+            if (!config.GetOnboardingCompleted())
+            {
+                // If user already has backup jobs, they're not new — skip onboarding silently
+                if (BackupJobs.Count > 0)
+                {
+                    config.SetOnboardingCompleted(true);
+                    ConfigurationManager.GetInstance().SaveConfiguration(config);
+                    return;
+                }
+
+                _onboardingStep = 0;
+                IsOnboardingActive = true;
+            }
+        }
+        catch
+        {
+            // If config fails, don't block the app
+        }
+    }
+
+    private void NextOnboardingStep()
+    {
+        if (_onboardingStep >= OnboardingTotalSteps - 1)
+        {
+            CompleteOnboarding();
+            return;
+        }
+
+        OnboardingStep = _onboardingStep + 1;
+        OnboardingStepChanged?.Invoke(_onboardingStep);
+    }
+
+    private void PrevOnboardingStep()
+    {
+        if (_onboardingStep > 0)
+        {
+            OnboardingStep = _onboardingStep - 1;
+            OnboardingStepChanged?.Invoke(_onboardingStep);
+        }
+    }
+
+    private void SkipOnboarding()
+    {
+        CompleteOnboarding();
+    }
+
+    private void CompleteOnboarding()
+    {
+        IsOnboardingActive = false;
 
         try
         {
-            ShowProgressPopup(SelectedBackupJob.Name);
-
-            // Execute on background thread to keep UI responsive
-            await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-            // Back on UI thread after await - refresh and mark as completed
-            jobToRefresh.RefreshDisplay();
-            _progressViewModel.IsCompleted = true;
-            ReloadBackupJobs();
+            var config = ConfigurationManager.GetInstance().LoadConfiguration();
+            config.SetOnboardingCompleted(true);
+            ConfigurationManager.GetInstance().SaveConfiguration(config);
         }
-        catch (Exception ex)
+        catch
         {
-            HideProgressPopup();
-            jobToRefresh.RefreshDisplay();
-            ReloadBackupJobs();
-            if (!HandleBlockedAppException(ex))
-                ShowErrorPopup(jobToRefresh.Name, ex);
+            // Non-critical — don't crash if save fails
         }
+    }
+
+    #endregion
+
+    private async void ExecuteBackup()
+    {
+        if (SelectedBackupJob == null) return;
+        LaunchSingleJob(SelectedBackupJob);
+    }
+
+    private void PlayJob(BackupJobViewModel? job)
+    {
+        if (job == null) return;
+        LaunchSingleJob(job);
+    }
+
+    /// <summary>
+    /// Launches a single job using the same multi-job pattern so it can coexist with other running jobs.
+    /// </summary>
+    private void LaunchSingleJob(BackupJobViewModel jobVm)
+    {
+        var jobId = jobVm.Id;
+        AddJobsToProgress(new[] { jobVm });
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobCompleted(jobId, jobVm.EncryptedFilesCount);
+                    jobVm.RefreshDisplay();
+                    ReloadBackupJobs();
+                });
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    jobVm.RefreshDisplay();
+                    ReloadBackupJobs();
+                    HandleBlockedAppException(ex);
+                });
+            }
+        });
+    }
+
+    /// <summary>
+    /// Manually pauses a running job (called from pause button in popup).
+    /// </summary>
+    private void PauseJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.PauseJob(jobId);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.MarkJobPaused(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Resumes a manually or auto-paused job.
+    /// </summary>
+    private void ResumeJob(string? jobId)
+    {
+        if (jobId == null) return;
+        _backupManager.ResumeJob(jobId);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _progressViewModel.MarkJobResumed(jobId);
+            var card = BackupJobs.FirstOrDefault(j => j.Id == jobId);
+            card?.RefreshDisplay();
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-pauses all running jobs because a blocked application started.
+    /// </summary>
+    private void OnJobAutoPaused(object? sender, JobPauseEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in e.JobIds)
+            {
+                _progressViewModel.MarkJobPaused(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast($"{T("gui_toast_paused_blocked")} ({string.Join(", ", e.BlockedApps)})");
+        });
+    }
+
+    /// <summary>
+    /// Called when BackupManager auto-resumes all paused jobs because the blocked application stopped.
+    /// </summary>
+    private void OnJobAutoResumed(object? sender, List<string> resumedIds)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var id in resumedIds)
+            {
+                _progressViewModel.MarkJobResumed(id);
+                var card = BackupJobs.FirstOrDefault(j => j.Id == id);
+                card?.RefreshDisplay();
+            }
+            NotifyStats();
+            ShowToast(T("gui_toast_resumed"));
+        });
     }
 
     private async void ExecuteSelected()
     {
         var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
-        for (int i = 0; i < selectedJobs.Count; i++)
-        {
-            var job = selectedJobs[i];
-            var isLastJob = i == selectedJobs.Count - 1;
+        if (selectedJobs.Count == 0) return;
 
+        AddJobsToProgress(selectedJobs);
+
+        var tasks = selectedJobs.Select(job => Task.Run(() =>
+        {
+            var jobId = job.Id;
             try
             {
-                ShowProgressPopup(job.Name);
-
-                var jobId = job.Id;
-                var jobToRefresh = job;
-
-                // Execute on background thread
-                await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-                // Back on UI thread after await - refresh
-                jobToRefresh.RefreshDisplay();
-
-                // Only mark as completed on the last job
-                if (isLastJob)
+                _backupManager.ExecuteJob(jobId);
+                Dispatcher.UIThread.Post(() =>
                 {
-                    _progressViewModel.IsCompleted = true;
-                    ReloadBackupJobs();
-                }
+                    _progressViewModel.MarkJobCompleted(jobId, job.EncryptedFilesCount);
+                    job.RefreshDisplay();
+                });
             }
             catch (Exception ex)
             {
-                HideProgressPopup();
-                job.RefreshDisplay();
-                ReloadBackupJobs();
-                if (!HandleBlockedAppException(ex))
-                    ShowErrorPopup(job.Name, ex);
-                break;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _progressViewModel.MarkJobError(jobId, GetErrorReason(ex));
+                    job.RefreshDisplay();
+                    HandleBlockedAppException(ex);
+                });
             }
-        }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+        ReloadBackupJobs();
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
-    private async void ExecuteEditingJob()
+    private void ExecuteEditingJob()
     {
         if (_editingBackupJob == null) return;
-
-        var jobId = _editingBackupJob.Id;
-        var jobToRefresh = _editingBackupJob;
-
-        try
-        {
-            ShowProgressPopup(_editingBackupJob.Name);
-
-            // Execute on background thread
-            await Task.Run(() => _backupManager.ExecuteJob(jobId));
-
-            // Back on UI thread after await - refresh and mark as completed
-            jobToRefresh.RefreshDisplay();
-            _progressViewModel.IsCompleted = true;
-            ReloadBackupJobs();
-        }
-        catch (Exception ex)
-        {
-            HideProgressPopup();
-            jobToRefresh.RefreshDisplay();
-            ReloadBackupJobs();
-            if (!HandleBlockedAppException(ex))
-                ShowErrorPopup(jobToRefresh.Name, ex);
-        }
+        LaunchSingleJob(_editingBackupJob);
     }
 
     private void AddSourcePath()
@@ -1002,10 +1525,18 @@ public class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(CurrentPage));
         }
 
-        // Apply pagination
-        var paginatedFiltered = filteredList
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize);
+        // Apply pagination only in card (non-compact) view
+        IEnumerable<BackupJobViewModel> paginatedFiltered;
+        if (!_isCompactView)
+        {
+            paginatedFiltered = filteredList
+                .Skip((CurrentPage - 1) * _pageSize)
+                .Take(_pageSize);
+        }
+        else
+        {
+            paginatedFiltered = filteredList;
+        }
 
         foreach (var job in paginatedFiltered)
             FilteredBackupJobs.Add(job);
@@ -1013,6 +1544,7 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasNoFilteredJobs));
         OnPropertyChanged(nameof(PageItemCount));
         OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(ShowPagination));
         OnPropertyChanged(nameof(CanGoToNextPage));
         OnPropertyChanged(nameof(CanGoToPreviousPage));
         ((RelayCommand)PreviousPageCommand).RaiseCanExecuteChanged();
@@ -1142,27 +1674,121 @@ public class MainViewModel : ViewModelBase
             job.IsSelected = selectAll;
     }
 
-    private void ShowProgressPopup(string jobName)
+    /// <summary>
+    /// Adds one or more jobs to the progress popup. If completed jobs from a previous run exist, clears them first.
+    /// Never resets while jobs are still running.
+    /// </summary>
+    private void AddJobsToProgress(IList<BackupJobViewModel> jobs)
     {
-        _progressViewModel.Reset();
-        _progressViewModel.JobName = jobName;
-        _progressViewModel.StartTracking();
+        // Clear finished data from previous run, but keep running jobs
+        if (_progressViewModel.Jobs.Count > 0 && _progressViewModel.AllCompleted)
+        {
+            _progressViewModel.Reset();
+        }
+
+        foreach (var job in jobs)
+        {
+            // Don't add duplicates (same job launched twice)
+            if (_progressViewModel.Jobs.All(j => j.JobId != job.Id))
+                _progressViewModel.AddJob(job.Id, job.Name);
+        }
+
+        _progressViewModel.IsCompleted = false;
         IsProgressPopupOpen = true;
     }
 
-    private void HideProgressPopup()
+    /// <summary>
+    /// Dismisses the popup without stopping backups - they continue in background
+    /// </summary>
+    private void DismissProgress()
     {
         IsProgressPopupOpen = false;
-        _progressViewModel.Reset();
+        OnPropertyChanged(nameof(HasProgressData));
+    }
+
+    /// <summary>
+    /// Reopens the progress popup to see ongoing backup progress
+    /// </summary>
+    private void ReopenProgress()
+    {
+        IsProgressPopupOpen = true;
+        OnPropertyChanged(nameof(HasProgressData));
     }
 
     /// <summary>
     /// Called when settings are saved — reload blocked applications and logger format into BackupManager immediately.
     /// </summary>
+    /// <summary>
+    /// Subscribes to the given RemoteLogger's StatusCallback so the UI shows live send status.
+    /// Pass null to detach (e.g. when switching back to local-only mode).
+    /// </summary>
+    public void BindRemoteLogger(RemoteLogger? logger)
+    {
+        if (_activeRemoteLogger != null)
+            _activeRemoteLogger.StatusCallback = null;
+
+        _activeRemoteLogger = logger;
+        _remoteSentCount = 0;
+        _isRemoteLogError = false;
+        RemoteLogStatus = string.Empty;
+        OnPropertyChanged(nameof(IsRemoteLogSuccess));
+        OnPropertyChanged(nameof(IsRemoteLogError));
+
+        if (logger == null) return;
+
+        logger.StatusCallback = (success, error) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                _isRemoteLogError = !success;
+                if (success)
+                {
+                    _remoteSentCount++;
+                    RemoteLogStatus = $"📡 {_remoteSentCount} log(s) envoyé(s)  ·  {DateTime.Now:HH:mm:ss}";
+                }
+                else
+                {
+                    var shortErr = error?.Split('\n')[0] ?? "connexion";
+                    RemoteLogStatus = $"📡 Erreur : {shortErr}";
+                }
+                OnPropertyChanged(nameof(IsRemoteLogSuccess));
+                OnPropertyChanged(nameof(IsRemoteLogError));
+            });
+        };
+    }
+
     private void OnSettingsSaved(object? sender, EventArgs e)
     {
         var config = ConfigurationManager.GetInstance().LoadConfiguration();
         _backupManager.UpdateBlockedApplications(config.GetBlockedApplications());
+        _backupManager.UpdatePriorityExtensions(config.GetPriorityExtensions());
+        _backupManager.UpdateMaxParallelSize(config.GetMaxParallelTransferSizeValue(), config.GetMaxParallelTransferSizeUnit());
+        _backupManager.UpdateCryptageManager(config.GetCryptosoftPath(), config.GetCryptosoftPublicKey(), config.GetEncryptedExtensions());
+
+        // Rebuild logger (format or remote settings may have changed)
+        var logPath = config.GetLogFilePath();
+        if (string.IsNullOrWhiteSpace(logPath))
+            logPath = config.GetDefaultLogPath();
+
+        ILogger localLogger = config.GetLogFormat() == EasyLog.Enums.LogFormat.XML
+            ? new DailyXmlLogger(logPath)
+            : new DailyJsonLogger(logPath);
+
+        var mode = config.GetLogStorageMode();
+        ILogger effectiveLogger = localLogger;
+        if (mode != LogStorageMode.Local)
+        {
+            var remoteUrl = config.GetRemoteLoggingUrl();
+            var remoteKey = config.GetRemoteLoggingApiKey();
+            if (!string.IsNullOrWhiteSpace(remoteUrl) && !string.IsNullOrWhiteSpace(remoteKey))
+                effectiveLogger = new RemoteLogger(localLogger, remoteUrl, remoteKey, mode == LogStorageMode.Both);
+        }
+
+        var newRemoteLogger = effectiveLogger as RemoteLogger;
+        App.RemoteLogger = newRemoteLogger;
+        BindRemoteLogger(newRemoteLogger);
+
+        _backupManager.UpdateLogger(effectiveLogger);
 
         // Refresh all translated labels on the main page
         RefreshHelpTranslations();
@@ -1182,6 +1808,7 @@ public class MainViewModel : ViewModelBase
     private void ShowErrorPopup(string jobName, Exception ex)
     {
         var reason = GetErrorReason(ex);
+        NotificationService.NotifyBackupFailed(jobName, reason);
         ShowErrorToast($"{jobName} — {reason}");
     }
 
@@ -1222,6 +1849,14 @@ public class MainViewModel : ViewModelBase
     {
         _selectedStates.Clear();
         _selectedStates.Add("ACTIVE");
+        NotifyFilterStateChanged();
+        ApplyFilter(resetPage: true);
+    }
+
+    private void FilterPausedJobs()
+    {
+        _selectedStates.Clear();
+        _selectedStates.Add("PAUSED");
         NotifyFilterStateChanged();
         ApplyFilter(resetPage: true);
     }
@@ -1278,16 +1913,18 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     private string GetErrorReason(Exception ex)
     {
-        // Dig into inner exception for the real cause
-        var inner = ex.InnerException ?? ex;
-
-        if (inner is DirectoryNotFoundException)
-            return T("gui_error_path_not_found");
-        if (inner is UnauthorizedAccessException)
-            return T("gui_error_access_denied");
-        if (inner is IOException)
-            return T("gui_error_io");
-
+        // Walk the full exception chain to find the root cause
+        Exception? current = ex;
+        while (current != null)
+        {
+            if (current is DirectoryNotFoundException)
+                return T("gui_error_path_not_found");
+            if (current is UnauthorizedAccessException)
+                return T("gui_error_access_denied");
+            if (current is IOException)
+                return T("gui_error_io");
+            current = current.InnerException;
+        }
         return T("gui_execution_error");
     }
 
@@ -1308,8 +1945,11 @@ public class MainViewModel : ViewModelBase
 
     private void CloseProgress()
     {
+        // Windows system notification
+        var completedName = _progressViewModel.Jobs.FirstOrDefault()?.JobName ?? string.Empty;
+        NotificationService.NotifyBackupCompleted(completedName);
         ShowToast(T("gui_toast_completed"));
-        HideProgressPopup();
+        DismissProgress(); // just hide, keep data so user can reopen
         NotifyStats();
     }
 
@@ -1317,6 +1957,7 @@ public class MainViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(TotalJobsCount));
         OnPropertyChanged(nameof(ActiveJobsCount));
+        OnPropertyChanged(nameof(PausedJobsCount));
         OnPropertyChanged(nameof(CompletedJobsCount));
         OnPropertyChanged(nameof(ErrorJobsCount));
         OnPropertyChanged(nameof(HasActiveOrErrorJobs));
@@ -1342,13 +1983,19 @@ public class MainViewModel : ViewModelBase
         // Update UI on the UI thread
         Dispatcher.UIThread.Post(() =>
         {
-            _progressViewModel.JobName = e.JobName;
-            _progressViewModel.CurrentFile = e.CurrentFile;
-            _progressViewModel.TotalFiles = e.TotalFiles;
-            _progressViewModel.FilesProcessed = e.FilesProcessed;
-            _progressViewModel.ProgressPercentage = e.ProgressPercentage;
-            _progressViewModel.TotalSize = e.TotalSize;
-            _progressViewModel.ProcessedSize = e.TotalSize - e.RemainingSize;
+            // Route progress to the correct job item
+            _progressViewModel.UpdateJobProgress(
+                e.JobId,
+                e.CurrentFile,
+                e.TotalFiles,
+                e.FilesProcessed,
+                e.ProgressPercentage,
+                e.TotalSize,
+                e.TotalSize - e.RemainingSize);
+
+            // Also update the card on the home page in real-time
+            var card = BackupJobs.FirstOrDefault(j => j.Id == e.JobId);
+            card?.RefreshDisplay();
         });
     }
 
@@ -1357,7 +2004,7 @@ public class MainViewModel : ViewModelBase
     // ── Help screen translated labels ──
     public string T(string key)
     {
-        try { return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? key; }
+        try { return App.LocalizationService?.GetTextTranslated(key) ?? key; }
         catch { return key; }
     }
 
@@ -1418,6 +2065,17 @@ public class MainViewModel : ViewModelBase
     public string HelpEncryptionDesc => T("help_encryption_desc");
     public string HelpErrorHandling => T("help_error_handling");
     public string HelpErrorHandlingDesc => T("help_error_handling_desc");
+    public string HelpScheduler => T("help_scheduler");
+    public string HelpSchedulerDesc => T("help_scheduler_desc");
+    public string HelpSchedulerTip => T("help_scheduler_tip");
+    public string HelpShortcuts => T("help_shortcuts");
+    public string HelpShortcutsDesc => T("help_shortcuts_desc");
+    public string HelpDragDrop => T("help_drag_drop");
+    public string HelpDragDropDesc => T("help_drag_drop_desc");
+    public string HelpAccentColors => T("help_accent_colors");
+    public string HelpAccentColorsDesc => T("help_accent_colors_desc");
+    public string HelpCompactView => T("help_compact_view");
+    public string HelpCompactViewDesc => T("help_compact_view_desc");
     public string HelpFaq => T("help_faq");
     public string HelpFaq1Q => T("help_faq1_q");
     public string HelpFaq1A => T("help_faq1_a");
@@ -1427,9 +2085,14 @@ public class MainViewModel : ViewModelBase
     public string HelpFaq3A => T("help_faq3_a");
     public string HelpFaq4Q => T("help_faq4_q");
     public string HelpFaq4A => T("help_faq4_a");
+    public string HelpFaq5Q => T("help_faq5_q");
+    public string HelpFaq5A => T("help_faq5_a");
+    public string HelpFaq6Q => T("help_faq6_q");
+    public string HelpFaq6A => T("help_faq6_a");
     public string HelpNeedHelp => T("help_need_help");
     public string HelpNeedHelpDesc => T("help_need_help_desc");
     public string HelpCopyEmail => T("help_copy_email");
+    public string HelpSendEmail => T("help_send_email");
 
     public void RefreshHelpTranslations()
     {

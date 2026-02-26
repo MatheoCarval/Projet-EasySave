@@ -6,8 +6,118 @@ using Utilities;
 using System.Text.Json;
 using System.Runtime.ConstrainedExecution;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Services.Managers;
+
+/// <summary>
+/// Token used to pause and resume a running backup job between file copies.
+/// Based on ManualResetEventSlim: initially set (running), Reset = paused, Set = running.
+/// </summary>
+public class PauseToken
+{
+    private readonly ManualResetEventSlim _event = new(true); // true = initially running
+    private bool _isAutoPaused;
+
+    public bool IsPaused => !_event.IsSet;
+    public bool IsAutoPaused => _isAutoPaused;
+
+    /// <summary>Manual pause (user-triggered)</summary>
+    public void Pause() { _event.Reset(); _isAutoPaused = false; }
+
+    /// <summary>Automatic pause (blocked app detected)</summary>
+    public void AutoPause() { _event.Reset(); _isAutoPaused = true; }
+
+    /// <summary>Resume (manual or auto)</summary>
+    public void Resume() { _event.Set(); _isAutoPaused = false; }
+
+    /// <summary>Blocks the calling thread until the token is resumed.</summary>
+    public void WaitIfPaused() { _event.Wait(); }
+}
+
+/// <summary>
+/// Event arguments raised when jobs are automatically paused due to a blocked application.
+/// </summary>
+public class JobPauseEventArgs : EventArgs
+{
+    public List<string> JobIds { get; set; } = new();
+    public List<string> BlockedApps { get; set; } = new();
+}
+
+/// <summary>
+/// Global byte-level throttle for concurrent file transfers across all parallel backup jobs.
+/// Limits the total bytes in-flight at any moment. A file can always start if nothing else
+/// is currently transferring, even if its size exceeds the configured limit.
+/// </summary>
+public class TransferThrottle
+{
+    private long _limitBytes; // 0 = unlimited
+    private long _bytesInFlight;
+    private readonly object _lock = new();
+
+    public bool HasLimit => _limitBytes > 0;
+
+    public void SetLimit(long bytes)
+    {
+        lock (_lock)
+        {
+            _limitBytes = Math.Max(0, bytes);
+            Monitor.PulseAll(_lock);
+        }
+    }
+
+    /// <summary>
+    /// From a list of pending file sizes, finds the FIRST file that fits under the limit
+    /// (or any file if nothing is currently in flight). Blocks until at least one file can start.
+    /// Marks the chosen file's bytes as in-flight and returns its index.
+    /// </summary>
+    public int AcquireFirstFitting(IReadOnlyList<long> pendingSizes)
+    {
+        lock (_lock)
+        {
+            while (true)
+            {
+                if (_limitBytes <= 0) // no limit configured
+                {
+                    _bytesInFlight += pendingSizes[0];
+                    return 0;
+                }
+
+                for (int i = 0; i < pendingSizes.Count; i++)
+                {
+                    // Allow any file when nothing is in flight (avoids deadlock on files > limit)
+                    if (_bytesInFlight == 0 || _bytesInFlight + pendingSizes[i] <= _limitBytes)
+                    {
+                        _bytesInFlight += pendingSizes[i];
+                        return i;
+                    }
+                }
+
+                Monitor.Wait(_lock); // wait for a Release() to pulse
+            }
+        }
+    }
+
+    /// <summary>Simple acquire for single-file transfers (not from TransferDirectory).</summary>
+    public void Acquire(long fileSize)
+    {
+        lock (_lock)
+        {
+            while (_limitBytes > 0 && _bytesInFlight > 0 && _bytesInFlight + fileSize > _limitBytes)
+                Monitor.Wait(_lock);
+            _bytesInFlight += fileSize;
+        }
+    }
+
+    public void Release(long bytes)
+    {
+        lock (_lock)
+        {
+            _bytesInFlight = Math.Max(0, _bytesInFlight - bytes);
+            Monitor.PulseAll(_lock);
+        }
+    }
+}
 
 /// <summary>
 /// Event arguments for file transfer progress
@@ -44,16 +154,35 @@ public class BackupManager
     private readonly StateWriter _stateWriter;
     private readonly string _jobsFilePath;
     private List<string> _blockedApplications;
+    private List<string> _priorityExtensions;
+
+    /// <summary>Pause tokens keyed by jobId for running jobs.</summary>
+    private readonly Dictionary<string, PauseToken> _pauseTokens = new();
+    private readonly object _pauseTokensLock = new();
+
+    /// <summary>Ensures concurrent job completions don't corrupt jobs.json via simultaneous read-modify-write.</summary>
+    private readonly object _jobsFileLock = new();
+
+    /// <summary>Shared throttle passed to FileTransferService to cap total bytes in-flight across all parallel jobs.</summary>
+    private readonly TransferThrottle _throttle = new();
+
+    /// <summary>Set to 1 when auto-pause is active (blocked app running), reset to 0 when cleared.</summary>
+    private int _autoPauseFired;
 
     /// <summary>
     /// Event raised when a file transfer completes during backup execution
     /// </summary>
     public event EventHandler<FileProgressEventArgs>? FileTransferred;
 
+    /// <summary>Raised when all running jobs are automatically paused because a blocked application started.</summary>
+    public event EventHandler<JobPauseEventArgs>? JobAutoPaused;
+    /// <summary>Raised when all auto-paused jobs resume because the blocked application stopped.</summary>
+    public event EventHandler<List<string>>? JobAutoResumed;
+
     /// <summary>
     /// Initializes a new instance of BackupManager with required services and loads existing backup jobs from persistent storage.
     /// </summary>
-    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null)
+    public BackupManager(FileTransferService fileTransferService, StateWriter stateWriter, IEnumerable<string>? blockedApplications = null, string? jobsFilePath = null, IEnumerable<string>? priorityExtensions = null)
     {
         ArgumentNullException.ThrowIfNull(fileTransferService);
         ArgumentNullException.ThrowIfNull(stateWriter);
@@ -62,6 +191,9 @@ public class BackupManager
         _fileTransferService = fileTransferService;
         _stateWriter = stateWriter;
         _blockedApplications = NormalizeBlockedApplications(blockedApplications);
+        _priorityExtensions = priorityExtensions?.ToList() ?? new List<string>();
+        _fileTransferService.SetPriorityExtensions(_priorityExtensions);
+        _fileTransferService.SetThrottle(_throttle);
         _jobsFilePath = string.IsNullOrWhiteSpace(jobsFilePath) ? GetDefaultJobsFilePath() : jobsFilePath;
 
         MigrateLegacyJobsFileIfNeeded();
@@ -160,20 +292,30 @@ public class BackupManager
             throw new ArgumentException($"Job with ID '{jobId}' does not exist.", nameof(jobId));
         }
 
+        var pauseToken = new PauseToken();
+        lock (_pauseTokensLock) { _pauseTokens[jobId] = pauseToken; }
+
+        // Poll for blocked apps every 2s while the job is running
+        var blockedCheckTimer = new System.Threading.Timer(
+            _ => CheckBlockedAppsForJob(jobId, pauseToken), null, 2000, 2000);
+
         try
         {
-            // Calculate totals BEFORE starting transfers
+            // Calculate totals in a single pass
             job.TotalFiles = 0;
             job.TotalSize = 0;
+            job.EncryptedFilesCount = 0;
             job.BackupState = BackupState.ACTIVE;
 
             foreach (var sourcePath in job.SourcePath)
             {
                 if (PathValidator.IsDirectory(sourcePath))
                 {
-                    var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
-                    job.TotalFiles += files.Length;
-                    job.TotalSize += files.Sum(f => new FileInfo(f).Length);
+                    foreach (var fi in new DirectoryInfo(sourcePath).EnumerateFiles("*", SearchOption.AllDirectories))
+                    {
+                        job.TotalFiles++;
+                        job.TotalSize += fi.Length;
+                    }
                 }
                 else if (File.Exists(sourcePath))
                 {
@@ -182,7 +324,6 @@ public class BackupManager
                 }
                 else
                 {
-                    // Fail fast on misconfigured jobs: a configured source path does not exist.
                     throw new DirectoryNotFoundException(
                         $"Source path '{sourcePath}' does not exist for job '{jobId}'.");
                 }
@@ -196,27 +337,64 @@ public class BackupManager
             {
                 if (PathValidator.IsDirectory(sourcePath))
                 {
-                    _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job);
+                    _fileTransferService.TransferDirectory(sourcePath, job.TargetPath, job, pauseToken);
                 }
                 else if (File.Exists(sourcePath))
                 {
                     string fileName = Path.GetFileName(sourcePath);
                     string targetFile = Path.Combine(job.TargetPath, fileName);
-                    _fileTransferService.TransferFile(sourcePath, targetFile, job);
+                    _fileTransferService.TransferFile(sourcePath, targetFile, job, pauseToken);
                 }
             }
 
             job.MarkAsCompleted();
             job.ErrorReason = null;
             _stateWriter.UpdateJobState(job);
+            _stateWriter.Flush();
+            _fileTransferService.FlushLogger();
+            SaveJob(job);
         }
         catch (Exception ex)
         {
             job.MarkAsError();
             job.ErrorReason = GetUserFriendlyError(ex);
             _stateWriter.UpdateJobState(job);
+            _stateWriter.Flush();
+            _fileTransferService.FlushLogger();
+            SaveJob(job);
             throw new InvalidOperationException($"Error executing job '{jobId}'.", ex);
         }
+        finally
+        {
+            blockedCheckTimer.Dispose();
+            lock (_pauseTokensLock)
+            {
+                _pauseTokens.Remove(jobId);
+                if (_pauseTokens.Count == 0)
+                    System.Threading.Interlocked.Exchange(ref _autoPauseFired, 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Executes a backup job asynchronously on a background thread.
+    /// </summary>
+    public Task ExecuteJobAsync(string jobId)
+    {
+        return Task.Run(() => ExecuteJob(jobId));
+    }
+
+    /// <summary>
+    /// Executes multiple backup jobs in parallel asynchronously.
+    /// Checks blocked applications once before launching all jobs.
+    /// </summary>
+    public async Task ExecuteJobsInParallelAsync(IEnumerable<string> jobIds)
+    {
+        EnsureNoBlockedApplicationsRunning();
+
+        var tasks = jobIds.Select(jobId => Task.Run(() => ExecuteJob(jobId))).ToList();
+
+        await Task.WhenAll(tasks);
     }
 
     /// <summary>
@@ -257,12 +435,129 @@ public class BackupManager
         }
     }
 
-    private void EnsureNoBlockedApplicationsRunning()
+    /// <summary>
+    /// Manually pauses a running job. The backup thread will block between files.
+    /// </summary>
+    public void PauseJob(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        if (token != null)
+        {
+            token.Pause();
+            var job = GetJob(jobId);
+            if (job != null) { job.BackupState = BackupState.PAUSED; _stateWriter.UpdateJobState(job); }
+        }
+    }
+
+    /// <summary>
+    /// Resumes a paused job.
+    /// </summary>
+    public void ResumeJob(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        if (token != null)
+        {
+            token.Resume();
+            var job = GetJob(jobId);
+            if (job != null) { job.BackupState = BackupState.ACTIVE; _stateWriter.UpdateJobState(job); }
+        }
+    }
+
+    /// <summary>
+    /// Returns true if the job is currently paused.
+    /// </summary>
+    public bool IsJobPaused(string jobId)
+    {
+        PauseToken? token;
+        lock (_pauseTokensLock) { _pauseTokens.TryGetValue(jobId, out token); }
+        return token?.IsPaused ?? false;
+    }
+
+    /// <summary>
+    /// Called by the per-job timer to detect blocked apps mid-execution.
+    /// When a blocked app is detected, stops ALL running jobs immediately.
+    /// Uses an atomic flag so only the first timer that fires handles the stop.
+    /// </summary>
+    private void CheckBlockedAppsForJob(string jobId, PauseToken pauseToken)
+    {
+        try
+        {
+            var running = GetRunningBlockedApps();
+
+            if (running.Count > 0)
+            {
+                // Atomically claim the right to trigger the auto-pause (only one timer wins)
+                if (System.Threading.Interlocked.CompareExchange(ref _autoPauseFired, 1, 0) != 0) return;
+
+                List<(string Id, PauseToken Token)> snapshot;
+                lock (_pauseTokensLock)
+                {
+                    snapshot = _pauseTokens.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+                }
+
+                var pausedIds = new List<string>();
+                foreach (var (id, token) in snapshot)
+                {
+                    if (!token.IsPaused)
+                    {
+                        token.AutoPause();
+                        var job = GetJob(id);
+                        if (job != null) { job.BackupState = BackupState.PAUSED; _stateWriter.UpdateJobState(job); }
+                        pausedIds.Add(id);
+                    }
+                }
+
+                if (pausedIds.Count > 0)
+                {
+                    JobAutoPaused?.Invoke(this, new JobPauseEventArgs
+                    {
+                        JobIds = pausedIds,
+                        BlockedApps = running
+                    });
+                }
+            }
+            else if (System.Threading.Interlocked.CompareExchange(ref _autoPauseFired, 0, 1) == 1)
+            {
+                // Blocked app closed — resume ALL auto-paused jobs
+                List<(string Id, PauseToken Token)> snapshot;
+                lock (_pauseTokensLock)
+                {
+                    snapshot = _pauseTokens.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+                }
+
+                var resumedIds = new List<string>();
+                foreach (var (id, token) in snapshot)
+                {
+                    if (token.IsAutoPaused)
+                    {
+                        token.Resume();
+                        var job = GetJob(id);
+                        if (job != null) { job.BackupState = BackupState.ACTIVE; _stateWriter.UpdateJobState(job); }
+                        resumedIds.Add(id);
+                    }
+                }
+
+                if (resumedIds.Count > 0)
+                {
+                    JobAutoResumed?.Invoke(this, resumedIds);
+                }
+            }
+        }
+        catch
+        {
+            // Never crash the timer callback
+        }
+    }
+
+    /// <summary>
+    /// Returns the list of currently-running processes that are in the blocked-applications list.
+    /// </summary>
+    private List<string> GetRunningBlockedApps()
     {
         if (_blockedApplications.Count == 0)
-        {
-            return;
-        }
+            return new List<string>();
 
         var runningProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var process in Process.GetProcesses())
@@ -271,20 +566,19 @@ public class BackupManager
             {
                 var name = process.ProcessName;
                 if (!string.IsNullOrWhiteSpace(name))
-                {
                     runningProcesses.Add(name);
-                }
             }
-            catch
-            {
-                // Ignore processes that cannot be accessed.
-            }
+            catch { }
         }
 
-        var blockedRunning = _blockedApplications
+        return _blockedApplications
             .Where(app => runningProcesses.Contains(app))
             .ToList();
+    }
 
+    private void EnsureNoBlockedApplicationsRunning()
+    {
+        var blockedRunning = GetRunningBlockedApps();
         if (blockedRunning.Count > 0)
         {
             throw new InvalidOperationException(
@@ -316,6 +610,40 @@ public class BackupManager
     }
 
     /// <summary>
+    /// Updates the ordered priority extensions list at runtime (e.g. after settings change).
+    /// </summary>
+    public void UpdatePriorityExtensions(IEnumerable<string>? priorityExtensions)
+    {
+        _priorityExtensions = priorityExtensions?.ToList() ?? new List<string>();
+        _fileTransferService.SetPriorityExtensions(_priorityExtensions);
+    }
+
+    /// <summary>
+    /// Updates the maximum parallel transfer size limit. 0 = unlimited.
+    /// The throttle is shared across all running jobs via FileTransferService.
+    /// </summary>
+    public void UpdateMaxParallelSize(long value, string unit)
+    {
+        if (value <= 0) { _throttle.SetLimit(0); return; }
+        long bytes = unit switch
+        {
+            "KB" => value * 1024L,
+            "MB" => value * 1024L * 1024L,
+            "TB" => value * 1024L * 1024L * 1024L * 1024L,
+            _ => value * 1024L * 1024L * 1024L   // "GB" default
+        };
+        _throttle.SetLimit(bytes);
+    }
+
+    /// <summary>
+    /// Updates the CryptageManager with new encryption settings (called after settings save).
+    /// </summary>
+    public void UpdateCryptageManager(string cryptosoftPath, string publicKeyPath, IEnumerable<string> encryptedExtensions)
+    {
+        _fileTransferService.UpdateCryptageManager(cryptosoftPath, publicKeyPath, encryptedExtensions);
+    }
+
+    /// <summary>
     /// Updates the logger instance used for recording backup operations.
     /// This allows changing the log format (JSON/XML) without restarting the application.
     /// </summary>
@@ -342,29 +670,33 @@ public class BackupManager
     {
         ArgumentNullException.ThrowIfNull(job);
 
-        try
+        lock (_jobsFileLock)
         {
-            var jobs = LoadJobsFromFile(_jobsFilePath);
-
-            // Find and remove existing job (search by ID)
-            var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
-            if (existingIndex >= 0)
+            try
             {
-                jobs[existingIndex] = job; // Replace instead of remove/add
+                var jobs = LoadJobsFromFile(_jobsFilePath);
+
+                // Find and remove existing job (search by ID)
+                var existingIndex = jobs.FindIndex(j => j.Id == job.Id);
+                if (existingIndex >= 0)
+                {
+                    jobs[existingIndex] = job; // Replace instead of remove/add
+                }
+                else
+                {
+                    jobs.Add(job); // New job
+                }
+
+                SaveJobsToFile(_jobsFilePath, jobs);
+
+                // Reload jobs to sync _jobs list
+                _jobs.Clear();
+                _jobs.AddRange(jobs);
             }
-            else
+            catch (Exception ex)
             {
-                jobs.Add(job); // New job
+                throw new IOException($"Error saving job '{job.Id}' to jobs.json.", ex);
             }
-
-            SaveJobsToFile(_jobsFilePath, jobs);
-
-            // Reload jobs to sync _jobs list
-            LoadJobs();
-        }
-        catch (Exception ex)
-        {
-            throw new IOException($"Error saving job '{job.Id}' to jobs.json.", ex);
         }
     }
 
@@ -567,3 +899,4 @@ public class BackupManager
         return "error_generic";
     }
 }
+

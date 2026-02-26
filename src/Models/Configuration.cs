@@ -1,4 +1,5 @@
 using EasyLog.Enums;
+using Models.Enums;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -19,7 +20,20 @@ namespace EasySave.Models
         private string CryptosoftPath { get; set; }
         private string CryptosoftPublicKey { get; set; }
         private List<string> EncryptedExtensions { get; set; }
+        private List<string> PriorityExtensions { get; set; }
         private bool DarkMode { get; set; }
+        /// <summary>Numeric value for the parallel transfer limit. 0 = unlimited.</summary>
+        private long MaxParallelTransferSizeValue { get; set; }
+        /// <summary>Unit for the parallel transfer limit: "KB", "MB", "GB", "TB".</summary>
+        private string MaxParallelTransferSizeUnit { get; set; }
+        private bool OnboardingCompleted { get; set; }
+        private string AccentColor { get; set; }
+        /// <summary>Base URL of the CryptoSoft Manager API. Empty = remote logging disabled.</summary>
+        private string RemoteLoggingUrl { get; set; }
+        /// <summary>Agent API key obtained after enrollment. Empty = not enrolled.</summary>
+        private string RemoteLoggingApiKey { get; set; }
+        /// <summary>Where backup log entries are persisted: Local, Remote, or Both.</summary>
+        private LogStorageMode LogStorageMode { get; set; }
 
         public Configuration()
         {
@@ -31,7 +45,15 @@ namespace EasySave.Models
             CryptosoftPath = string.Empty;
             CryptosoftPublicKey = string.Empty;
             EncryptedExtensions = new List<string>();
+            PriorityExtensions = new List<string>();
             DarkMode = false;
+            MaxParallelTransferSizeValue = 0;
+            MaxParallelTransferSizeUnit = "GB";
+            OnboardingCompleted = false;
+            AccentColor = "Blue";
+            RemoteLoggingUrl = string.Empty;
+            RemoteLoggingApiKey = string.Empty;
+            LogStorageMode = LogStorageMode.Local;
         }
 
         // Getters
@@ -43,7 +65,15 @@ namespace EasySave.Models
         public string GetCryptosoftPath() => CryptosoftPath;
         public string GetCryptosoftPublicKey() => CryptosoftPublicKey;
         public List<string> GetEncryptedExtensions() => new List<string>(EncryptedExtensions);
+        public List<string> GetPriorityExtensions() => new List<string>(PriorityExtensions);
         public bool GetDarkMode() => DarkMode;
+        public long GetMaxParallelTransferSizeValue() => MaxParallelTransferSizeValue;
+        public string GetMaxParallelTransferSizeUnit() => MaxParallelTransferSizeUnit;
+        public bool GetOnboardingCompleted() => OnboardingCompleted;
+        public string GetAccentColor() => AccentColor;
+        public string GetRemoteLoggingUrl() => RemoteLoggingUrl;
+        public string GetRemoteLoggingApiKey() => RemoteLoggingApiKey;
+        public LogStorageMode GetLogStorageMode() => LogStorageMode;
 
         // Setters
         public void SetLanguage(string language)
@@ -111,9 +141,60 @@ namespace EasySave.Models
                 .ToList();
         }
 
+        /// <summary>
+        /// Sets the ordered list of priority extensions (order is preserved — first = highest priority).
+        /// </summary>
+        public void SetPriorityExtensions(IEnumerable<string> extensions)
+        {
+            if (extensions == null)
+            {
+                PriorityExtensions = new List<string>();
+                return;
+            }
+
+            // Preserve order, deduplicate case-insensitively (take first occurrence)
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            PriorityExtensions = extensions
+                .Where(ext => !string.IsNullOrWhiteSpace(ext))
+                .Select(NormalizeExtension)
+                .Where(ext => !string.IsNullOrWhiteSpace(ext) && seen.Add(ext))
+                .ToList();
+        }
+
         public void SetDarkMode(bool darkMode)
         {
             DarkMode = darkMode;
+        }
+
+        public void SetMaxParallelTransferSize(long value, string unit)
+        {
+            MaxParallelTransferSizeValue = Math.Max(0, value);
+            MaxParallelTransferSizeUnit = unit is "KB" or "MB" or "GB" or "TB" ? unit : "GB";
+        }
+
+        public void SetRemoteLoggingUrl(string url)
+        {
+            RemoteLoggingUrl = url?.Trim() ?? string.Empty;
+        }
+
+        public void SetRemoteLoggingApiKey(string key)
+        {
+            RemoteLoggingApiKey = key?.Trim() ?? string.Empty;
+        }
+
+        public void SetLogStorageMode(LogStorageMode mode)
+        {
+            LogStorageMode = mode;
+        }
+
+        public void SetOnboardingCompleted(bool completed)
+        {
+            OnboardingCompleted = completed;
+        }
+
+        public void SetAccentColor(string color)
+        {
+            AccentColor = string.IsNullOrWhiteSpace(color) ? "Blue" : color.Trim();
         }
 
         private static string NormalizeExtension(string extension)
@@ -234,7 +315,15 @@ namespace EasySave.Models
                 CryptosoftPath = string.Empty,
                 CryptosoftPublicKey = string.Empty,
                 EncryptedExtensions = new List<string>(),
-                DarkMode = false
+                PriorityExtensions = new List<string>(),
+                DarkMode = false,
+                MaxParallelTransferSizeValue = 0,
+                MaxParallelTransferSizeUnit = "GB",
+                OnboardingCompleted = false,
+                AccentColor = "Blue",
+                RemoteLoggingUrl = string.Empty,
+                RemoteLoggingApiKey = string.Empty,
+                LogStorageMode = (int)LogStorageMode.Local
             };
 
             // Retourne la sérialisation de la configuration par défaut au format JSON
@@ -275,7 +364,15 @@ namespace EasySave.Models
             public string CryptosoftPath { get; set; } = string.Empty;
             public string CryptosoftPublicKey { get; set; } = string.Empty;
             public List<string> EncryptedExtensions { get; set; } = new();
+            public List<string> PriorityExtensions { get; set; } = new();
             public bool DarkMode { get; set; }
+            public long MaxParallelTransferSizeValue { get; set; }
+            public string MaxParallelTransferSizeUnit { get; set; } = "GB";
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
+            public string RemoteLoggingUrl { get; set; } = string.Empty;
+            public string RemoteLoggingApiKey { get; set; } = string.Empty;
+            public int LogStorageMode { get; set; } = 0;
         }
     }
 

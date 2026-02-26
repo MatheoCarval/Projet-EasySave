@@ -8,7 +8,11 @@ using Avalonia.Media.Transformation;
 using Avalonia.VisualTree;
 using Avalonia.Animation;
 using Avalonia.Threading;
+using EasySave.Services;
+using EasySave.Services.Managers;
 using EasySave.ViewModels;
+using Models.Entries;
+using Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,22 +52,47 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         var vm = new MainViewModel(App.BackupManager!);
+        vm.BindRemoteLogger(App.RemoteLogger);
 
         DataContext = vm;
 
-        // Subscribe to property changes to load logs when panel becomes visible
+        // Subscribe to onboarding step changes
+        vm.OnboardingStepChanged += OnOnboardingStepChanged;
         vm.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(MainViewModel.IsLogsOpen) && vm.IsLogsOpen)
+            if (e.PropertyName == nameof(MainViewModel.IsOnboardingActive))
             {
-                try
+                if (vm.IsOnboardingActive)
                 {
-                    ResetLogsToJournal();
+                    // Delay to let layout complete, then position
+                    Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
                 }
-                catch (Exception ex)
-                {
-                    App.LogCrash("LoadLogsOnOpen", ex);
-                }
+            }
+            else if (e.PropertyName == nameof(MainViewModel.IsSettingsOpen) && vm.IsSettingsOpen)
+            {
+                Dispatcher.UIThread.Post(() => UpdateAccentChecks(vm.SettingsVM.AccentColorIndex), DispatcherPriority.Loaded);
+            }
+            else if (e.PropertyName == nameof(MainViewModel.IsLogsOpen) && vm.IsLogsOpen)
+            {
+                Dispatcher.UIThread.Post(() => ResetLogsToJournal(), DispatcherPriority.Loaded);
+            }
+        };
+
+        // Initial onboarding positioning after window is loaded
+        this.Opened += (s, e) =>
+        {
+            if (vm.IsOnboardingActive)
+            {
+                Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
+            }
+        };
+
+        // Re-render onboarding overlay when window is resized / maximized
+        this.PropertyChanged += (s, e) =>
+        {
+            if (e.Property == BoundsProperty && vm.IsOnboardingActive)
+            {
+                Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(vm.OnboardingStep), DispatcherPriority.Loaded);
             }
         };
 
@@ -73,6 +102,72 @@ public partial class MainWindow : Window
             App.LogCrash("UnobservedTaskException", e.Exception);
             e.SetObserved();
         };
+
+        // Global keyboard shortcuts
+        this.KeyDown += MainWindow_KeyDown;
+
+        // Drag & drop for source paths
+        AddHandler(DragDrop.DropEvent, SourcePathDrop);
+        AddHandler(DragDrop.DragOverEvent, SourcePathDragOver);
+        AddHandler(DragDrop.DragEnterEvent, SourcePathDragEnter);
+        AddHandler(DragDrop.DragLeaveEvent, SourcePathDragLeave);
+    }
+
+    /// <summary>
+    /// Handles global keyboard shortcuts: Ctrl+N (add), Ctrl+S (settings), F1 (help), Delete (delete selected)
+    /// </summary>
+    private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        // Ignore shortcuts when typing in a text field
+        if (e.Source is TextBox || e.Source is Avalonia.Controls.AutoCompleteBox) return;
+
+        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+        if (ctrl && e.Key == Key.N)
+        {
+            if (vm.AddBackupCommand.CanExecute(null))
+                vm.AddBackupCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == Key.S)
+        {
+            if (vm.OpenSettingsCommand.CanExecute(null))
+                vm.OpenSettingsCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F1)
+        {
+            if (vm.OpenHelpCommand.CanExecute(null))
+                vm.OpenHelpCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Delete)
+        {
+            if (vm.BackupJobs.Any(j => j.IsSelected))
+            {
+                if (vm.DeleteSelectedCommand.CanExecute(null))
+                    vm.DeleteSelectedCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Escape)
+        {
+            // Close any open modal/page
+            if (vm.IsAddEditModalOpen)
+            {
+                if (vm.CancelModalCommand.CanExecute(null))
+                    vm.CancelModalCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if (vm.IsSettingsOpen || vm.IsHelpOpen || vm.IsLogsOpen || vm.IsSchedulerOpen)
+            {
+                if (vm.GoHomeCommand.CanExecute(null))
+                    vm.GoHomeCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
     }
 
     /// <summary>
@@ -123,31 +218,90 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Opens the native folder picker dialog. Handles COM cleanup to prevent
-    /// crashes when opening the picker multiple times in sequence on Windows.
+    /// Opens a folder picker dialog.
+    /// On Windows: uses native Win32 COM API on a dedicated STA thread (bypasses Avalonia's
+    /// buggy StorageProvider which causes random native COM crashes).
+    /// On other platforms: falls back to Avalonia's StorageProvider.
     /// </summary>
-    private async Task<string?> OpenFolderPickerSafeAsync()
+    private async Task<string?> OpenFolderPickerSafeAsync(string title = "Select Folder")
     {
+        if (!await _browseSemaphore.WaitAsync(0)) return null;
         try
         {
-            var options = new FolderPickerOpenOptions
+            if (OperatingSystem.IsWindows())
             {
-                Title = "Select Folder",
-                AllowMultiple = false
-            };
-
-            var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-            if (result.Count > 0 && result[0].Path != null)
+                // Use Win32 native picker on a dedicated STA thread — no COM crash
+                return await EasySave.Utilities.Win32Picker.PickFolderAsync(title);
+            }
+            else
             {
-                return result[0].Path.LocalPath;
+                // Avalonia fallback for macOS/Linux
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false
+                };
+                var result = await StorageProvider.OpenFolderPickerAsync(options);
+                if (result.Count > 0 && result[0].Path != null)
+                    return result[0].Path.LocalPath;
+                return null;
             }
         }
         catch (Exception ex)
         {
             App.LogCrash("OpenFolderPickerSafe", ex);
+            return null;
         }
-        return null;
+        finally
+        {
+            _browseSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Opens a file picker dialog.
+    /// On Windows: uses native Win32 COM API on a dedicated STA thread.
+    /// On other platforms: falls back to Avalonia's StorageProvider.
+    /// </summary>
+    private async Task<string?> OpenFilePickerSafeAsync(string title,
+        string? filterName = null, string? filterPattern = null)
+    {
+        if (!await _browseSemaphore.WaitAsync(0)) return null;
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Use Win32 native picker on a dedicated STA thread — no COM crash
+                return await EasySave.Utilities.Win32Picker.PickFileAsync(title, filterName, filterPattern);
+            }
+            else
+            {
+                // Avalonia fallback for macOS/Linux
+                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
+                if (!string.IsNullOrEmpty(filterName) && !string.IsNullOrEmpty(filterPattern))
+                    fileTypes.Add(new FilePickerFileType(filterName) { Patterns = new[] { filterPattern } });
+
+                var options = new FilePickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false,
+                    FileTypeFilter = fileTypes.Count > 0 ? fileTypes : null
+                };
+                var result = await StorageProvider.OpenFilePickerAsync(options);
+                if (result.Count > 0 && result[0].Path != null)
+                    return result[0].Path.LocalPath;
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            App.LogCrash("OpenFilePickerSafe", ex);
+            return null;
+        }
+        finally
+        {
+            _browseSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -181,6 +335,108 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    #region Drag & Drop Source Paths
+
+    private Border? _sourceDropZone;
+    private Border? FindSourceDropZone() => _sourceDropZone ??= this.FindControl<Border>("SourcePathDropZone");
+
+    /// <summary>
+    /// Allow drag when files/folders are being dragged over the source path zone.
+    /// </summary>
+    private void SourcePathDragOver(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        e.DragEffects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Highlight the drop zone when dragging enters it.
+    /// </summary>
+    private void SourcePathDragEnter(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = new SolidColorBrush(Color.Parse("#2196F3"));
+            zone.BorderThickness = new Avalonia.Thickness(2.5);
+        }
+    }
+
+    /// <summary>
+    /// Remove highlight when drag leaves the zone.
+    /// </summary>
+    private void SourcePathDragLeave(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = (IBrush?)this.FindResource("BorderSubtle") ?? Brushes.Gray;
+            zone.BorderThickness = new Avalonia.Thickness(2);
+        }
+    }
+
+    /// <summary>
+    /// Handles files/folders dropped onto the source path zone.
+    /// Adds each dropped path as a new source path entry.
+    /// </summary>
+    private void SourcePathDrop(object? sender, DragEventArgs e)
+    {
+        if (!IsSourceDropTarget(e)) return;
+        if (DataContext is not MainViewModel vm) return;
+
+        // Reset visual
+        var zone = FindSourceDropZone();
+        if (zone != null)
+        {
+            zone.BorderBrush = (IBrush?)this.FindResource("BorderSubtle") ?? Brushes.Gray;
+            zone.BorderThickness = new Avalonia.Thickness(2);
+        }
+
+        var files = e.Data.GetFiles();
+        if (files == null) return;
+
+        foreach (var item in files)
+        {
+            var path = item.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path)) continue;
+
+            // If the first source path is empty, fill it instead of adding a new one
+            var emptySlot = vm.ModalSourcePaths.FirstOrDefault(s => string.IsNullOrWhiteSpace(s.Path));
+            if (emptySlot != null)
+            {
+                emptySlot.Path = path;
+            }
+            else
+            {
+                vm.ModalSourcePaths.Add(new SourcePathViewModel(path));
+            }
+        }
+
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Checks if the drag event targets the source path drop zone.
+    /// </summary>
+    private bool IsSourceDropTarget(DragEventArgs e)
+    {
+        var zone = FindSourceDropZone();
+        if (zone == null) return false;
+
+        // Check if the event source is within the drop zone
+        if (e.Source is Avalonia.Visual visual)
+        {
+            var ancestors = visual.GetSelfAndVisualAncestors();
+            return ancestors.Any(a => a == zone);
+        }
+        return false;
+    }
+
+    #endregion
 
     /// <summary>
     /// Handles the Tapped event on the selection zone to toggle checkbox
@@ -229,6 +485,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void PausedCard_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm)
+        {
+            mainVm.FilterPausedJobsCommand.Execute(null);
+        }
+    }
+
     private async void CopyEmail_Tapped(object? sender, TappedEventArgs e)
     {
         try
@@ -245,6 +509,56 @@ public partial class MainWindow : Window
         }
         catch { }
     }
+
+    private void SendEmail_Tapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "mailto:support@prosoft.com?subject=EasySave%20-%20Support%20Request",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch { }
+    }
+
+    #region Accent Color Handlers
+
+    private void SetAccentColor(int index)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SettingsVM.AccentColorIndex = index;
+            UpdateAccentChecks(index);
+        }
+    }
+
+    private void UpdateAccentChecks(int index)
+    {
+        var checks = new[] {
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckBlue"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckPurple"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckGreen"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckOrange"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckRed"),
+            this.FindControl<Avalonia.Controls.Viewbox>("AccentCheckTeal")
+        };
+        for (int i = 0; i < checks.Length; i++)
+        {
+            if (checks[i] != null) checks[i]!.IsVisible = (i == index);
+        }
+    }
+
+    private void AccentBlue_Tapped(object? s, TappedEventArgs e) => SetAccentColor(0);
+    private void AccentPurple_Tapped(object? s, TappedEventArgs e) => SetAccentColor(1);
+    private void AccentGreen_Tapped(object? s, TappedEventArgs e) => SetAccentColor(2);
+    private void AccentOrange_Tapped(object? s, TappedEventArgs e) => SetAccentColor(3);
+    private void AccentRed_Tapped(object? s, TappedEventArgs e) => SetAccentColor(4);
+    private void AccentTeal_Tapped(object? s, TappedEventArgs e) => SetAccentColor(5);
+
+    #endregion
 
     /// <summary>
     /// Forces COM cleanup to prevent Windows folder/file picker crashes
@@ -263,35 +577,11 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseLogPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var dir = await OpenFolderPickerSafeAsync("Select Log Directory");
+        if (!string.IsNullOrEmpty(dir) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select Log Directory",
-                    AllowMultiple = false
-                };
-
-                var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-                if (result.Count > 0 && result[0].Path != null)
-                {
-                    string dir = result[0].Path.LocalPath;
-                    string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
-                    mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseLogPath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            string ext = mainVm.SettingsVM.LogFormatIndex == 1 ? "xml" : "json";
+            mainVm.SettingsVM.LogFilePath = System.IO.Path.Combine(dir, $"jobs.{ext}");
         }
     }
 
@@ -300,34 +590,10 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseStatePath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var dir = await OpenFolderPickerSafeAsync("Select State File Directory");
+        if (!string.IsNullOrEmpty(dir) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select State File Directory",
-                    AllowMultiple = false
-                };
-
-                var result = await StorageProvider.OpenFolderPickerAsync(options);
-
-                if (result.Count > 0 && result[0].Path != null)
-                {
-                    string dir = result[0].Path.LocalPath;
-                    mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseStatePath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            mainVm.SettingsVM.StateFilePath = System.IO.Path.Combine(dir, "state.json");
         }
     }
 
@@ -336,47 +602,14 @@ public partial class MainWindow : Window
     /// </summary>
     private async void BrowseCryptosoftPath_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var title = OperatingSystem.IsWindows()
+            ? "Select Cryptosoft executable (.exe)"
+            : "Select Cryptosoft executable";
+
+        var path = await OpenFilePickerSafeAsync(title, "Executables", "*.exe");
+        if (!string.IsNullOrEmpty(path) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
-            {
-                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
-
-                if (OperatingSystem.IsWindows())
-                {
-                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
-                }
-                else
-                {
-                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-                }
-
-                var options = new FilePickerOpenOptions
-                {
-                    Title = OperatingSystem.IsWindows()
-                        ? "Select Cryptosoft executable (.exe)"
-                        : "Select Cryptosoft executable",
-                    AllowMultiple = false,
-                    FileTypeFilter = fileTypes
-                };
-
-                var result = await StorageProvider.OpenFilePickerAsync(options);
-
-                if (result.Count > 0)
-                {
-                    mainVm.SettingsVM.CryptosoftPath = result[0].Path.LocalPath;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseCryptosoftPath", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
+            mainVm.SettingsVM.CryptosoftPath = path;
         }
     }
 
@@ -411,59 +644,21 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Handles the Browse button click to add a process name from an executable file.
-    /// Cross-platform: .exe on Windows, .app bundles or any file on macOS, any file on Linux.
     /// </summary>
     private async void BrowseExe_Click(object? sender, RoutedEventArgs e)
     {
-        if (!await _browseSemaphore.WaitAsync(0)) return;
-        try
+        var title = OperatingSystem.IsWindows()
+            ? "Select an application (.exe)"
+            : "Select an application";
+
+        var path = await OpenFilePickerSafeAsync(title, "Executables", "*.exe");
+        if (!string.IsNullOrEmpty(path) && DataContext is MainViewModel mainVm)
         {
-            await ForceComCleanup();
-            if (DataContext is MainViewModel mainVm)
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (!string.IsNullOrWhiteSpace(fileName))
             {
-                var fileTypes = new System.Collections.Generic.List<FilePickerFileType>();
-
-                if (OperatingSystem.IsWindows())
-                {
-                    fileTypes.Add(new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } });
-                }
-                else if (OperatingSystem.IsMacOS())
-                {
-                    fileTypes.Add(new FilePickerFileType("Applications") { Patterns = new[] { "*.app", "*" } });
-                }
-                else
-                {
-                    fileTypes.Add(new FilePickerFileType("All files") { Patterns = new[] { "*" } });
-                }
-
-                var options = new FilePickerOpenOptions
-                {
-                    Title = OperatingSystem.IsWindows()
-                        ? "Select an application (.exe)"
-                        : "Select an application",
-                    AllowMultiple = false,
-                    FileTypeFilter = fileTypes
-                };
-
-                var result = await StorageProvider.OpenFilePickerAsync(options);
-
-                if (result.Count > 0)
-                {
-                    string fileName = System.IO.Path.GetFileNameWithoutExtension(result[0].Name);
-                    if (!string.IsNullOrWhiteSpace(fileName))
-                    {
-                        mainVm.SettingsVM.AddBlockedApplication(fileName);
-                    }
-                }
+                mainVm.SettingsVM.AddBlockedApplication(fileName);
             }
-        }
-        catch (Exception ex)
-        {
-            App.LogCrash("BrowseExe", ex);
-        }
-        finally
-        {
-            _browseSemaphore.Release();
         }
     }
 
@@ -692,8 +887,15 @@ public partial class MainWindow : Window
         if (etatTab != null) etatTab.Text = T("logs_tab_state");
         if (journalJsonTitle != null && _currentJsonFilePath != null)
         {
-            var jExt = Path.GetExtension(_currentJsonFilePath).TrimStart('.').ToUpperInvariant();
-            journalJsonTitle.Text = jExt == "XML" ? T("logs_xml_content") : T("logs_json_content");
+            if (_currentJsonFilePath.StartsWith(RemoteTagPrefix))
+            {
+                journalJsonTitle.Text = $"📡 {_currentJsonFilePath[RemoteTagPrefix.Length..]}";
+            }
+            else
+            {
+                var jExt = Path.GetExtension(_currentJsonFilePath).TrimStart('.').ToUpperInvariant();
+                journalJsonTitle.Text = jExt == "XML" ? T("logs_xml_content") : T("logs_json_content");
+            }
         }
         if (etatJsonTitle != null && _currentEtatJsonContent != null) etatJsonTitle.Text = T("logs_json_content");
         if (journalPlaceholder != null) journalPlaceholder.Text = T("logs_select_date");
@@ -764,6 +966,70 @@ public partial class MainWindow : Window
 
         // Apply localized strings
         ApplyLogsLocalization();
+
+        // Reset source filter to "All" each time the panel opens
+        _journalSourceFilter = 0;
+        UpdateSourceFilterButtons(0);
+
+        // Hide the filter bar when Etat tab is shown (it's Journal-only)
+        var filterBar = this.FindControl<Border>("JournalSourceFilterBar");
+        if (filterBar != null) filterBar.IsVisible = true;
+    }
+
+    /// <summary>
+    /// Updates which source filter button looks "active".
+    /// </summary>
+    private void UpdateSourceFilterButtons(int activeFilter)
+    {
+        var allBtn = this.FindControl<Button>("FilterAllBtn");
+        var localBtn = this.FindControl<Button>("FilterLocalBtn");
+        var remoteBtn = this.FindControl<Button>("FilterRemoteBtn");
+
+        void Set(Button? btn, bool active)
+        {
+            if (btn == null) return;
+            if (active)
+            {
+                if (!btn.Classes.Contains("LogSourceFilterActive"))
+                    btn.Classes.Add("LogSourceFilterActive");
+            }
+            else
+            {
+                btn.Classes.Remove("LogSourceFilterActive");
+            }
+        }
+
+        Set(allBtn, activeFilter == 0);
+        Set(localBtn, activeFilter == 1);
+        Set(remoteBtn, activeFilter == 2);
+    }
+
+    private void FilterAll_Clicked(object? sender, RoutedEventArgs e)
+    {
+        _journalSourceFilter = 0;
+        _journalCurrentPage = 1;
+        UpdateSourceFilterButtons(0);
+        ApplyJournalPagination();
+    }
+
+    private void FilterLocal_Clicked(object? sender, RoutedEventArgs e)
+    {
+        _journalSourceFilter = 1;
+        _journalCurrentPage = 1;
+        UpdateSourceFilterButtons(1);
+        ApplyJournalPagination();
+    }
+
+    private void FilterRemote_Clicked(object? sender, RoutedEventArgs e)
+    {
+        _journalSourceFilter = 2;
+        _journalCurrentPage = 1;
+        UpdateSourceFilterButtons(2);
+        // Trigger remote load if no remote items loaded yet
+        if (!_journalAllDateItems.Any(b => b.Tag is string t && t.StartsWith(RemoteTagPrefix)))
+            _ = LoadRemoteDatesAsync();
+        else
+            ApplyJournalPagination();
     }
 
     /// <summary>
@@ -784,6 +1050,10 @@ public partial class MainWindow : Window
 
         if (journalierContent != null) journalierContent.IsVisible = true;
         if (etatContent != null) etatContent.IsVisible = false;
+
+        // Show source filter bar for Journal tab
+        var filterBar = this.FindControl<Border>("JournalSourceFilterBar");
+        if (filterBar != null) filterBar.IsVisible = true;
     }
 
     /// <summary>
@@ -805,6 +1075,10 @@ public partial class MainWindow : Window
         if (journalierContent != null) journalierContent.IsVisible = false;
         if (etatContent != null) etatContent.IsVisible = true;
 
+        // Hide source filter bar for Etat tab (not relevant)
+        var filterBar = this.FindControl<Border>("JournalSourceFilterBar");
+        if (filterBar != null) filterBar.IsVisible = false;
+
         LoadStateJobs();
     }
 
@@ -816,6 +1090,11 @@ public partial class MainWindow : Window
     private string? _currentJsonContent;
     private string? _currentJsonFilePath;
     private string? _currentEtatJsonContent;
+
+    // ── Paginated log entry content ────────────────────────────────────────
+    private List<string> _logEntryStrings = new();   // each entry as a formatted string
+    private int _logEntryPage = 1;
+    private const int LogEntriesPerPage = 50;
 
     /// <summary>
     /// Filters the Journal date list based on search text and re-applies pagination
@@ -1222,71 +1501,7 @@ public partial class MainWindow : Window
                 firstItem.Classes.Add("SelectedDate");
 
             if (firstItem.Tag is string filePath)
-            {
-                string jsonContent;
-                try { jsonContent = File.ReadAllText(filePath); }
-                catch (Exception ex) { jsonContent = $"{T("logs_read_error")}{ex.Message}"; }
-
-                _currentJsonContent = jsonContent;
-                _currentJsonFilePath = filePath;
-
-                // Update title based on file format
-                var jTitle = this.FindControl<TextBlock>("JournalJsonTitle");
-                if (jTitle != null)
-                {
-                    var fmt = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
-                    jTitle.Text = fmt == "XML" ? T("logs_xml_content") : T("logs_json_content");
-                }
-
-                var copyBtn = this.FindControl<Button>("CopyJsonButton");
-                var dlBtn = this.FindControl<Button>("DownloadJsonButton");
-                if (copyBtn != null) copyBtn.IsVisible = true;
-                if (dlBtn != null) dlBtn.IsVisible = true;
-
-                var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
-                if (jsonGrid != null)
-                {
-                    if (jsonGrid.Children.Count > 2) jsonGrid.Children.RemoveAt(2);
-
-                    var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
-                    if (searchBar != null) searchBar.IsVisible = true;
-
-                    var jSearchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
-                    if (jSearchBox != null) jSearchBox.Text = "";
-                    var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
-                    if (searchCount != null) searchCount.Text = "";
-                    var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
-                    if (searchError != null) searchError.IsVisible = false;
-
-                    _journalJsonSearchMatches.Clear();
-                    _journalJsonSearchIndex = -1;
-                    _journalJsonLastQuery = "";
-
-                    var scrollViewer = new ScrollViewer
-                    {
-                        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-                        HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
-                    };
-
-                    var jsonText = new TextBox
-                    {
-                        Name = "JournalJsonTextBox",
-                        FontFamily = new Avalonia.Media.FontFamily("Consolas"),
-                        FontSize = 13,
-                        Padding = new Avalonia.Thickness(15),
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                        IsReadOnly = true,
-                        AcceptsReturn = true,
-                        Text = jsonContent
-                    };
-                    jsonText.Classes.Add("JsonViewer");
-                    _journalJsonTextBox = jsonText;
-
-                    scrollViewer.Content = jsonText;
-                    Grid.SetRow(scrollViewer, 2);
-                    jsonGrid.Children.Add(scrollViewer);
-                }
-            }
+                DisplayLocalFileContent(firstItem, filePath);
         }
     }
 
@@ -1359,71 +1574,7 @@ public partial class MainWindow : Window
                 matchingItem.Classes.Add("SelectedDate");
 
             if (matchingItem.Tag is string filePath)
-            {
-                string jsonContent;
-                try { jsonContent = File.ReadAllText(filePath); }
-                catch (Exception ex) { jsonContent = $"{T("logs_read_error")}{ex.Message}"; }
-
-                _currentJsonContent = jsonContent;
-                _currentJsonFilePath = filePath;
-
-                // Update title based on file format
-                var jTitle = this.FindControl<TextBlock>("JournalJsonTitle");
-                if (jTitle != null)
-                {
-                    var fmt = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
-                    jTitle.Text = fmt == "XML" ? T("logs_xml_content") : T("logs_json_content");
-                }
-
-                var copyBtn = this.FindControl<Button>("CopyJsonButton");
-                var dlBtn = this.FindControl<Button>("DownloadJsonButton");
-                if (copyBtn != null) copyBtn.IsVisible = true;
-                if (dlBtn != null) dlBtn.IsVisible = true;
-
-                var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
-                if (jsonGrid != null)
-                {
-                    if (jsonGrid.Children.Count > 2) jsonGrid.Children.RemoveAt(2);
-
-                    var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
-                    if (searchBar != null) searchBar.IsVisible = true;
-
-                    var jSearchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
-                    if (jSearchBox != null) jSearchBox.Text = "";
-                    var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
-                    if (searchCount != null) searchCount.Text = "";
-                    var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
-                    if (searchError != null) searchError.IsVisible = false;
-
-                    _journalJsonSearchMatches.Clear();
-                    _journalJsonSearchIndex = -1;
-                    _journalJsonLastQuery = "";
-
-                    var scrollViewer = new ScrollViewer
-                    {
-                        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-                        HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
-                    };
-
-                    var jsonText = new TextBox
-                    {
-                        Name = "JournalJsonTextBox",
-                        FontFamily = new Avalonia.Media.FontFamily("Consolas"),
-                        FontSize = 13,
-                        Padding = new Avalonia.Thickness(15),
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                        IsReadOnly = true,
-                        AcceptsReturn = true,
-                        Text = jsonContent
-                    };
-                    jsonText.Classes.Add("JsonViewer");
-                    _journalJsonTextBox = jsonText;
-
-                    scrollViewer.Content = jsonText;
-                    Grid.SetRow(scrollViewer, 2);
-                    jsonGrid.Children.Add(scrollViewer);
-                }
-            }
+                DisplayLocalFileContent(matchingItem, filePath);
         }
         else
         {
@@ -1681,6 +1832,485 @@ public partial class MainWindow : Window
 
         _journalCurrentPage = 1;
         ApplyJournalPagination();
+
+        // Async: also load remote log dates if configured
+        _ = LoadRemoteDatesAsync();
+    }
+
+    /// <summary>
+    /// Returns url + key if remote logging is configured (any non-Local mode with URL and key set),
+    /// otherwise null. Does NOT require mode to be non-Local so the user can still browse
+    /// remote logs even when the current write-mode is Local.
+    /// </summary>
+    private static (string Url, string Key)? GetRemoteClientConfig()
+    {
+        var config = ConfigurationManager.GetInstance().LoadConfiguration();
+        var url = config.GetRemoteLoggingUrl();
+        var key = config.GetRemoteLoggingApiKey();
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(key))
+            return null;
+        return (url, key);
+    }
+
+    private void SetRemoteIndicator(string text, bool isError = false)
+    {
+        var indicator = this.FindControl<TextBlock>("RemoteDatesLoadingIndicator");
+        if (indicator == null) return;
+        indicator.Text = text;
+        indicator.Foreground = isError
+            ? new SolidColorBrush(Color.Parse("#FF5722"))
+            : new SolidColorBrush(Color.Parse("#2196F3"));
+        indicator.IsVisible = !string.IsNullOrEmpty(text);
+    }
+
+    /// <summary>
+    /// Asynchronously fetches available log files from the remote server and adds them to
+    /// the Journal date list (below local dates), each tagged with "remote://" prefix.
+    /// Falls back to deriving dates from GET /api/logs entries if GET /api/logs/files fails.
+    /// </summary>
+    private async Task LoadRemoteDatesAsync()
+    {
+        var creds = GetRemoteClientConfig();
+        if (creds == null) return;
+
+        // Show loading indicator
+        await Dispatcher.UIThread.InvokeAsync(() => SetRemoteIndicator("📡 Chargement logs distants…"));
+
+        var client = new RemoteLogClient(creds.Value.Url, creds.Value.Key);
+
+        // Try GET /api/logs/files first; fall back to deriving dates from entries
+        var (files, filesError) = await client.GetLogFilesAsync();
+
+        if (filesError != null || files.Count == 0)
+        {
+            // If auth failed, don't bother with the fallback — it would fail too
+            if (filesError != null && filesError.Contains("(HTTP 401)") || filesError != null && filesError.Contains("(HTTP 403)"))
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    SetRemoteIndicator($"📡 {filesError}", isError: true));
+                return;
+            }
+
+            // Fallback: get entries and derive file names from their timestamps
+            var (entries, entriesError) = await client.GetLogsAsync(pageSize: 200);
+            if (entriesError != null)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    SetRemoteIndicator($"📡 Erreur : {entriesError.Split('\n')[0]}", isError: true));
+                return;
+            }
+
+            files = entries
+                .Select(e =>
+                {
+                    var ts = e.ServerTimestamp ?? e.BackupEntry?.Timestamp;
+                    return ts.HasValue ? $"jobs_{ts.Value:yyyy-MM-dd}.json" : null;
+                })
+                .Where(f => f != null)
+                .Distinct()
+                .OrderByDescending(f => f)
+                .ToList()!;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            SetRemoteIndicator(""); // hide
+
+            if (files.Count == 0) return;
+
+            // Collect local file names already shown so we can visually differentiate
+            var localFileNames = new HashSet<string>(
+                _journalAllDateItems
+                    .Where(b => b.Tag is string t && !t.StartsWith(RemoteTagPrefix))
+                    .Select(b => Path.GetFileName((string)b.Tag!)),
+                StringComparer.OrdinalIgnoreCase);
+
+            bool anyAdded = false;
+            foreach (var fileName in files.OrderByDescending(f => f))
+            {
+                // Skip if we already have the same date locally
+                if (localFileNames.Contains(fileName)) continue;
+
+                // Parse date from file name: jobs_YYYY-MM-DD.json
+                var baseName = Path.GetFileNameWithoutExtension(fileName).Replace("jobs_", "");
+                if (!DateTime.TryParseExact(baseName, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var date))
+                    continue;
+
+                var displayDate = date.ToString("dd/MM/yyyy");
+
+                var bullet = new TextBlock
+                {
+                    Text = "\u25cf",
+                    FontSize = 12,
+                    Margin = new Avalonia.Thickness(0, 0, 10, 0),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Foreground = new SolidColorBrush(Color.Parse("#2196F3"))
+                };
+
+                var dateText = new TextBlock
+                {
+                    Text = displayDate,
+                    FontSize = 14,
+                    FontWeight = FontWeight.SemiBold,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+
+                var remoteTag = new Border
+                {
+                    Background = new SolidColorBrush(Color.Parse("#1A2196F3")),
+                    BorderBrush = new SolidColorBrush(Color.Parse("#2196F3")),
+                    BorderThickness = new Avalonia.Thickness(1),
+                    CornerRadius = new Avalonia.CornerRadius(4),
+                    Padding = new Avalonia.Thickness(6, 2),
+                    Margin = new Avalonia.Thickness(8, 0, 0, 0),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = "DIST",
+                        FontSize = 10,
+                        FontWeight = FontWeight.Bold,
+                        Foreground = new SolidColorBrush(Color.Parse("#2196F3"))
+                    }
+                };
+
+                var stack = new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    Height = 40
+                };
+                stack.Children.Add(bullet);
+                stack.Children.Add(dateText);
+                stack.Children.Add(remoteTag);
+
+                var border = new Border
+                {
+                    Margin = new Avalonia.Thickness(0, 5),
+                    Padding = new Avalonia.Thickness(10),
+                    CornerRadius = new Avalonia.CornerRadius(5),
+                    Tag = RemoteTagPrefix + fileName,
+                    Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                    Child = stack
+                };
+                border.Classes.Add("JobItem");
+                border.PointerPressed += DateItem_Clicked;
+
+                _journalAllDateItems.Add(border);
+                anyAdded = true;
+            }
+
+            if (anyAdded)
+            {
+                ApplyJournalPagination();
+                SetRemoteIndicator($"📡 {_journalAllDateItems.Count(b => b.Tag is string t && t.StartsWith(RemoteTagPrefix))} date(s) distante(s) chargée(s)");
+            }
+            else
+            {
+                SetRemoteIndicator("📡 Aucune date distante supplémentaire");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Displays local log file content in the Journal right panel.
+    /// Parses entries individually to avoid loading huge strings into a TextBox.
+    /// </summary>
+    private void DisplayLocalFileContent(Border border, string filePath)
+    {
+        _currentJsonFilePath = filePath;
+        _logEntryStrings.Clear();
+        _logEntryPage = 1;
+
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+        try
+        {
+            if (ext == ".xml")
+            {
+                // XML: read as text first to handle encoding mismatch (UTF-16 declaration in UTF-8 file)
+                var xmlText = File.ReadAllText(filePath);
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(List<BackupLogEntry>));
+                using var reader = new System.IO.StringReader(xmlText);
+                var entries = serializer.Deserialize(reader) as List<BackupLogEntry>;
+                if (entries != null)
+                {
+                    var opts = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                    foreach (var entry in entries)
+                        _logEntryStrings.Add(System.Text.Json.JsonSerializer.Serialize(entry, opts));
+                }
+            }
+            else
+            {
+                // JSON: stream-parse the array to avoid allocating the whole string
+                using var stream = File.OpenRead(filePath);
+                var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var entries = System.Text.Json.JsonSerializer.Deserialize<List<BackupLogEntry>>(stream, opts);
+                if (entries != null)
+                {
+                    var writeOpts = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                    foreach (var entry in entries)
+                        _logEntryStrings.Add(System.Text.Json.JsonSerializer.Serialize(entry, writeOpts));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logEntryStrings.Clear();
+            _logEntryStrings.Add($"{T("logs_read_error")}{ex.Message}");
+        }
+
+        // _currentJsonContent is set lazily for copy/download (null = read from disk)
+        _currentJsonContent = null;
+
+        var journalTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+        if (journalTitle != null)
+        {
+            var format = ext.TrimStart('.').ToUpperInvariant();
+            var countInfo = _logEntryStrings.Count > 0 ? $" ({_logEntryStrings.Count} entrées)" : "";
+            journalTitle.Text = (format == "XML" ? T("logs_xml_content") : T("logs_json_content")) + countInfo;
+        }
+
+        ShowCopyDownloadButtons();
+        PopulateJsonPanelPaginated();
+    }
+
+    /// <summary>
+    /// Ensures _currentJsonContent is available (lazy-loaded from disk for large files).
+    /// </summary>
+    private string GetOrLoadCurrentJsonContent()
+    {
+        if (_currentJsonContent != null) return _currentJsonContent;
+        if (_currentJsonFilePath != null && !_currentJsonFilePath.StartsWith(RemoteTagPrefix)
+            && File.Exists(_currentJsonFilePath))
+        {
+            try { return File.ReadAllText(_currentJsonFilePath); }
+            catch { return string.Empty; }
+        }
+        // Fallback: rebuild from parsed entries
+        if (_logEntryStrings.Count > 0)
+            return "[\n" + string.Join(",\n", _logEntryStrings) + "\n]";
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Asynchronously fetches remote log entries for a given file and displays them.
+    /// </summary>
+    private async Task DisplayRemoteFileContentAsync(Border border, string fileName)
+    {
+        _currentJsonContent = null;
+        _currentJsonFilePath = null;
+
+        var journalTitle = this.FindControl<TextBlock>("JournalJsonTitle");
+        if (journalTitle != null)
+            journalTitle.Text = $"📡 {fileName} (chargement…)";
+
+        HideCopyDownloadButtons();
+        PopulateJsonPanel("Chargement des logs distants…");
+
+        var config = ConfigurationManager.GetInstance().LoadConfiguration();
+        var client = new RemoteLogClient(config.GetRemoteLoggingUrl()!, config.GetRemoteLoggingApiKey()!);
+        var (entries, error) = await client.GetLogsAsync(fileName: fileName, pageSize: 500);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            string content;
+            if (error != null)
+            {
+                content = $"Erreur lors du chargement : {error}";
+            }
+            else if (entries.Count == 0)
+            {
+                content = "Aucun log trouvé pour ce fichier.";
+            }
+            else
+            {
+                // Build a JSON array from the fetched entries
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("[");
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    var e = entries[i];
+                    if (e.BackupEntry != null)
+                    {
+                        sb.Append("  ");
+                        sb.Append(System.Text.Json.JsonSerializer.Serialize(e.BackupEntry,
+                            new System.Text.Json.JsonSerializerOptions { WriteIndented = false }));
+                    }
+                    else
+                    {
+                        sb.Append($"  {{\"id\":{e.Id},\"message\":\"{e.Message}\"}}");
+                    }
+                    if (i < entries.Count - 1) sb.AppendLine(",");
+                    else sb.AppendLine();
+                }
+                sb.Append("]");
+                content = sb.ToString();
+            }
+
+            _currentJsonContent = content;
+            _currentJsonFilePath = RemoteTagPrefix + fileName;
+
+            if (journalTitle != null)
+                journalTitle.Text = $"📡 {fileName}";
+
+            if (error == null) ShowCopyDownloadButtons();
+            PopulateJsonPanel(content);
+        });
+    }
+
+    /// <summary>Shows copy/download buttons in the Journal right panel.</summary>
+    private void ShowCopyDownloadButtons()
+    {
+        var copyBtn = this.FindControl<Button>("CopyJsonButton");
+        var dlBtn = this.FindControl<Button>("DownloadJsonButton");
+        if (copyBtn != null) copyBtn.IsVisible = true;
+        if (dlBtn != null) dlBtn.IsVisible = true;
+    }
+
+    /// <summary>Hides copy/download buttons in the Journal right panel.</summary>
+    private void HideCopyDownloadButtons()
+    {
+        var copyBtn = this.FindControl<Button>("CopyJsonButton");
+        var dlBtn = this.FindControl<Button>("DownloadJsonButton");
+        if (copyBtn != null) copyBtn.IsVisible = false;
+        if (dlBtn != null) dlBtn.IsVisible = false;
+    }
+
+    /// <summary>Populates the JSON text area (row 2) in JournalJsonGrid with the given content (small strings only).</summary>
+    private void PopulateJsonPanel(string content)
+    {
+        // For small content or remote/status messages, display directly
+        _logEntryStrings.Clear();
+        _logEntryStrings.Add(content);
+        _logEntryPage = 1;
+        _currentJsonContent = content;
+        PopulateJsonPanelPaginated();
+    }
+
+    /// <summary>
+    /// Renders the current page of log entries into the JournalJsonGrid.
+    /// Handles pagination so the TextBox never holds more than ~50 entries.
+    /// </summary>
+    private void PopulateJsonPanelPaginated()
+    {
+        var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
+        if (jsonGrid == null) return;
+
+        // Remove old content at row 2 (could be placeholder, scrollviewer, or container)
+        while (jsonGrid.Children.Count > 2)
+            jsonGrid.Children.RemoveAt(2);
+
+        var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
+        if (searchBar != null) searchBar.IsVisible = true;
+
+        var searchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
+        if (searchBox != null) searchBox.Text = "";
+        var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
+        if (searchCount != null) searchCount.Text = "";
+        var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
+        if (searchError != null) searchError.IsVisible = false;
+
+        _journalJsonSearchMatches.Clear();
+        _journalJsonSearchIndex = -1;
+        _journalJsonLastQuery = "";
+
+        var totalEntries = _logEntryStrings.Count;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalEntries / (double)LogEntriesPerPage));
+        if (_logEntryPage > totalPages) _logEntryPage = totalPages;
+        if (_logEntryPage < 1) _logEntryPage = 1;
+
+        // Build the page text from the current slice of entries
+        var pageEntries = _logEntryStrings
+            .Skip((_logEntryPage - 1) * LogEntriesPerPage)
+            .Take(LogEntriesPerPage);
+        var pageText = string.Join("\n\n", pageEntries);
+
+        // Container: text + pagination bar
+        var container = new Grid { RowDefinitions = RowDefinitions.Parse("*,Auto") };
+
+        var scrollViewer = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+        };
+
+        var jsonText = new TextBox
+        {
+            Name = "JournalJsonTextBox",
+            FontFamily = new FontFamily("Consolas"),
+            FontSize = 13,
+            Padding = new Avalonia.Thickness(15),
+            TextWrapping = TextWrapping.Wrap,
+            IsReadOnly = true,
+            AcceptsReturn = true,
+            Text = pageText
+        };
+        jsonText.Classes.Add("JsonViewer");
+
+        _journalJsonTextBox = jsonText;
+        jsonText.KeyDown += JournalJsonTextBox_KeyDown;
+
+        scrollViewer.Content = jsonText;
+        Grid.SetRow(scrollViewer, 0);
+        container.Children.Add(scrollViewer);
+
+        // Pagination bar (only if more than 1 page)
+        if (totalPages > 1)
+        {
+            var paginationBar = new Border
+            {
+                Padding = new Avalonia.Thickness(8, 6),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            };
+            try
+            {
+                var bg = this.FindResource("CardBackground") as IBrush;
+                var border = this.FindResource("ClickableCardBorder") as IBrush;
+                if (bg != null) paginationBar.Background = bg;
+                if (border != null) paginationBar.BorderBrush = border;
+            }
+            catch
+            {
+                paginationBar.Background = Brushes.White;
+                paginationBar.BorderBrush = CardBorderBrush;
+            }
+            paginationBar.BorderThickness = new Avalonia.Thickness(1);
+            paginationBar.CornerRadius = new Avalonia.CornerRadius(8);
+
+            var paginationStack = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 4 };
+
+            // Page info label
+            var pageInfo = new TextBlock
+            {
+                Text = $"Page {_logEntryPage}/{totalPages}  ({totalEntries} entrées)",
+                FontSize = 11,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 0, 10, 0)
+            };
+            try
+            {
+                var fg = this.FindResource("TextSecondary") as IBrush;
+                if (fg != null) pageInfo.Foreground = fg;
+            }
+            catch { pageInfo.Foreground = TextSecondaryBrush; }
+            paginationStack.Children.Add(pageInfo);
+
+            // Separate panel for pagination buttons (BuildPaginationButtons clears its panel)
+            var buttonsPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 4 };
+            BuildPaginationButtons(buttonsPanel, _logEntryPage, totalPages, page =>
+            {
+                _logEntryPage = page;
+                PopulateJsonPanelPaginated();
+            });
+            paginationStack.Children.Add(buttonsPanel);
+
+            paginationBar.Child = paginationStack;
+            Grid.SetRow(paginationBar, 1);
+            container.Children.Add(paginationBar);
+        }
+
+        Grid.SetRow(container, 2);
+        jsonGrid.Children.Add(container);
     }
 
     /// <summary>
@@ -1705,91 +2335,20 @@ public partial class MainWindow : Window
     {
         if (sender is Border border && border.Tag is string filePath)
         {
-            // Mark selected date
             ClearSelectedDates();
             if (!border.Classes.Contains("SelectedDate"))
                 border.Classes.Add("SelectedDate");
 
-            // Read the actual JSON file
-            string jsonContent;
-            try
+            if (filePath.StartsWith(RemoteTagPrefix))
             {
-                jsonContent = File.ReadAllText(filePath);
+                // Remote entry: fetch from API asynchronously
+                var fileName = filePath[RemoteTagPrefix.Length..];
+                _ = DisplayRemoteFileContentAsync(border, fileName);
             }
-            catch (Exception ex)
+            else
             {
-                jsonContent = $"{T("logs_read_error")}{ex.Message}";
-            }
-
-            _currentJsonContent = jsonContent;
-            _currentJsonFilePath = filePath;
-
-            // Update title based on file format
-            var journalTitle = this.FindControl<TextBlock>("JournalJsonTitle");
-            if (journalTitle != null)
-            {
-                var format = Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant();
-                journalTitle.Text = format == "XML" ? T("logs_xml_content") : T("logs_json_content");
-            }
-
-            // Show copy/download buttons
-            var copyBtn = this.FindControl<Button>("CopyJsonButton");
-            var dlBtn = this.FindControl<Button>("DownloadJsonButton");
-            if (copyBtn != null) copyBtn.IsVisible = true;
-            if (dlBtn != null) dlBtn.IsVisible = true;
-
-            var jsonGrid = this.FindControl<Grid>("JournalJsonGrid");
-            if (jsonGrid != null)
-            {
-                // Remove previous content (placeholder or scrollviewer) at index 2
-                if (jsonGrid.Children.Count > 2)
-                {
-                    jsonGrid.Children.RemoveAt(2);
-                }
-
-                // Show the JSON search bar
-                var searchBar = this.FindControl<Grid>("JournalJsonSearchBar");
-                if (searchBar != null) searchBar.IsVisible = true;
-
-                // Reset search state
-                var searchBox = this.FindControl<TextBox>("JournalJsonSearchBox");
-                if (searchBox != null) searchBox.Text = "";
-                var searchCount = this.FindControl<TextBlock>("JournalJsonSearchCount");
-                if (searchCount != null) searchCount.Text = "";
-                var searchError = this.FindControl<TextBlock>("JournalJsonSearchError");
-                if (searchError != null) searchError.IsVisible = false;
-
-                // Clear previous search matches
-                _journalJsonSearchMatches.Clear();
-                _journalJsonSearchIndex = -1;
-                _journalJsonLastQuery = "";
-
-                var scrollViewer = new ScrollViewer
-                {
-                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
-                };
-
-                var jsonText = new TextBox
-                {
-                    Name = "JournalJsonTextBox",
-                    FontFamily = new Avalonia.Media.FontFamily("Consolas"),
-                    FontSize = 13,
-                    Padding = new Avalonia.Thickness(15),
-                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                    IsReadOnly = true,
-                    AcceptsReturn = true,
-                    Text = jsonContent
-                };
-                jsonText.Classes.Add("JsonViewer");
-
-                // Store direct reference for search and attach KeyDown for Enter navigation
-                _journalJsonTextBox = jsonText;
-                jsonText.KeyDown += JournalJsonTextBox_KeyDown;
-
-                scrollViewer.Content = jsonText;
-                Grid.SetRow(scrollViewer, 2);
-                jsonGrid.Children.Add(scrollViewer);
+                // Local entry: read from disk
+                DisplayLocalFileContent(border, filePath);
             }
         }
     }
@@ -1799,9 +2358,10 @@ public partial class MainWindow : Window
     /// </summary>
     private async void CopyJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (_currentJsonContent != null && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        var content = GetOrLoadCurrentJsonContent();
+        if (!string.IsNullOrEmpty(content) && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
         {
-            await clipboard.SetTextAsync(_currentJsonContent);
+            await clipboard.SetTextAsync(content);
 
             // Visual feedback: change button text briefly
             if (sender is Button btn)
@@ -1819,7 +2379,8 @@ public partial class MainWindow : Window
     /// </summary>
     private async void DownloadJson_Clicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (_currentJsonContent == null) return;
+        var downloadContent = GetOrLoadCurrentJsonContent();
+        if (string.IsNullOrEmpty(downloadContent)) return;
 
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
@@ -1843,9 +2404,20 @@ public partial class MainWindow : Window
 
         if (file != null)
         {
-            await using var stream = await file.OpenWriteAsync();
-            await using var writer = new System.IO.StreamWriter(stream);
-            await writer.WriteAsync(_currentJsonContent);
+            // For local files, copy directly from disk (avoids loading 20MB into memory)
+            if (_currentJsonFilePath != null && !_currentJsonFilePath.StartsWith(RemoteTagPrefix)
+                && File.Exists(_currentJsonFilePath))
+            {
+                await using var dest = await file.OpenWriteAsync();
+                await using var src = File.OpenRead(_currentJsonFilePath);
+                await src.CopyToAsync(dest);
+            }
+            else
+            {
+                await using var stream = await file.OpenWriteAsync();
+                await using var writer = new System.IO.StreamWriter(stream);
+                await writer.WriteAsync(downloadContent);
+            }
         }
     }
 
@@ -2254,6 +2826,10 @@ public partial class MainWindow : Window
     private List<Border>? _journalFilteredDateItems = null;
     private int _journalCurrentPage = 1;
     private bool _journalSearchUpdating;
+    // Remote prefix used as Tag for remote date items
+    private const string RemoteTagPrefix = "remote://";
+    // Source filter: 0=All, 1=Local only, 2=Remote only
+    private int _journalSourceFilter = 0;
 
     // Etat pagination state
     private List<Border> _etatAllJobItems = new();
@@ -2272,7 +2848,14 @@ public partial class MainWindow : Window
 
         panel.Children.Clear();
 
-        var sourceItems = _journalFilteredDateItems ?? _journalAllDateItems;
+        var baseItems = _journalFilteredDateItems ?? _journalAllDateItems;
+        // Apply source filter
+        var sourceItems = _journalSourceFilter switch
+        {
+            1 => baseItems.Where(b => b.Tag is string t && !t.StartsWith(RemoteTagPrefix)).ToList(),
+            2 => baseItems.Where(b => b.Tag is string t && t.StartsWith(RemoteTagPrefix)).ToList(),
+            _ => baseItems
+        };
 
         if (sourceItems.Count == 0)
         {
@@ -2549,6 +3132,170 @@ public partial class MainWindow : Window
             _etatCurrentPage = page;
             ApplyEtatPagination();
             jumpBox.Text = "";
+        }
+    }
+
+    #endregion
+
+    #region Onboarding
+
+    private void OnOnboardingStepChanged(int step)
+    {
+        Dispatcher.UIThread.Post(() => UpdateOnboardingPosition(step), DispatcherPriority.Loaded);
+    }
+
+    /// <summary>
+    /// Positions the spotlight cutout, glow ring, and tooltip card for the given onboarding step.
+    /// Step 0 = welcome (centered card, no spotlight).
+    /// Steps 1-5 = sidebar buttons (Home, Add, Logs, Settings, Help).
+    /// </summary>
+    private void UpdateOnboardingPosition(int step)
+    {
+        var backdropPath = this.FindControl<Avalonia.Controls.Shapes.Path>("OnboardingBackdropPath");
+        var glowRing = this.FindControl<Border>("OnboardingGlowRing");
+        var card = this.FindControl<Border>("OnboardingCard");
+
+        if (backdropPath == null || glowRing == null || card == null) return;
+
+        // Update step dots
+        UpdateOnboardingDots(step);
+
+        var windowBounds = this.Bounds;
+        double winW = windowBounds.Width;
+        double winH = windowBounds.Height;
+
+        if (step == 0)
+        {
+            // Welcome step: full dark overlay, centered card, no glow ring
+            var fullRect = new Avalonia.Media.RectangleGeometry { Rect = new Avalonia.Rect(0, 0, winW, winH) };
+            backdropPath.Data = fullRect;
+            glowRing.IsVisible = false;
+
+            // Center the card
+            double cx = (winW - 380) / 2;
+            double cy = (winH - 340) / 2;
+            card.Margin = new Avalonia.Thickness(cx, cy, 0, 0);
+            return;
+        }
+
+        // Steps 1-5: find the target sidebar button
+        Avalonia.Visual? target = step switch
+        {
+            1 => this.FindControl<Grid>("SidebarHomeBtn"),
+            2 => this.FindControl<Grid>("SidebarAddBtn"),
+            3 => this.FindControl<Grid>("SidebarLogsBtn"),
+            4 => this.FindControl<Grid>("SidebarSettingsBtn"),
+            5 => this.FindControl<Grid>("SidebarHelpBtn"),
+            _ => null
+        };
+
+        if (target == null) return;
+
+        // Get target position relative to this window by walking the visual tree
+        var targetBounds = target.Bounds;
+        var pos = GetPositionInWindow(target);
+
+        double tX = pos.X;
+        double tY = pos.Y;
+        double tW = targetBounds.Width;
+        double tH = targetBounds.Height;
+
+        // Rounded rectangle spotlight
+        double pad = 8;
+        double holeX = tX - pad;
+        double holeY = tY - pad;
+        double holeW = tW + pad * 2;
+        double holeH = tH + pad * 2;
+        double holeR = 14;
+
+        // Create backdrop with rounded-rect cutout using StreamGeometry
+        var fullGeom = new Avalonia.Media.RectangleGeometry { Rect = new Avalonia.Rect(0, 0, winW, winH) };
+        var holeGeom = BuildRoundedRectGeometry(holeX, holeY, holeW, holeH, holeR);
+
+        var combined = new Avalonia.Media.CombinedGeometry(
+            Avalonia.Media.GeometryCombineMode.Exclude, fullGeom, holeGeom);
+
+        backdropPath.Data = combined;
+
+        // Show and position glow ring (rounded rectangle)
+        glowRing.IsVisible = true;
+        glowRing.Width = holeW;
+        glowRing.Height = holeH;
+        glowRing.CornerRadius = new Avalonia.CornerRadius(holeR);
+        glowRing.Margin = new Avalonia.Thickness(holeX, holeY, 0, 0);
+
+        // Position tooltip card to the right of the sidebar (100px sidebar width + gap)
+        double cardLeft = 120;
+        double cardTop = Math.Max(20, tY - 30);
+
+        // Make sure the card doesn't go below the window
+        if (cardTop + 320 > winH)
+            cardTop = winH - 340;
+
+        card.Margin = new Avalonia.Thickness(cardLeft, cardTop, 0, 0);
+    }
+
+    /// <summary>
+    /// Gets the position of a visual element relative to this window by walking the visual tree.
+    /// </summary>
+    private Avalonia.Point GetPositionInWindow(Avalonia.Visual element)
+    {
+        double x = 0, y = 0;
+        Avalonia.Visual? current = element;
+        while (current != null && current != this)
+        {
+            x += current.Bounds.X;
+            y += current.Bounds.Y;
+            current = current.GetVisualParent();
+        }
+        return new Avalonia.Point(x, y);
+    }
+
+    /// <summary>
+    /// Builds a StreamGeometry for a rounded rectangle (Avalonia RectangleGeometry has no corner radius).
+    /// </summary>
+    private static Avalonia.Media.StreamGeometry BuildRoundedRectGeometry(double x, double y, double w, double h, double r)
+    {
+        var sg = new Avalonia.Media.StreamGeometry();
+        using (var ctx = sg.Open())
+        {
+            ctx.BeginFigure(new Avalonia.Point(x + r, y), true);
+            ctx.LineTo(new Avalonia.Point(x + w - r, y));
+            ctx.ArcTo(new Avalonia.Point(x + w, y + r), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x + w, y + h - r));
+            ctx.ArcTo(new Avalonia.Point(x + w - r, y + h), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x + r, y + h));
+            ctx.ArcTo(new Avalonia.Point(x, y + h - r), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.LineTo(new Avalonia.Point(x, y + r));
+            ctx.ArcTo(new Avalonia.Point(x + r, y), new Avalonia.Size(r, r), 0, false, Avalonia.Media.SweepDirection.Clockwise);
+            ctx.EndFigure(true);
+        }
+        return sg;
+    }
+
+    /// <summary>
+    /// Updates the dot indicators for the current onboarding step.
+    /// </summary>
+    private void UpdateOnboardingDots(int activeStep)
+    {
+        var dots = new[]
+        {
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot0"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot1"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot2"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot3"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot4"),
+            this.FindControl<Avalonia.Controls.Shapes.Ellipse>("OBDot5"),
+        };
+
+        for (int i = 0; i < dots.Length; i++)
+        {
+            if (dots[i] != null)
+            {
+                dots[i]!.Fill = i == activeStep
+                    ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4FC3F7"))
+                    : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#40808080"));
+            }
         }
     }
 

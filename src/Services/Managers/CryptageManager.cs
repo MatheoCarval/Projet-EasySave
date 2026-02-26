@@ -12,6 +12,9 @@ namespace Services.Managers
     /// </summary>
     public class CryptageManager
     {
+        // CryptoSoft is mono-instance: only one process can run at a time across all parallel jobs.
+        private static readonly SemaphoreSlim _cryptosoftLock = new(1, 1);
+
         private readonly string _cryptosoftPath;
         private readonly string _publicKeyPath;
         private readonly HashSet<string> _encryptedExtensions;
@@ -37,7 +40,7 @@ namespace Services.Managers
                 return 0;
             }
 
-            if (!ShouldEncrypt(filePath))
+            if (!ShouldEncrypt(filePath, job))
             {
                 return 0;
             }
@@ -52,7 +55,15 @@ namespace Services.Managers
                 return 0;
             }
 
-            return EncryptFile(filePath);
+            _cryptosoftLock.Wait();
+            try
+            {
+                return EncryptFile(filePath);
+            }
+            finally
+            {
+                _cryptosoftLock.Release();
+            }
         }
 
         /// <summary>
@@ -86,7 +97,7 @@ namespace Services.Managers
                     FileName = _cryptosoftPath,
                     Arguments = $"encrypt --input \"{filePath}\" --output \"{encryptedPath}\" --pubkey \"{_publicKeyPath}\"",
                     UseShellExecute = false,
-                    RedirectStandardOutput = true,
+                    RedirectStandardOutput = false, // not needed — don't redirect to avoid deadlock
                     RedirectStandardError = true,
                     CreateNoWindow = true
                 };
@@ -98,12 +109,13 @@ namespace Services.Managers
                         throw new InvalidOperationException("Failed to start CryptoSoft process");
                     }
 
+                    // Read stderr BEFORE WaitForExit: avoids deadlock when the stderr pipe buffer fills up.
+                    string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit();
 
                     if (process.ExitCode != 0)
                     {
-                        string error = process.StandardError.ReadToEnd();
-                        throw new InvalidOperationException($"CryptoSoft encryption failed with exit code {process.ExitCode}: {error}");
+                        throw new InvalidOperationException($"CryptoSoft encryption failed (exit {process.ExitCode}): {stderr.Trim()}");
                     }
                 }
 
@@ -136,7 +148,7 @@ namespace Services.Managers
             }
         }
 
-        private bool ShouldEncrypt(string filePath)
+        private bool ShouldEncrypt(string filePath, BackupJob job)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -149,7 +161,22 @@ namespace Services.Managers
                 return false;
             }
 
-            return _encryptedExtensions.Contains(extension);
+            // Check global extensions (from config)
+            if (_encryptedExtensions.Contains(extension))
+            {
+                return true;
+            }
+
+            // Check per-job extensions
+            if (job.EncryptedExtensions?.Count > 0)
+            {
+                var jobExtensions = new HashSet<string>(
+                    NormalizeExtensions(job.EncryptedExtensions),
+                    StringComparer.OrdinalIgnoreCase);
+                return jobExtensions.Contains(extension);
+            }
+
+            return false;
         }
 
         private static IEnumerable<string> NormalizeExtensions(IEnumerable<string> extensions)

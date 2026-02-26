@@ -1,5 +1,6 @@
 using EasyLog.Enums;
 using EasySave.Models;
+using Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,7 +76,15 @@ namespace EasySave.Services.Managers
                 CryptosoftPath = config.GetCryptosoftPath(),
                 CryptosoftPublicKey = config.GetCryptosoftPublicKey(),
                 EncryptedExtensions = config.GetEncryptedExtensions(),
-                DarkMode = config.GetDarkMode()
+                PriorityExtensions = config.GetPriorityExtensions(),
+                DarkMode = config.GetDarkMode(),
+                MaxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue(),
+                MaxParallelTransferSizeUnit = config.GetMaxParallelTransferSizeUnit(),
+                OnboardingCompleted = config.GetOnboardingCompleted(),
+                AccentColor = config.GetAccentColor(),
+                RemoteLoggingUrl = config.GetRemoteLoggingUrl(),
+                RemoteLoggingApiKey = config.GetRemoteLoggingApiKey(),
+                LogStorageMode = (int)config.GetLogStorageMode()
             };
 
             string json = JsonSerializer.Serialize(configTemplate, new JsonSerializerOptions
@@ -121,7 +130,14 @@ namespace EasySave.Services.Managers
             config.SetCryptosoftPath(template.CryptosoftPath ?? string.Empty);
             config.SetCryptosoftPublicKey(template.CryptosoftPublicKey ?? string.Empty);
             config.SetEncryptedExtensions(template.EncryptedExtensions ?? new List<string>());
+            config.SetPriorityExtensions(template.PriorityExtensions ?? new List<string>());
             config.SetDarkMode(template.DarkMode);
+            config.SetMaxParallelTransferSize(template.MaxParallelTransferSizeValue, template.MaxParallelTransferSizeUnit ?? "GB");
+            config.SetOnboardingCompleted(template.OnboardingCompleted);
+            config.SetAccentColor(template.AccentColor ?? "Blue");
+            config.SetRemoteLoggingUrl(template.RemoteLoggingUrl ?? string.Empty);
+            config.SetRemoteLoggingApiKey(template.RemoteLoggingApiKey ?? string.Empty);
+            config.SetLogStorageMode((LogStorageMode)template.LogStorageMode);
 
             return config;
         }
@@ -149,7 +165,15 @@ namespace EasySave.Services.Managers
             public string? CryptosoftPath { get; set; }
             public string? CryptosoftPublicKey { get; set; }
             public List<string>? EncryptedExtensions { get; set; }
+            public List<string>? PriorityExtensions { get; set; }
             public bool DarkMode { get; set; }
+            public long MaxParallelTransferSizeValue { get; set; }
+            public string? MaxParallelTransferSizeUnit { get; set; }
+            public bool OnboardingCompleted { get; set; }
+            public string AccentColor { get; set; } = "Blue";
+            public string? RemoteLoggingUrl { get; set; }
+            public string? RemoteLoggingApiKey { get; set; }
+            public int LogStorageMode { get; set; } = 0;
         }
     }
 }

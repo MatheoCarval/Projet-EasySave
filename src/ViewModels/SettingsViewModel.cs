@@ -4,10 +4,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using EasyLog.Enums;
 using EasySave.Services;
 using EasySave.Services.Managers;
+using Models.Enums;
 using Avalonia;
 using Avalonia.Styling;
 
@@ -32,16 +35,32 @@ public class SettingsViewModel : ViewModelBase
     private string _cryptosoftPublicKey = string.Empty;
     private string _encryptedExtensionsText = string.Empty;
     private string _blockedApplicationsText = string.Empty;
+    private string _newPriorityExtension = string.Empty;
+    private long _maxParallelTransferSizeValue;
+    private int _maxParallelTransferSizeUnitIndex = 2; // 0=KB 1=MB 2=GB 3=TB
+    private static readonly string[] _sizeUnits = { "KB", "MB", "GB", "TB" };
     private string? _selectedDetectedApplication;
     private string _detectedAppsSearch = string.Empty;
     private bool _hasUnsavedChanges;
     private string _saveMessage = string.Empty;
+    private int _accentColorIndex;
+    private string _remoteLoggingUrl = string.Empty;
+    private string _remoteLoggingApiKey = string.Empty;
+    private string _enrollmentKey = string.Empty;
+    private string _remoteLoggingStatus = string.Empty;
+    private bool _isEnrolling;
+    private int _logStorageModeIndex = 0; // 0=Local, 1=Remote, 2=Both
+    private bool _isTestingConnection;
+    private string _connectionTestStatus = string.Empty;
+    private string _connectionTestColor = "#9E9E9E";
 
     public SettingsViewModel()
     {
         _configManager = ConfigurationManager.GetInstance();
         DetectedApplications = new ObservableCollection<string>();
         FilteredDetectedApplications = new ObservableCollection<string>();
+        PriorityExtensions = new ObservableCollection<string>();
+        BlockedApplicationsList = new ObservableCollection<string>();
         LoadSettings();
 
         SaveCommand = new RelayCommand(Save);
@@ -49,6 +68,14 @@ public class SettingsViewModel : ViewModelBase
         RefreshDetectedAppsCommand = new RelayCommand(RefreshDetectedApplications);
         AddDetectedAppCommand = new RelayCommand(AddSelectedDetectedApplication, () => !string.IsNullOrWhiteSpace(SelectedDetectedApplication));
         ClearDetectedAppsSearchCommand = new RelayCommand(() => DetectedAppsSearch = string.Empty);
+        AddPriorityExtensionCommand = new RelayCommand(AddPriorityExtension, () => !string.IsNullOrWhiteSpace(_newPriorityExtension));
+        RemovePriorityExtensionCommand = new RelayCommand<string>(RemovePriorityExtension);
+        MovePriorityExtensionUpCommand = new RelayCommand<string>(MovePriorityExtensionUp);
+        MovePriorityExtensionDownCommand = new RelayCommand<string>(MovePriorityExtensionDown);
+        RemoveBlockedAppCommand = new RelayCommand<string>(RemoveBlockedApplication);
+        EnrollCommand = new RelayCommand(async () => await EnrollAsync(), () => !_isEnrolling && !string.IsNullOrWhiteSpace(_remoteLoggingUrl) && !string.IsNullOrWhiteSpace(_enrollmentKey));
+        ClearApiKeyCommand = new RelayCommand(ClearApiKey);
+        TestConnectionCommand = new RelayCommand(async () => await TestConnectionAsync(), () => !_isTestingConnection && !string.IsNullOrWhiteSpace(_remoteLoggingUrl));
     }
 
     #region Properties
@@ -169,6 +196,43 @@ public class SettingsViewModel : ViewModelBase
 
     public ObservableCollection<string> DetectedApplications { get; }
     public ObservableCollection<string> FilteredDetectedApplications { get; }
+    public ObservableCollection<string> PriorityExtensions { get; }
+
+    public string NewPriorityExtension
+    {
+        get => _newPriorityExtension;
+        set
+        {
+            if (SetProperty(ref _newPriorityExtension, value))
+                ((RelayCommand)AddPriorityExtensionCommand).RaiseCanExecuteChanged();
+        }
+    }
+
+    /// <summary>
+    /// Numeric value for the parallel transfer limit. 0 = unlimited.
+    /// </summary>
+    public long MaxParallelTransferSizeValue
+    {
+        get => _maxParallelTransferSizeValue;
+        set
+        {
+            if (SetProperty(ref _maxParallelTransferSizeValue, Math.Max(0, value)))
+                HasUnsavedChanges = true;
+        }
+    }
+
+    /// <summary>Selected unit index: 0=KB 1=MB 2=GB 3=TB</summary>
+    public int MaxParallelTransferSizeUnitIndex
+    {
+        get => _maxParallelTransferSizeUnitIndex;
+        set
+        {
+            if (SetProperty(ref _maxParallelTransferSizeUnitIndex, Math.Clamp(value, 0, 3)))
+                HasUnsavedChanges = true;
+        }
+    }
+    public ObservableCollection<string> BlockedApplicationsList { get; }
+    public bool HasBlockedApps => BlockedApplicationsList.Count > 0;
 
     public string DetectedAppsSearch
     {
@@ -242,6 +306,14 @@ public class SettingsViewModel : ViewModelBase
     public string TxtModalEncryptedExtensions => T("gui_modal_encrypted_extensions");
     public string TxtModalEncryptedExtensionsDesc => T("gui_modal_encrypted_extensions_desc");
     public string TxtModalEncryptedExtensionsPlaceholder => T("gui_modal_encrypted_extensions_placeholder");
+    public string TxtPriorityExtensions => T("gui_priority_extensions");
+    public string TxtPriorityExtensionsDesc => T("gui_priority_extensions_desc");
+    public string TxtPriorityExtensionsPlaceholder => T("gui_priority_extensions_placeholder");
+    public string TxtPriorityExtensionsAdd => T("gui_priority_extensions_add");
+    public string TxtPriorityExtensionsEmpty => T("gui_priority_extensions_empty");
+    public string TxtMaxParallelSize => T("gui_max_parallel_size");
+    public string TxtMaxParallelSizeDesc => T("gui_max_parallel_size_desc");
+    public string TxtMaxParallelSizeUnit => T("gui_max_parallel_size_unit");
     public string TxtBlockedApps => T("gui_blocked_apps");
     public string TxtBlockedAppsDesc => T("gui_blocked_apps_desc");
     public string TxtBlockedAppsPlaceholder => T("gui_blocked_apps_placeholder");
@@ -274,6 +346,127 @@ public class SettingsViewModel : ViewModelBase
     public string OSInfo => $"{Environment.OSVersion.Platform} {Environment.OSVersion.Version}";
     public string Architecture => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
 
+    // Accent color names (must match indices)
+    public static readonly string[] AccentColorNames = { "Blue", "Purple", "Green", "Orange", "Red", "Teal" };
+    public static readonly string[] AccentColorValues = { "#2196F3", "#9C27B0", "#4CAF50", "#FF9800", "#F44336", "#009688" };
+    public static readonly string[] AccentColorHovers = { "#1976D2", "#7B1FA2", "#388E3C", "#F57C00", "#D32F2F", "#00796B" };
+    public static readonly string[] AccentColorLights = { "#64B5F6", "#CE93D8", "#81C784", "#FFB74D", "#EF9A9A", "#80CBC4" };
+
+    public int AccentColorIndex
+    {
+        get => _accentColorIndex;
+        set
+        {
+            if (SetProperty(ref _accentColorIndex, value))
+            {
+                HasUnsavedChanges = true;
+                // Apply accent color live
+                ApplyAccentColor(value);
+            }
+        }
+    }
+
+    public string TxtAccentColor => T("gui_accent_color");
+
+    public string RemoteLoggingUrl
+    {
+        get => _remoteLoggingUrl;
+        set { if (SetProperty(ref _remoteLoggingUrl, value)) { HasUnsavedChanges = true; ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); } }
+    }
+
+    public string RemoteLoggingApiKey
+    {
+        get => _remoteLoggingApiKey;
+        set => SetProperty(ref _remoteLoggingApiKey, value);
+    }
+
+    public string EnrollmentKey
+    {
+        get => _enrollmentKey;
+        set { if (SetProperty(ref _enrollmentKey, value)) ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public string RemoteLoggingStatus
+    {
+        get => _remoteLoggingStatus;
+        set => SetProperty(ref _remoteLoggingStatus, value);
+    }
+
+    public bool IsEnrolling
+    {
+        get => _isEnrolling;
+        set { if (SetProperty(ref _isEnrolling, value)) ((RelayCommand)EnrollCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public bool HasApiKey => !string.IsNullOrWhiteSpace(_remoteLoggingApiKey);
+
+    public bool IsTestingConnection
+    {
+        get => _isTestingConnection;
+        set { if (SetProperty(ref _isTestingConnection, value)) ((RelayCommand)TestConnectionCommand).RaiseCanExecuteChanged(); }
+    }
+
+    public string ConnectionTestStatus
+    {
+        get => _connectionTestStatus;
+        set => SetProperty(ref _connectionTestStatus, value);
+    }
+
+    public string ConnectionTestColor
+    {
+        get => _connectionTestColor;
+        set => SetProperty(ref _connectionTestColor, value);
+    }
+
+    // Log storage mode (0=Local, 1=Remote only, 2=Both)
+    public int LogStorageModeIndex
+    {
+        get => _logStorageModeIndex;
+        set
+        {
+            if (SetProperty(ref _logStorageModeIndex, value))
+            {
+                HasUnsavedChanges = true;
+                OnPropertyChanged(nameof(IsLocalOnly));
+                OnPropertyChanged(nameof(IsRemoteOnly));
+                OnPropertyChanged(nameof(IsBothMode));
+                OnPropertyChanged(nameof(IsRemoteEnabled));
+            }
+        }
+    }
+    public bool IsLocalOnly
+    {
+        get => _logStorageModeIndex == 0;
+        set { if (value) LogStorageModeIndex = 0; }
+    }
+    public bool IsRemoteOnly
+    {
+        get => _logStorageModeIndex == 1;
+        set { if (value) LogStorageModeIndex = 1; }
+    }
+    public bool IsBothMode
+    {
+        get => _logStorageModeIndex == 2;
+        set { if (value) LogStorageModeIndex = 2; }
+    }
+    /// <summary>Controls visibility of the server URL + enrollment section.</summary>
+    public bool IsRemoteEnabled => _logStorageModeIndex > 0;
+
+    // Translated labels for remote logging
+    public string TxtLogStorageMode => T("gui_log_storage_mode");
+    public string TxtLogStorageModeLocal => T("gui_log_storage_mode_local");
+    public string TxtLogStorageModeRemote => T("gui_log_storage_mode_remote");
+    public string TxtLogStorageModeBoth => T("gui_log_storage_mode_both");
+    public string TxtRemoteLogging => T("gui_remote_logging");
+    public string TxtRemoteLoggingDesc => T("gui_remote_logging_desc");
+    public string TxtRemoteLoggingUrl => T("gui_remote_logging_url");
+    public string TxtRemoteLoggingUrlPlaceholder => T("gui_remote_logging_url_placeholder");
+    public string TxtRemoteLoggingApiKey => T("gui_remote_logging_api_key");
+    public string TxtRemoteLoggingEnrollmentKey => T("gui_remote_logging_enrollment_key");
+    public string TxtRemoteLoggingEnroll => T("gui_remote_logging_enroll");
+    public string TxtRemoteLoggingStatus => T("gui_remote_logging_status");
+    public string TxtRemoteLoggingEnrolledBadge => T("gui_remote_logging_enrolled_badge");
+
     #endregion
 
     #region Commands
@@ -283,6 +476,14 @@ public class SettingsViewModel : ViewModelBase
     public ICommand RefreshDetectedAppsCommand { get; }
     public ICommand AddDetectedAppCommand { get; }
     public ICommand ClearDetectedAppsSearchCommand { get; }
+    public ICommand AddPriorityExtensionCommand { get; }
+    public ICommand RemovePriorityExtensionCommand { get; }
+    public ICommand MovePriorityExtensionUpCommand { get; }
+    public ICommand MovePriorityExtensionDownCommand { get; }
+    public ICommand RemoveBlockedAppCommand { get; }
+    public ICommand EnrollCommand { get; }
+    public ICommand ClearApiKeyCommand { get; }
+    public ICommand TestConnectionCommand { get; }
 
     #endregion
 
@@ -331,6 +532,48 @@ public class SettingsViewModel : ViewModelBase
         _blockedApplicationsText = string.Join(Environment.NewLine, blockedApps);
         OnPropertyChanged(nameof(BlockedApplicationsText));
 
+        PriorityExtensions.Clear();
+        foreach (var ext in config.GetPriorityExtensions())
+            PriorityExtensions.Add(ext);
+
+        _maxParallelTransferSizeValue = config.GetMaxParallelTransferSizeValue();
+        var savedUnit = config.GetMaxParallelTransferSizeUnit();
+        _maxParallelTransferSizeUnitIndex = Array.IndexOf(_sizeUnits, savedUnit);
+        if (_maxParallelTransferSizeUnitIndex < 0) _maxParallelTransferSizeUnitIndex = 2; // fallback GB
+        OnPropertyChanged(nameof(MaxParallelTransferSizeValue));
+        OnPropertyChanged(nameof(MaxParallelTransferSizeUnitIndex));
+        BlockedApplicationsList.Clear();
+        foreach (var app in blockedApps)
+        {
+            if (!string.IsNullOrWhiteSpace(app))
+                BlockedApplicationsList.Add(app);
+        }
+        OnPropertyChanged(nameof(HasBlockedApps));
+
+        // Accent color
+        var accentName = config.GetAccentColor();
+        _accentColorIndex = Array.IndexOf(AccentColorNames, accentName);
+        if (_accentColorIndex < 0) _accentColorIndex = 0;
+        OnPropertyChanged(nameof(AccentColorIndex));
+
+        // Remote logging
+        _logStorageModeIndex = (int)config.GetLogStorageMode();
+        _remoteLoggingUrl = config.GetRemoteLoggingUrl();
+        _remoteLoggingApiKey = config.GetRemoteLoggingApiKey();
+        _enrollmentKey = string.Empty;
+        _remoteLoggingStatus = string.Empty;
+        OnPropertyChanged(nameof(LogStorageModeIndex));
+        OnPropertyChanged(nameof(IsLocalOnly));
+        OnPropertyChanged(nameof(IsRemoteOnly));
+        OnPropertyChanged(nameof(IsBothMode));
+        OnPropertyChanged(nameof(IsRemoteEnabled));
+        OnPropertyChanged(nameof(RemoteLoggingUrl));
+        OnPropertyChanged(nameof(RemoteLoggingApiKey));
+        OnPropertyChanged(nameof(EnrollmentKey));
+        OnPropertyChanged(nameof(RemoteLoggingStatus));
+        OnPropertyChanged(nameof(HasApiKey));
+        ((RelayCommand?)EnrollCommand)?.RaiseCanExecuteChanged();
+
         HasUnsavedChanges = false;
         SaveMessage = string.Empty;
     }
@@ -364,6 +607,9 @@ public class SettingsViewModel : ViewModelBase
             config.SetLogFormat(format);
             config.SetDarkMode(_isDarkTheme);
             config.SetBlockedApplications(ParseBlockedApplications(_blockedApplicationsText));
+            config.SetPriorityExtensions(PriorityExtensions);
+            config.SetMaxParallelTransferSize(_maxParallelTransferSizeValue, _sizeUnits[_maxParallelTransferSizeUnitIndex]);
+            config.SetBlockedApplications(BlockedApplicationsList.ToList());
             config.SetCryptosoftPath(_cryptosoftPath);
             config.SetCryptosoftPublicKey(_cryptosoftPublicKey);
             config.SetEncryptedExtensions(ParseEncryptedExtensions(_encryptedExtensionsText));
@@ -371,6 +617,10 @@ public class SettingsViewModel : ViewModelBase
                 config.SetLogFilePath(logPath);
             if (!string.IsNullOrWhiteSpace(statePath))
                 config.SetStateFilePath(statePath);
+            config.SetAccentColor(AccentColorNames[_accentColorIndex]);
+            config.SetRemoteLoggingUrl(_remoteLoggingUrl);
+            config.SetRemoteLoggingApiKey(_remoteLoggingApiKey);
+            config.SetLogStorageMode((LogStorageMode)_logStorageModeIndex);
             _configManager.SaveConfiguration(config);
 
             // Apply theme live
@@ -444,6 +694,14 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtModalEncryptedExtensions));
         OnPropertyChanged(nameof(TxtModalEncryptedExtensionsDesc));
         OnPropertyChanged(nameof(TxtModalEncryptedExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtPriorityExtensions));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsDesc));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsPlaceholder));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsAdd));
+        OnPropertyChanged(nameof(TxtPriorityExtensionsEmpty));
+        OnPropertyChanged(nameof(TxtMaxParallelSize));
+        OnPropertyChanged(nameof(TxtMaxParallelSizeDesc));
+        OnPropertyChanged(nameof(TxtMaxParallelSizeUnit));
         OnPropertyChanged(nameof(TxtBlockedApps));
         OnPropertyChanged(nameof(TxtBlockedAppsDesc));
         OnPropertyChanged(nameof(TxtBlockedAppsPlaceholder));
@@ -470,6 +728,19 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TxtAboutLicense));
         OnPropertyChanged(nameof(TxtAboutLicenseValue));
         OnPropertyChanged(nameof(TxtAboutArchitecture));
+        OnPropertyChanged(nameof(TxtLogStorageMode));
+        OnPropertyChanged(nameof(TxtLogStorageModeLocal));
+        OnPropertyChanged(nameof(TxtLogStorageModeRemote));
+        OnPropertyChanged(nameof(TxtLogStorageModeBoth));
+        OnPropertyChanged(nameof(TxtRemoteLogging));
+        OnPropertyChanged(nameof(TxtRemoteLoggingDesc));
+        OnPropertyChanged(nameof(TxtRemoteLoggingUrl));
+        OnPropertyChanged(nameof(TxtRemoteLoggingUrlPlaceholder));
+        OnPropertyChanged(nameof(TxtRemoteLoggingApiKey));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnrollmentKey));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnroll));
+        OnPropertyChanged(nameof(TxtRemoteLoggingStatus));
+        OnPropertyChanged(nameof(TxtRemoteLoggingEnrolledBadge));
     }
 
     private static List<string> ParseBlockedApplications(string? text)
@@ -504,6 +775,46 @@ public class SettingsViewModel : ViewModelBase
             .ToList();
     }
 
+    private static string NormalizePriorityExtension(string ext)
+    {
+        ext = ext.Trim();
+        if (!ext.StartsWith('.')) ext = "." + ext;
+        return ext.ToLowerInvariant();
+    }
+
+    private void AddPriorityExtension()
+    {
+        var ext = NormalizePriorityExtension(_newPriorityExtension);
+        if (string.IsNullOrWhiteSpace(ext)) return;
+        if (!PriorityExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+        {
+            PriorityExtensions.Add(ext);
+            HasUnsavedChanges = true;
+        }
+        NewPriorityExtension = string.Empty;
+    }
+
+    private void RemovePriorityExtension(string? ext)
+    {
+        if (ext == null) return;
+        PriorityExtensions.Remove(ext);
+        HasUnsavedChanges = true;
+    }
+
+    private void MovePriorityExtensionUp(string? ext)
+    {
+        if (ext == null) return;
+        var idx = PriorityExtensions.IndexOf(ext);
+        if (idx > 0) { PriorityExtensions.Move(idx, idx - 1); HasUnsavedChanges = true; }
+    }
+
+    private void MovePriorityExtensionDown(string? ext)
+    {
+        if (ext == null) return;
+        var idx = PriorityExtensions.IndexOf(ext);
+        if (idx >= 0 && idx < PriorityExtensions.Count - 1) { PriorityExtensions.Move(idx, idx + 1); HasUnsavedChanges = true; }
+    }
+
     private void RefreshDetectedApplications()
     {
         var detected = DetectRunningApplications();
@@ -535,11 +846,10 @@ public class SettingsViewModel : ViewModelBase
             return;
         }
 
-        var items = ParseBlockedApplications(_blockedApplicationsText);
-        if (!items.Contains(SelectedDetectedApplication, StringComparer.OrdinalIgnoreCase))
+        if (!BlockedApplicationsList.Contains(SelectedDetectedApplication, StringComparer.OrdinalIgnoreCase))
         {
-            items.Add(SelectedDetectedApplication);
-            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+            BlockedApplicationsList.Add(SelectedDetectedApplication);
+            SyncBlockedTextFromList();
         }
     }
 
@@ -550,12 +860,33 @@ public class SettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(processName)) return;
 
-        var items = ParseBlockedApplications(_blockedApplicationsText);
-        if (!items.Contains(processName, StringComparer.OrdinalIgnoreCase))
+        if (!BlockedApplicationsList.Contains(processName, StringComparer.OrdinalIgnoreCase))
         {
-            items.Add(processName);
-            BlockedApplicationsText = string.Join(Environment.NewLine, items);
+            BlockedApplicationsList.Add(processName);
+            SyncBlockedTextFromList();
         }
+    }
+
+    /// <summary>
+    /// Removes a process name from the blocked applications list.
+    /// </summary>
+    private void RemoveBlockedApplication(string? processName)
+    {
+        if (!string.IsNullOrWhiteSpace(processName) && BlockedApplicationsList.Remove(processName))
+        {
+            SyncBlockedTextFromList();
+        }
+    }
+
+    /// <summary>
+    /// Sync the hidden text field from the list (for Save compatibility).
+    /// </summary>
+    private void SyncBlockedTextFromList()
+    {
+        _blockedApplicationsText = string.Join(Environment.NewLine, BlockedApplicationsList);
+        OnPropertyChanged(nameof(BlockedApplicationsText));
+        OnPropertyChanged(nameof(HasBlockedApps));
+        HasUnsavedChanges = true;
     }
 
     /// <summary>
@@ -618,5 +949,130 @@ public class SettingsViewModel : ViewModelBase
         return result.ToList();
     }
 
+    private async Task TestConnectionAsync()
+    {
+        var url = _remoteLoggingUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        IsTestingConnection = true;
+        ConnectionTestStatus = "Connexion en cours...";
+        ConnectionTestColor = "#9E9E9E";
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+            // On teste juste la joignabilité — sans auth.
+            // N'importe quelle réponse HTTP prouve que le serveur est accessible.
+            var response = await http.GetAsync(url.TrimEnd('/'));
+            var code = (int)response.StatusCode;
+
+            ConnectionTestStatus = $"✓ Serveur accessible (HTTP {code})";
+            ConnectionTestColor = "#4CAF50";
+        }
+        catch (TaskCanceledException)
+        {
+            ConnectionTestStatus = "✗ Délai dépassé — serveur inaccessible";
+            ConnectionTestColor = "#F44336";
+        }
+        catch (HttpRequestException ex)
+        {
+            ConnectionTestStatus = $"✗ Connexion impossible : {ex.Message}";
+            ConnectionTestColor = "#F44336";
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestStatus = $"✗ Erreur : {ex.Message}";
+            ConnectionTestColor = "#F44336";
+        }
+        finally
+        {
+            IsTestingConnection = false;
+        }
+    }
+
+    private void ClearApiKey()
+    {
+        _remoteLoggingApiKey = string.Empty;
+        RemoteLoggingStatus = string.Empty;
+        OnPropertyChanged(nameof(RemoteLoggingApiKey));
+        OnPropertyChanged(nameof(HasApiKey));
+        HasUnsavedChanges = true;
+    }
+
+    private async Task EnrollAsync()
+    {
+        var url = _remoteLoggingUrl?.Trim();
+        var key = _enrollmentKey?.Trim();
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(key)) return;
+
+        IsEnrolling = true;
+        RemoteLoggingStatus = T("gui_remote_logging_enrolling");
+
+        var (success, apiKey, error) = await RemoteLogger.EnrollAsync(url, key, Environment.MachineName);
+
+        if (success && apiKey != null)
+        {
+            _remoteLoggingApiKey = apiKey;
+            OnPropertyChanged(nameof(RemoteLoggingApiKey));
+            OnPropertyChanged(nameof(HasApiKey));
+
+            // Persist immediately
+            var config = _configManager.LoadConfiguration();
+            config.SetRemoteLoggingUrl(url);
+            config.SetRemoteLoggingApiKey(apiKey);
+            _configManager.SaveConfiguration(config);
+
+            EnrollmentKey = string.Empty;
+            RemoteLoggingStatus = T("gui_remote_logging_enrolled_ok");
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            RemoteLoggingStatus = $"{T("gui_remote_logging_enroll_error")}: {error}";
+        }
+
+        IsEnrolling = false;
+    }
+
     #endregion
+
+    /// <summary>
+    /// Applies the accent color to the application's dynamic resources at runtime.
+    /// </summary>
+    public static void ApplyAccentColor(int index)
+    {
+        if (index < 0 || index >= AccentColorValues.Length) index = 0;
+        var app = Application.Current;
+        if (app == null) return;
+
+        var primary = Avalonia.Media.Color.Parse(AccentColorValues[index]);
+        var hover = Avalonia.Media.Color.Parse(AccentColorHovers[index]);
+        var light = Avalonia.Media.Color.Parse(AccentColorLights[index]);
+
+        // Update both Light and Dark theme dictionaries
+        if (app.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Light, out var lightDict) && lightDict is Avalonia.Controls.ResourceDictionary ld)
+        {
+            ld["AccentBlue"] = new Avalonia.Media.SolidColorBrush(primary);
+            ld["AccentBlueHover"] = new Avalonia.Media.SolidColorBrush(hover);
+            ld["AccentBlueLight"] = new Avalonia.Media.SolidColorBrush(light);
+            ld["AccentBlueBg"] = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromArgb(34, primary.R, primary.G, primary.B));
+            ld["SidebarIconHover"] = new Avalonia.Media.SolidColorBrush(primary);
+            ld["ClickableCardHoverBorder"] = new Avalonia.Media.SolidColorBrush(primary);
+        }
+        if (app.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Dark, out var darkDict) && darkDict is Avalonia.Controls.ResourceDictionary dd)
+        {
+            dd["AccentBlue"] = new Avalonia.Media.SolidColorBrush(primary);
+            dd["AccentBlueHover"] = new Avalonia.Media.SolidColorBrush(hover);
+            dd["AccentBlueLight"] = new Avalonia.Media.SolidColorBrush(light);
+            dd["AccentBlueBg"] = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromArgb(34, primary.R, primary.G, primary.B));
+            dd["SidebarIconHover"] = new Avalonia.Media.SolidColorBrush(light);
+            dd["ClickableCardHoverBorder"] = new Avalonia.Media.SolidColorBrush(primary);
+        }
+
+        // Force re-render by toggling theme variant
+        var current = app.RequestedThemeVariant;
+        app.RequestedThemeVariant = current == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
+        app.RequestedThemeVariant = current;
+    }
 }

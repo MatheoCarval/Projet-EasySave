@@ -17,6 +17,7 @@
     "CurrentTargetFile": "\\\\localhost\\C$\\Users\\allan\\Music\\workflows\\dotnet.yml",
     "Progress": 100,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -37,6 +38,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -57,46 +59,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
-    "EncryptedExtensions": []
-  },
-  {
-    "Id": "91b98f29-2625-4309-beab-274cf1d5c263",
-    "Name": "M\u00E9moire_Fin_Etudes_FINAL",
-    "SourcePath": [
-      "--dark"
-    ],
-    "TargetPath": "--dark",
-    "BackupType": 0,
-    "BackupState": 4,
-    "LastExecution": "0001-01-01T00:00:00",
-    "TotalFiles": 0,
-    "TotalSize": 0,
-    "RemainingFiles": 0,
-    "RemainingSize": 0,
-    "CurrentSourceFile": null,
-    "CurrentTargetFile": null,
-    "Progress": 0,
-    "EncryptFiles": false,
-    "EncryptedExtensions": []
-  },
-  {
-    "Id": "209289b0-4d19-404d-bf0d-fab262462525",
-    "Name": "Dossier_Administratif_Impots",
-    "SourcePath": [
-      "Humam Sakhnini"
-    ],
-    "TargetPath": "--dark",
-    "BackupType": 0,
-    "BackupState": 4,
-    "LastExecution": "0001-01-01T00:00:00",
-    "TotalFiles": 0,
-    "TotalSize": 0,
-    "RemainingFiles": 0,
-    "RemainingSize": 0,
-    "CurrentSourceFile": null,
-    "CurrentTargetFile": null,
-    "Progress": 0,
-    "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -117,6 +80,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -137,6 +101,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -157,6 +122,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -177,6 +143,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -199,6 +166,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -219,6 +187,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   },
   {
@@ -239,6 +208,7 @@
     "CurrentTargetFile": null,
     "Progress": 0,
     "EncryptFiles": false,
+    "ErrorReason": null,
     "EncryptedExtensions": []
   }
 ]

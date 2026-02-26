@@ -1,6 +1,7 @@
 using Models;
 using Models.Enums;
 using System;
+using System.IO;
 
 namespace EasySave.ViewModels;
 
@@ -109,13 +110,40 @@ public class BackupJobViewModel : ViewModelBase
 
     public DateTime LastExecution => _backupJob.LastExecution;
 
-    public string LastExecutionDisplay => _backupJob.LastExecution == DateTime.MinValue
-        ? "Never"
-        : _backupJob.LastExecution.ToString("g");
+    public string LastExecutionDisplay
+    {
+        get
+        {
+            if (_backupJob.LastExecution == DateTime.MinValue)
+                return T("gui_never");
+            return FormatRelativeTime(_backupJob.LastExecution);
+        }
+    }
+
+    /// <summary>Target drive free space display (e.g. "12.3 GB free")</summary>
+    public string DiskSpaceDisplay
+    {
+        get
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_backupJob.TargetPath)) return string.Empty;
+                var root = Path.GetPathRoot(_backupJob.TargetPath);
+                if (string.IsNullOrEmpty(root)) return string.Empty;
+                var drive = new DriveInfo(root);
+                if (!drive.IsReady) return string.Empty;
+                return $"{FormatBytes(drive.AvailableFreeSpace)} {T("gui_free")}";
+            }
+            catch { return string.Empty; }
+        }
+    }
+
+    public bool HasDiskSpace => !string.IsNullOrEmpty(DiskSpaceDisplay);
 
     public string? ErrorReason => _backupJob.ErrorReason;
 
     public bool HasError => _backupJob.BackupState == BackupState.ERROR && !string.IsNullOrEmpty(_backupJob.ErrorReason);
+    public bool IsPaused => _backupJob.BackupState == BackupState.PAUSED;
 
     public string ErrorReasonDisplay
     {
@@ -141,6 +169,16 @@ public class BackupJobViewModel : ViewModelBase
 
     public string ProgressDisplay => $"{_backupJob.Progress:F0}%";
 
+    /// <summary>Number of files encrypted during the current or last execution.</summary>
+    public int EncryptedFilesCount => _backupJob.EncryptedFilesCount;
+
+    /// <summary>Display string shown only when at least one file was encrypted.</summary>
+    public string EncryptedFilesDisplay => _backupJob.EncryptedFilesCount > 0
+        ? $"{_backupJob.EncryptedFilesCount} fichier(s) chiffré(s)"
+        : string.Empty;
+
+    public bool HasEncryptedFiles => _backupJob.EncryptedFilesCount > 0;
+
     public BackupJob GetBackupJob() => _backupJob;
 
     public void RefreshDisplay()
@@ -157,8 +195,44 @@ public class BackupJobViewModel : ViewModelBase
         OnPropertyChanged(nameof(LastExecutionDisplay));
         OnPropertyChanged(nameof(ErrorReason));
         OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(IsPaused));
         OnPropertyChanged(nameof(ErrorReasonDisplay));
         OnPropertyChanged(nameof(Progress));
         OnPropertyChanged(nameof(ProgressDisplay));
+        OnPropertyChanged(nameof(DiskSpaceDisplay));
+        OnPropertyChanged(nameof(HasDiskSpace));
+        OnPropertyChanged(nameof(EncryptedFilesCount));
+        OnPropertyChanged(nameof(EncryptedFilesDisplay));
+        OnPropertyChanged(nameof(HasEncryptedFiles));
+    }
+
+    private static string T(string key)
+    {
+        try { return View.GUI.App.LocalizationService?.GetTextTranslated(key) ?? key; }
+        catch { return key; }
+    }
+
+    private static string FormatRelativeTime(DateTime dt)
+    {
+        var span = DateTime.Now - dt;
+        if (span.TotalSeconds < 60) return T("gui_time_just_now");
+        if (span.TotalMinutes < 60)
+            return string.Format(T("gui_time_minutes_ago"), (int)span.TotalMinutes);
+        if (span.TotalHours < 24)
+            return string.Format(T("gui_time_hours_ago"), (int)span.TotalHours);
+        if (span.TotalDays < 7)
+            return string.Format(T("gui_time_days_ago"), (int)span.TotalDays);
+        if (span.TotalDays < 30)
+            return string.Format(T("gui_time_weeks_ago"), (int)(span.TotalDays / 7));
+        return dt.ToString("g");
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        int i = 0;
+        double d = bytes;
+        while (d >= 1024 && i < suffixes.Length - 1) { d /= 1024; i++; }
+        return $"{d:F1} {suffixes[i]}";
     }
 }
