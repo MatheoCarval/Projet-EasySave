@@ -51,6 +51,16 @@ public partial class MainWindow : Window
 
         DataContext = vm;
 
+        // Intercept window close to show rating popup
+        this.Closing += (s, e) =>
+        {
+            if (!vm.IsRatingOpen && !vm.IsRatingResponseOpen)
+            {
+                e.Cancel = true;
+                vm.IsRatingOpen = true;
+            }
+        };
+
         // Subscribe to onboarding step changes
         vm.OnboardingStepChanged += OnOnboardingStepChanged;
         vm.PropertyChanged += (s, e) =>

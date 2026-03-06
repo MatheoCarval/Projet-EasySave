@@ -49,6 +49,7 @@
     <AvaloniaResource Include="Assets\app-icon.png" />
     <AvaloniaResource Include="Assets\app-icon.ico" />
     <AvaloniaResource Include="Assets\app-icon-in.png" />
+    <AvaloniaResource Include="Assets\IMG_5193.jpg" />
   </ItemGroup>
 
   <!-- Copy native libraries to output directory for Windows -->

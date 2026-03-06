@@ -191,7 +191,7 @@
 
             <!-- Sidebar -->
             <Border Grid.Column="0" Classes="Sidebar">
-                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto">
 
                     <!-- Home Button -->
                     <Grid x:Name="SidebarHomeBtn" Grid.Row="0" Margin="12,16,12,8">
@@ -292,7 +292,7 @@
                     </Grid>
 
                     <!-- Help Button -->
-                    <Grid x:Name="SidebarHelpBtn" Grid.Row="6" Margin="12,8,12,16">
+                    <Grid x:Name="SidebarHelpBtn" Grid.Row="6" Margin="12,8">
                         <Button Classes="SidebarButton"
                                 Command="{Binding OpenHelpCommand}"
                                 ToolTip.Tip="{Binding TxtTooltipHelp}">
@@ -308,6 +308,10 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Bottom"
                                 IsVisible="{Binding IsHelpOpen}"/>
+                    </Grid>
+
+                    <!-- Rate Button (removed from sidebar - now shown on close) -->
+                    <Grid Grid.Row="7" Margin="12,8,12,16">
                     </Grid>
 
                 </Grid>
@@ -4107,6 +4111,94 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+        </Panel>
+
+        <!-- Rating Popup - Avez-vous aimé l'app ? (shown on close) -->
+        <Panel IsVisible="{Binding IsRatingOpen}" Background="#DD000000">
+            <Border Background="{DynamicResource PopupBackground}"
+                    Width="420"
+                    CornerRadius="16"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 24 4 #30000000">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border CornerRadius="16,16,0,0" Padding="0">
+                        <StackPanel>
+                            <Border Height="4" CornerRadius="16,16,0,0" Background="#4CAF50"/>
+                            <StackPanel HorizontalAlignment="Center" Spacing="10" Margin="24,16,24,16">
+                                <TextBlock Text="Évaluation"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Border Height="1" Background="{DynamicResource ClickableCardBorder}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Margin="24,20" Spacing="20">
+                        <TextBlock Text="Avez-vous aimé l'application ?"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
+
+                        <TextBlock Text="Votre avis compte énormément pour nous !"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextTertiary}"
+                                   HorizontalAlignment="Center"/>
+
+                        <Grid ColumnDefinitions="*,12,*" Margin="0,4,0,0">
+                            <Button Grid.Column="0"
+                                    Content="Non 👎"
+                                    HorizontalAlignment="Stretch"
+                                    Height="40"
+                                    FontSize="14"
+                                    CornerRadius="10"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Background="{DynamicResource InputBackground}"
+                                    BorderBrush="{DynamicResource ClickableCardBorder}"
+                                    BorderThickness="1.5"
+                                    HorizontalContentAlignment="Center"
+                                    Cursor="Hand"
+                                    Command="{Binding RateNoCommand}"/>
+                            <Button Grid.Column="2"
+                                    Content="Oui 👍"
+                                    HorizontalAlignment="Stretch"
+                                    Height="40"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    CornerRadius="10"
+                                    Foreground="White"
+                                    Background="#4CAF50"
+                                    HorizontalContentAlignment="Center"
+                                    Cursor="Hand"
+                                    Command="{Binding RateYesCommand}"/>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- Rating Response Popup -->
+        <Panel IsVisible="{Binding IsRatingResponseOpen}" Background="#FF000000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                <Image Source="/Assets/IMG_5193.jpg"
+                       Width="400" Height="400"
+                       HorizontalAlignment="Center"
+                       Stretch="UniformToFill"/>
+                <TextBlock Text="{Binding RatingResponseMessage}"
+                           FontSize="36"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"/>
+            </StackPanel>
         </Panel>
 
         <!-- ═══════════════════════════════════════════════════════ -->

